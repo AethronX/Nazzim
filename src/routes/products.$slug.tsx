@@ -235,16 +235,13 @@ function ProductPage() {
 
         {/* ── Buy box ─────────────────────────────── */}
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <h1 className="text-[28px] font-bold leading-tight sm:text-[34px]">
+          <h1 className="text-[30px] font-extrabold leading-[1.2] tracking-tight sm:text-[38px]">
             {t(product.arabicName)}
           </h1>
-          <p className="latin mt-1 text-[15px] font-semibold text-muted-foreground">
-            {product.name}
-          </p>
 
-          <div className="mt-3 flex items-center gap-2 text-[14px]">
+          <div className="mt-2.5 flex items-center gap-2 text-[14px]">
             <Stars value={socialProof.rating} />
-            <span className="latin tabular-nums text-muted-foreground">
+            <span className="latin font-medium tabular-nums text-muted-foreground">
               ({socialProof.reviewCount.toLocaleString("en-US")} {t("تقييم")})
             </span>
           </div>
@@ -261,8 +258,8 @@ function ProductPage() {
             ))}
           </ul>
 
-          {/* Flash sale bar */}
-          <div className="mt-5 rounded-xl bg-ink px-4 py-2.5 text-center text-[12.5px] font-bold tracking-wide text-ink-foreground">
+          {/* Flash-sale bar */}
+          <div className="mt-5 rounded-lg bg-ink px-4 py-3 text-center text-[12.5px] font-bold tracking-[0.06em] text-ink-foreground">
             {t("عرض محدود — ينتهي خلال")}{" "}
             <span className="latin tabular-nums">{countdown ?? "--:--:--"}</span> ⏳
           </div>
@@ -277,7 +274,7 @@ function ProductPage() {
                 <label
                   key={p.id}
                   className={cn(
-                    "relative flex cursor-pointer items-center gap-3 rounded-2xl border bg-card px-4 py-3.5 transition-all",
+                    "relative flex cursor-pointer items-center gap-3 rounded-xl border-2 bg-card px-4 py-4 transition-all",
                     isActive
                       ? "border-foreground shadow-soft"
                       : "border-border hover:border-border-strong",
@@ -289,33 +286,28 @@ function ProductPage() {
                     value={p.id}
                     checked={isActive}
                     onChange={() => setSelectedId(p.id)}
-                    className="size-4.5 accent-primary"
+                    className="size-5 shrink-0 accent-foreground"
                   />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="text-[15.5px] font-bold">{t(p.arabicName)}</span>
-                      {off > 0 ? (
-                        <span className="latin rounded-md brand-gradient px-1.5 py-0.5 text-[10.5px] font-bold text-primary-foreground">
-                          {off}% OFF
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="latin mt-0.5 block text-[12px] text-muted-foreground">
-                      {p.name}
-                    </span>
+                  <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-[15.5px] font-bold">{t(p.arabicName)}</span>
+                    {off > 0 ? (
+                      <span className="latin rounded-md bg-destructive px-1.5 py-0.5 text-[10.5px] font-bold text-destructive-foreground">
+                        {off}% OFF
+                      </span>
+                    ) : null}
                   </span>
-                  <span className="shrink-0 text-left">
+                  <span className="shrink-0 text-end">
                     <span className="latin block text-[17px] font-bold tabular-nums">
                       {formatPrice(p.price)}
                     </span>
                     {p.compareAtPrice ? (
-                      <span className="latin block text-[12px] text-muted-foreground line-through tabular-nums">
+                      <span className="latin block text-[12.5px] text-muted-foreground line-through tabular-nums">
                         {formatPrice(p.compareAtPrice)}
                       </span>
                     ) : null}
                   </span>
                   {p.featured ? (
-                    <span className="absolute -top-2.5 left-4 rounded-full brand-gradient px-2.5 py-0.5 text-[10.5px] font-bold text-primary-foreground shadow-lift">
+                    <span className="absolute -top-3 left-4 rounded-full bg-destructive px-3 py-1 text-[10.5px] font-bold text-destructive-foreground shadow-lift">
                       {t("الأكثر طلباً")}
                     </span>
                   ) : null}
@@ -324,13 +316,13 @@ function ProductPage() {
             })}
           </fieldset>
 
-          {/* Bonus opt-in (no extra charge) */}
-          <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-2xl border border-dashed border-border-strong bg-surface/50 px-4 py-3.5">
+          {/* Order bump */}
+          <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-xl border-2 border-border bg-card px-4 py-3.5">
             <input
               type="checkbox"
               checked={bonus}
               onChange={(e) => setBonus(e.target.checked)}
-              className="mt-0.5 size-4.5 accent-primary"
+              className="mt-0.5 size-5 shrink-0 accent-foreground"
             />
             <span>
               <span className="block text-[14.5px] font-bold">{t("قوالب إضافية مجاناً")}</span>
@@ -340,63 +332,75 @@ function ProductPage() {
             </span>
           </label>
 
-          <div className="mt-4 flex flex-col gap-2.5">
-            {canBuy ? (
-              <Button variant="accent" size="lg" onClick={buyNow}>
-                {t("اشترِ الآن")} — {formatPrice(selected.price)}
-              </Button>
-            ) : null}
-            <Button variant={canBuy ? "outline" : "accent"} size="lg" onClick={addToCart}>
-              {t("أضف إلى السلة")}
-            </Button>
-          </div>
+          {/* Primary CTA */}
+          <button
+            type="button"
+            onClick={addToCart}
+            className="mt-4 w-full rounded-lg bg-ink px-6 py-4 text-[15px] font-bold tracking-[0.08em] text-ink-foreground transition-opacity hover:opacity-90 active:scale-[0.99]"
+          >
+            {t("أضف إلى السلة")}
+          </button>
 
           {canBuy ? (
-            /* Payment methods */
-            <ul className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              {paymentMethods.map((m) => (
-                <li
-                  key={m}
-                  className="latin rounded-md border border-border bg-card px-2.5 py-1 text-[10.5px] font-semibold tracking-wide text-muted-foreground"
-                >
-                  {m}
-                </li>
-              ))}
-            </ul>
+            <button
+              type="button"
+              onClick={buyNow}
+              className="mt-2 w-full rounded-lg border-2 border-border-strong px-6 py-3.5 text-[14.5px] font-bold transition-colors hover:bg-surface"
+            >
+              {t("اشترِ الآن")} — {formatPrice(selected.price)}
+            </button>
           ) : (
-            <StoreSetupNotice className="mt-4" />
+            <StoreSetupNotice className="mt-3" />
           )}
 
+          {/* Payment methods */}
+          <ul className="mt-4 flex flex-wrap items-center justify-center gap-1.5">
+            {paymentMethods.map((m) => (
+              <li
+                key={m}
+                className="latin rounded-[5px] border border-border bg-card px-2 py-1 text-[10px] font-bold tracking-wide text-muted-foreground"
+              >
+                {m}
+              </li>
+            ))}
+          </ul>
 
-          {/* Social proof + review carousel */}
-          <div className="mt-6 rounded-2xl border border-border bg-card p-5">
-            <p className="flex items-center gap-2 text-[14.5px] font-bold">
-              <Check className="size-4 text-primary" strokeWidth={3} aria-hidden />
-              <span className="latin tabular-nums">{socialProof.customers}</span>
-              {t("شخص ينظّمون يومهم مع نظّم")}
-            </p>
-            <blockquote className="mt-4 text-[14px] leading-[1.9] text-muted-foreground">
-              «{t(reviews[reviewIndex]?.text ?? "")}»
-            </blockquote>
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="flex items-center gap-2 text-[13px] font-semibold">
-                {t(reviews[reviewIndex]?.name ?? "")}
-                <Stars value={reviews[reviewIndex]?.stars ?? 5} className="scale-90" />
-              </p>
-              <div className="flex gap-1.5">
-                {reviews.map((r, i) => (
-                  <button
-                    key={r.name}
-                    type="button"
-                    aria-label={`${t("تقييم")} ${i + 1}`}
-                    onClick={() => setReviewIndex(i)}
-                    className={cn(
-                      "size-2 rounded-full transition-colors",
-                      i === reviewIndex ? "bg-foreground" : "bg-border-strong",
-                    )}
-                  />
-                ))}
+          {/* Social proof */}
+          <p className="mt-5 flex items-center justify-center gap-2 text-center text-[14.5px] font-bold">
+            <Check className="size-4 shrink-0 text-primary" strokeWidth={3} aria-hidden />
+            <span className="latin tabular-nums">{socialProof.customers}</span>
+            {t("شخص ينظّمون يومهم مع نظّم")}
+          </p>
+
+          {/* Review carousel */}
+          <div className="mt-4 rounded-xl border border-border bg-card p-5">
+            <div className="flex items-start gap-3">
+              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary-soft text-[15px] font-bold text-primary">
+                {t(reviews[reviewIndex]?.name ?? "").slice(0, 1)}
+              </span>
+              <div className="min-w-0 flex-1">
+                <blockquote className="text-[14px] leading-[1.9] text-foreground">
+                  {t(reviews[reviewIndex]?.text ?? "")}
+                </blockquote>
+                <p className="mt-2 flex items-center gap-2 text-[13px] font-semibold">
+                  {t(reviews[reviewIndex]?.name ?? "")}
+                  <Stars value={reviews[reviewIndex]?.stars ?? 5} className="scale-90" />
+                </p>
               </div>
+            </div>
+            <div className="mt-4 flex justify-center gap-2">
+              {reviews.map((r, i) => (
+                <button
+                  key={r.name}
+                  type="button"
+                  aria-label={`${t("تقييم")} ${i + 1}`}
+                  onClick={() => setReviewIndex(i)}
+                  className={cn(
+                    "size-2 rounded-full transition-colors",
+                    i === reviewIndex ? "bg-foreground" : "bg-border-strong",
+                  )}
+                />
+              ))}
             </div>
           </div>
 

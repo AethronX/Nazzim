@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Menu, ShoppingCart, X } from "lucide-react";
+import { Menu, ShoppingBag, X } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { announcement } from "@/data/site";
 import { ButtonLink } from "./ui";
@@ -98,19 +98,29 @@ export function Navbar() {
         )}
       >
         <div className="container-nz grid h-20 grid-cols-[1fr_auto_1fr] items-center sm:h-[104px]">
+          {/* Start: primary links on desktop, menu button on mobile */}
           <div className="flex items-center justify-start gap-1">
+            <nav className="hidden items-center gap-1 lg:flex">
+              {nav.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  activeOptions={{ exact: item.exact }}
+                  className="rounded-lg px-3.5 py-2 text-[14px] font-semibold text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+                  activeProps={{ className: "!bg-ink !text-ink-foreground" }}
+                >
+                  {t(item.label)}
+                </Link>
+              ))}
+            </nav>
             <button
               type="button"
-              onClick={openCart}
-              aria-label={t("السلة")}
-              className="relative grid size-11 place-items-center rounded-full transition-colors hover:bg-surface"
+              onClick={() => setOpen((v) => !v)}
+              aria-label={t("القائمة")}
+              aria-expanded={open}
+              className="grid size-11 place-items-center rounded-full transition-colors hover:bg-surface lg:hidden"
             >
-              <ShoppingCart className="size-[21px]" strokeWidth={1.7} />
-              {count > 0 ? (
-                <span className="absolute top-1 left-1 grid min-w-4.5 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground tabular-nums">
-                  {count}
-                </span>
-              ) : null}
+              {open ? <X className="size-[21px]" /> : <Menu className="size-[21px]" />}
             </button>
           </div>
 
@@ -118,29 +128,21 @@ export function Navbar() {
             <Logo />
           </div>
 
-          <div className="flex items-center justify-end gap-2">
-            <nav className="hidden items-center gap-1 lg:flex">
-              {nav.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  activeOptions={{ exact: item.exact }}
-                  className="rounded-full px-4 py-2 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
-                  activeProps={{ className: "!bg-ink !text-ink-foreground shadow-soft" }}
-                >
-                  {t(item.label)}
-                </Link>
-              ))}
-            </nav>
+          {/* End: language + cart */}
+          <div className="flex items-center justify-end gap-1.5">
             <LanguageToggle className="hidden sm:inline-flex" />
             <button
               type="button"
-              onClick={() => setOpen((v) => !v)}
-              aria-label={t("القائمة")}
-              aria-expanded={open}
-              className="grid size-11 place-items-center rounded-full transition-colors hover:bg-surface"
+              onClick={openCart}
+              aria-label={t("السلة")}
+              className="relative grid size-11 place-items-center rounded-full transition-colors hover:bg-surface"
             >
-              {open ? <X className="size-[21px]" /> : <Menu className="size-[21px]" />}
+              <ShoppingBag className="size-[21px]" strokeWidth={1.7} />
+              {count > 0 ? (
+                <span className="absolute top-1 left-1 grid min-w-4.5 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground tabular-nums">
+                  {count}
+                </span>
+              ) : null}
             </button>
           </div>
         </div>
