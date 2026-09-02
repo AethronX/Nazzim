@@ -1,0 +1,17 @@
+# Netlify build configuration for Nazzim (TanStack Start + nitro).
+#
+# The Lovable vite config defaults nitro to a Cloudflare Workers target, so the
+# preset has to be set explicitly. With NITRO_PRESET=netlify the build emits:
+#   dist/                            -> static assets (publish directory)
+#   .netlify/functions-internal/     -> the SSR function, named "server"
+#
+# The generated function declares its own route in code (Netlify Functions API
+# v2: path "/*", preferStatic true), so no _redirects rule is needed — static
+# files win, everything else falls through to SSR.
+
+[build]
+  command = "NITRO_PRESET=netlify bun run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
