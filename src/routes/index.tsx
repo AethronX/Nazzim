@@ -19,7 +19,7 @@ import {
 } from "@/data/products";
 import { benefits, features, hero, quotes, steps, worksheets } from "@/data/site";
 import { Shot } from "@/components/nazzim/Shot";
-import heroLaptop from "@/assets/shots/hero-laptop.png.asset.json";
+import { ProductVisual } from "@/components/nazzim/ProductVisual";
 import { BuyNowButton, ProductCard } from "@/components/nazzim/ProductCard";
 import { ButtonLink, Faq, Section, SectionHead } from "@/components/nazzim/ui";
 import { cn } from "@/lib/utils";
@@ -100,16 +100,13 @@ function Hero() {
         </ul>
 
         <div className="relative mx-auto mt-14 max-w-5xl sm:mt-16">
-          <img
-            src={heroLaptop.url}
-            alt={t("نظام نظّم داخل شاشة لابتوب: لوحة العادات والتقدم الشهري")}
-            width={1067}
-            height={571}
-            loading="eager"
-            decoding="sync"
-            fetchPriority="high"
+          <div
+            role="img"
+            aria-label={t("نظام نظّم داخل شاشة لابتوب: لوحة العادات والتقدم الشهري")}
             className="relative w-full"
-          />
+          >
+            <ProductVisual variant="dashboard" />
+          </div>
         </div>
 
       </div>

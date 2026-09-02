@@ -1,21 +1,15 @@
-import dashboard from "@/assets/shots/dashboard.png.asset.json";
-import habits from "@/assets/shots/habits.png.asset.json";
-import tasks from "@/assets/shots/tasks.png.asset.json";
-import goals from "@/assets/shots/goals.png.asset.json";
-import progress from "@/assets/shots/progress.png.asset.json";
-import system from "@/assets/shots/system.png.asset.json";
 import { cn } from "@/lib/utils";
-import { visualTitles, type VisualKey } from "./ProductVisual";
+import { ProductVisual, visualTitles, type VisualKey } from "./ProductVisual";
 
-export const shots: Record<VisualKey, string> = {
-  dashboard: dashboard.url,
-  habits: habits.url,
-  tasks: tasks.url,
-  goals: goals.url,
-  progress: progress.url,
-  system: system.url,
-};
-
+/**
+ * Product screen.
+ *
+ * These used to be PNG screenshots served from Lovable's asset CDN
+ * (/__l5e/assets-v1/...). That path only resolves while the app is hosted by
+ * Lovable, so every image 404'd once the site moved to its own domain.
+ * We now render the same screens with <ProductVisual />, which draws them in
+ * pure CSS — no external asset host, nothing to break.
+ */
 export function Shot({
   variant,
   className,
@@ -24,19 +18,18 @@ export function Shot({
 }: {
   variant: VisualKey;
   className?: string;
+  /** Kept for call-site compatibility; nothing is fetched any more. */
   eager?: boolean;
   alt?: string;
 }) {
+  void eager;
   return (
-    <img
-      src={shots[variant]}
-      alt={alt ?? `${visualTitles[variant]} — Nazzim`}
-      width={980}
-      height={802}
-      loading={eager ? "eager" : "lazy"}
-      decoding={eager ? "sync" : "async"}
-      fetchPriority={eager ? "high" : "auto"}
-      className={cn("w-full rounded-2xl border border-border bg-card", className)}
-    />
+    <div
+      role="img"
+      aria-label={alt ?? `${visualTitles[variant]} — Nazzim`}
+      className={cn("w-full", className)}
+    >
+      <ProductVisual variant={variant} />
+    </div>
   );
 }
