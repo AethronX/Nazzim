@@ -11,7 +11,7 @@ export interface DeliveryLine {
   sheetUrl: string | null;
 }
 
-const CONTACT_URL = "https://nazzim-system-hub.lovable.app/contact";
+const CONTACT_URL = "https://www.nazzim.co/contact";
 
 export function buildDeliveryEmail(lines: DeliveryLine[]) {
   const missing = lines.some((l) => !l.sheetUrl);
