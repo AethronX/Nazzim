@@ -10,11 +10,9 @@ import { LanguageToggle } from "@/components/nazzim/LanguageToggle";
 import { useT } from "@/lib/i18n";
 
 const nav = [
-  { to: "/", label: "الرئيسية" },
-  { to: "/products", label: "المنتجات" },
-  { to: "/how-it-works", label: "كيف يعمل؟" },
-  { to: "/faq", label: "الأسئلة الشائعة" },
-  { to: "/contact", label: "تواصل معنا" },
+  { to: "/", label: "الرئيسية", exact: true },
+  { to: "/products", label: "متتبع العادات والمهام", exact: false },
+  { to: "/contact", label: "تواصل", exact: false },
 ] as const;
 
 export function Logo({ compact = false }: { compact?: boolean }) {
@@ -122,12 +120,13 @@ export function Navbar() {
 
           <div className="flex items-center justify-end gap-2">
             <nav className="hidden items-center gap-1 lg:flex">
-              {nav.slice(1, 4).map((item) => (
+              {nav.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
-                  className="rounded-full px-3.5 py-2 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
-                  activeProps={{ className: "!text-foreground bg-surface" }}
+                  activeOptions={{ exact: item.exact }}
+                  className="rounded-full px-4 py-2 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+                  activeProps={{ className: "!bg-ink !text-ink-foreground shadow-soft" }}
                 >
                   {t(item.label)}
                 </Link>
@@ -154,7 +153,9 @@ export function Navbar() {
                   key={item.to}
                   to={item.to}
                   onClick={() => setOpen(false)}
+                  activeOptions={{ exact: item.exact }}
                   className="rounded-xl px-3 py-3.5 text-[15px] font-medium text-foreground transition-colors hover:bg-surface"
+                  activeProps={{ className: "!bg-ink !text-ink-foreground" }}
                 >
                   {t(item.label)}
                 </Link>

@@ -3,6 +3,7 @@ export const commonDict: Record<string, string> = {
   // Brand / nav
   "الرئيسية": "Home",
   "المنتجات": "Products",
+  "متتبع العادات والمهام": "Habit + Task Tracker",
   "الأنظمة": "Systems",
   "كيف يعمل": "How it works",
   "كيف يعمل نظّم؟": "How does Nazzim work?",
