@@ -5,8 +5,7 @@ import { formatPrice, savingsPercent, type Product } from "@/data/products";
 import { useCart } from "@/lib/cart";
 import { track } from "@/lib/analytics";
 import { Button, btnClass } from "./ui";
-import { shots } from "./Shot";
-import type { VisualKey } from "./ProductVisual";
+import { ProductVisual } from "./ProductVisual";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import { isPurchasable, usePaddleConfig } from "@/lib/payments";
@@ -132,14 +131,9 @@ export function ProductCard({ product }: { product: Product }) {
         aria-hidden
       >
         <div className="aspect-5/4 overflow-hidden rounded-2xl border border-border bg-card p-2">
-          <img
-            src={shots[product.image as VisualKey]}
-            alt=""
-            width={980}
-            height={802}
-            loading="lazy"
-            decoding="async"
-            className="size-full rounded-xl object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+          <ProductVisual
+            variant={product.image}
+            className="size-full transition-transform duration-500 group-hover:scale-[1.03]"
           />
         </div>
       </Link>

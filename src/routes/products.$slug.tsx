@@ -18,9 +18,9 @@ import { isPurchasable, usePaddleConfig } from "@/lib/payments";
 import { steps } from "@/data/site";
 import { useCart } from "@/lib/cart";
 import { track } from "@/lib/analytics";
-import { Shot, shots } from "@/components/nazzim/Shot";
+import { Shot } from "@/components/nazzim/Shot";
 import { Stars } from "@/components/nazzim/Stars";
-import { visualTitles, type VisualKey } from "@/components/nazzim/ProductVisual";
+import { ProductVisual, visualTitles, type VisualKey } from "@/components/nazzim/ProductVisual";
 import { Button, Faq, SectionHead, btnClass } from "@/components/nazzim/ui";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
@@ -211,15 +211,13 @@ function ProductPage() {
                         : "border-border hover:border-border-strong",
                     )}
                   >
-                    <img
-                      src={shots[g]}
-                      alt={visualTitles[g] ?? g}
-                      width={196}
-                      height={160}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full rounded-lg"
-                    />
+                    <span className="relative block h-16 w-full overflow-hidden rounded-lg bg-surface sm:h-20">
+                      <ProductVisual
+                        variant={g}
+                        className="pointer-events-none absolute top-0 right-0 w-[420px] origin-top-right scale-[0.24]"
+                      />
+                    </span>
+                    <span className="sr-only">{visualTitles[g] ?? g}</span>
                   </button>
                 </li>
               ))}
