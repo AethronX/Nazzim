@@ -1,9 +1,8 @@
 import { Check, Lock, RefreshCcw, Zap } from "lucide-react";
 import { formatPrice, products, savingsPercent } from "@/data/products";
-import { paymentMethods, socialProof } from "@/data/reviews";
+import { paymentMethods } from "@/data/reviews";
 import { useCart } from "@/lib/cart";
 import { track } from "@/lib/analytics";
-import { Stars } from "./Stars";
 import { Button } from "./ui";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
@@ -33,17 +32,13 @@ export function TrustStrip({ className }: { className?: string }) {
   );
 }
 
-/** Rating + customer count, used near every primary CTA. */
+/** Honest reassurance line, used near every primary CTA. */
 export function SocialProofLine({ className }: { className?: string }) {
   const t = useT();
   return (
-    <p className={cn("flex flex-wrap items-center justify-center gap-2 text-[13px]", className)}>
-      <Stars value={socialProof.rating} className="scale-90" />
-      <span className="latin font-bold tabular-nums">{socialProof.rating}</span>
-      <span className="text-muted-foreground">
-        {t("من")} <span className="latin tabular-nums">{socialProof.reviewCount.toLocaleString("en-US")}</span> {t("تقييم")}
-        · <span className="latin tabular-nums">{socialProof.customers}</span> {t("مستخدم")}
-      </span>
+    <p className={cn("flex flex-wrap items-center justify-center gap-2 text-[13px] text-muted-foreground", className)}>
+      <Check className="size-4 shrink-0 text-primary" strokeWidth={3} aria-hidden />
+      {t("منتج جديد من نظّم — جرّبه بضمان استرجاع كامل")}
     </p>
   );
 }

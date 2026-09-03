@@ -11,7 +11,7 @@ import {
   savingsPercent,
   trustPoints,
 } from "@/data/products";
-import { paymentMethods, reviews, socialProof } from "@/data/reviews";
+import { paymentMethods } from "@/data/reviews";
 import { StoreSetupNotice } from "@/components/nazzim/StoreSetupNotice";
 import { isPurchasable, usePaddleConfig } from "@/lib/payments";
 
@@ -19,7 +19,6 @@ import { steps } from "@/data/site";
 import { useCart } from "@/lib/cart";
 import { track } from "@/lib/analytics";
 import { Shot } from "@/components/nazzim/Shot";
-import { Stars } from "@/components/nazzim/Stars";
 import { ProductVisual, visualTitles, type VisualKey } from "@/components/nazzim/ProductVisual";
 import { Button, Faq, SectionHead, btnClass } from "@/components/nazzim/ui";
 import { cn } from "@/lib/utils";
@@ -61,11 +60,6 @@ export const Route = createFileRoute("/products/$slug")({
             description: product.longDescription,
             brand: { "@type": "Brand", name: "Nazzim" },
             category: "Digital productivity template",
-            aggregateRating: {
-              "@type": "AggregateRating",
-              ratingValue: socialProof.rating,
-              reviewCount: socialProof.reviewCount,
-            },
             offers: {
               "@type": "Offer",
               price: product.price.toFixed(2),
@@ -115,7 +109,6 @@ function ProductPage() {
   const [selectedId, setSelectedId] = useState(product.id);
   const [bonus, setBonus] = useState(true);
   const [shotIndex, setShotIndex] = useState(0);
-  const [reviewIndex, setReviewIndex] = useState(0);
   const countdown = useCountdown(2 * 60 * 60 + 45 * 60);
 
   const selected = useMemo(
@@ -239,13 +232,6 @@ function ProductPage() {
             {t(product.arabicName)}
           </h1>
 
-          <div className="mt-2.5 flex items-center gap-2 text-[14px]">
-            <Stars value={socialProof.rating} />
-            <span className="latin font-medium tabular-nums text-muted-foreground">
-              ({socialProof.reviewCount.toLocaleString("en-US")} {t("تقييم")})
-            </span>
-          </div>
-
           <ul className="mt-4 flex flex-wrap gap-2">
             {chips.map((c) => (
               <li
@@ -365,44 +351,11 @@ function ProductPage() {
             ))}
           </ul>
 
-          {/* Social proof */}
-          <p className="mt-5 flex items-center justify-center gap-2 text-center text-[14.5px] font-bold">
+          {/* Honest launch note — no fabricated review counts or testimonials */}
+          <p className="mt-5 flex items-center justify-center gap-2 text-center text-[13.5px] font-medium text-muted-foreground">
             <Check className="size-4 shrink-0 text-primary" strokeWidth={3} aria-hidden />
-            <span className="latin tabular-nums">{socialProof.customers}</span>
-            {t("شخص ينظّمون يومهم مع نظّم")}
+            {t("منتج جديد من نظّم — جرّبه بضمان استرجاع كامل")}
           </p>
-
-          {/* Review carousel */}
-          <div className="mt-4 rounded-xl border border-border bg-card p-5">
-            <div className="flex items-start gap-3">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary-soft text-[15px] font-bold text-primary">
-                {t(reviews[reviewIndex]?.name ?? "").slice(0, 1)}
-              </span>
-              <div className="min-w-0 flex-1">
-                <blockquote className="text-[14px] leading-[1.9] text-foreground">
-                  {t(reviews[reviewIndex]?.text ?? "")}
-                </blockquote>
-                <p className="mt-2 flex items-center gap-2 text-[13px] font-semibold">
-                  {t(reviews[reviewIndex]?.name ?? "")}
-                  <Stars value={reviews[reviewIndex]?.stars ?? 5} className="scale-90" />
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 flex justify-center gap-2">
-              {reviews.map((r, i) => (
-                <button
-                  key={r.name}
-                  type="button"
-                  aria-label={`${t("تقييم")} ${i + 1}`}
-                  onClick={() => setReviewIndex(i)}
-                  className={cn(
-                    "size-2 rounded-full transition-colors",
-                    i === reviewIndex ? "bg-foreground" : "bg-border-strong",
-                  )}
-                />
-              ))}
-            </div>
-          </div>
 
           <ul className="mt-5 space-y-2.5 text-[13.5px]">
             {trustPoints.map((tp) => (
