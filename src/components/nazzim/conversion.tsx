@@ -73,7 +73,7 @@ export function CheckoutSteps({ current }: { current: 1 | 2 | 3 }) {
             <span
               className={cn(
                 "grid size-6 place-items-center rounded-full text-[11px] font-bold",
-                done && "bg-primary/15 text-primary",
+                done && "bg-success/15 text-success",
                 active && "brand-gradient text-primary-foreground",
                 !done && !active && "border border-border text-muted-foreground",
               )}

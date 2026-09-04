@@ -53,7 +53,13 @@ function SuccessPage() {
     <div className="container-nz py-16 sm:py-24">
       <div className="mx-auto max-w-2xl">
         <div className="rounded-3xl border border-border bg-card p-8 text-center shadow-soft sm:p-12">
-          <span className="mx-auto grid size-14 place-items-center rounded-full brand-gradient text-primary-foreground">
+          <span
+            className={
+              confirmed
+                ? "mx-auto grid size-14 place-items-center rounded-full bg-success text-success-foreground"
+                : "mx-auto grid size-14 place-items-center rounded-full brand-gradient text-primary-foreground"
+            }
+          >
             {pending ? (
               <Loader2 className="size-7 animate-spin" aria-hidden />
             ) : (

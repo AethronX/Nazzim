@@ -78,7 +78,7 @@ function ProductsPage() {
                   {products.map((p) => (
                     <td key={p.id} className="px-4 py-3 text-center">
                       {row.values[p.id] ? (
-                        <Check className="mx-auto size-4 text-primary" strokeWidth={3} aria-hidden />
+                        <Check className="mx-auto size-4 text-success" strokeWidth={3} aria-hidden />
                       ) : (
                         <Minus className="mx-auto size-4 text-border-strong" aria-hidden />
                       )}

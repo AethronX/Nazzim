@@ -277,7 +277,7 @@ function ProductPage() {
                   <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-[15.5px] font-bold">{t(p.arabicName)}</span>
                     {off > 0 ? (
-                      <span className="latin rounded-md bg-destructive px-1.5 py-0.5 text-[10.5px] font-bold text-destructive-foreground">
+                      <span className="latin rounded-md bg-warning px-1.5 py-0.5 text-[10.5px] font-bold text-warning-foreground">
                         {off}% OFF
                       </span>
                     ) : null}
@@ -293,7 +293,7 @@ function ProductPage() {
                     ) : null}
                   </span>
                   {p.featured ? (
-                    <span className="absolute -top-3 left-4 rounded-full bg-destructive px-3 py-1 text-[10.5px] font-bold text-destructive-foreground shadow-lift">
+                    <span className="absolute -top-3 left-4 rounded-full bg-primary px-3 py-1 text-[10.5px] font-bold text-primary-foreground shadow-lift">
                       {t("الأكثر طلباً")}
                     </span>
                   ) : null}
