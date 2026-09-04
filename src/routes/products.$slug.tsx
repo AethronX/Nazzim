@@ -262,8 +262,9 @@ function ProductPage() {
                   className={cn(
                     "relative flex cursor-pointer items-center gap-3 rounded-xl border-2 bg-card px-4 py-4 transition-all",
                     isActive
-                      ? "border-foreground shadow-soft"
-                      : "border-border hover:border-border-strong",
+                      ? "border-foreground shadow-lift"
+                      : "border-border hover:border-border-strong hover:shadow-soft",
+                    p.featured && "border-primary/50",
                   )}
                 >
                   <input
@@ -293,7 +294,10 @@ function ProductPage() {
                     ) : null}
                   </span>
                   {p.featured ? (
-                    <span className="absolute -top-3 left-4 rounded-full bg-primary px-3 py-1 text-[10.5px] font-bold text-primary-foreground shadow-lift">
+                    <span
+                      className="absolute -top-3 right-6 whitespace-nowrap bg-primary px-3 pt-1 pb-1.5 text-[10.5px] font-bold text-primary-foreground shadow-lift"
+                      style={{ clipPath: "polygon(0 0, 100% 0, 100% 65%, 50% 100%, 0 65%)" }}
+                    >
                       {t("الأكثر طلباً")}
                     </span>
                   ) : null}
