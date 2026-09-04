@@ -37,6 +37,12 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-focus: var(--focus);
+  --color-focus-foreground: var(--focus-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-input: var(--input);
@@ -85,10 +91,10 @@
 :root {
   --radius: 0.875rem;
 
-  /* Nazzim light system: premium white canvas + electric blue→violet brand gradient */
-  --background: oklch(1 0 0);
+  /* Nazzim light system: premium off-white canvas + electric blue→violet brand gradient */
+  --background: oklch(0.98 0.005 286.3); /* off white #f8f8fc */
   --foreground: oklch(0.185 0.035 280); /* near-black indigo #0a0a1f */
-  --surface: oklch(0.976 0.008 288); /* #f4f4fb */
+  --surface: oklch(0.961 0.02 292.1); /* soft lavender #f2f0ff */
 
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.185 0.035 280);
@@ -111,6 +117,18 @@
 
   --destructive: oklch(0.58 0.2 25);
   --destructive-foreground: oklch(0.99 0 0);
+
+  /* secondary focus accent — focus cyan #19c3d1. Use sparingly: focus states, timers, data viz. */
+  --focus: oklch(0.747 0.124 204.2);
+  --focus-foreground: oklch(0.185 0.035 280);
+
+  /* functional success — achievement green #20b486. Completed tasks/habits only, never a dominant color. */
+  --success: oklch(0.686 0.136 165.7);
+  --success-foreground: oklch(0.99 0 0);
+
+  /* functional attention — warm amber #f4b740. Reminders/deadlines only, use very sparingly. */
+  --warning: oklch(0.816 0.147 80.2);
+  --warning-foreground: oklch(0.185 0.035 280);
 
   --border: oklch(0.918 0.01 288);
   --border-strong: oklch(0.86 0.016 288);
