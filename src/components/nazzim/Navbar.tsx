@@ -11,7 +11,12 @@ import { useT } from "@/lib/i18n";
 
 const nav = [
   { to: "/", label: "الرئيسية", exact: true },
-  { to: "/products", label: "متتبع العادات والمهام", exact: false },
+  {
+    to: "/products/$slug",
+    params: { slug: "habit-tracker" },
+    label: "متتبع العادات والمهام",
+    exact: false,
+  },
   { to: "/contact", label: "تواصل", exact: false },
 ] as const;
 
@@ -105,6 +110,7 @@ export function Navbar() {
                 <Link
                   key={item.to}
                   to={item.to}
+                  params={"params" in item ? item.params : undefined}
                   activeOptions={{ exact: item.exact }}
                   className="rounded-lg px-3.5 py-2 text-[14px] font-semibold text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
                   activeProps={{ className: "!bg-ink !text-ink-foreground" }}
