@@ -182,6 +182,11 @@ export const swatch = (key: keyof typeof SUBJECT_COLORS, scheme: Scheme) => {
 export const TAB_BAR_CONTENT = 59;
 
 export type Weight = 400 | 500 | 600 | 700 | 800;
+
+// Line-height scale by role, not by language. Arabic has deeper descenders than Latin, so a single ratio
+// clips at display sizes and over-breathes at number sizes. Encode once; use everywhere.
+export const LH = { display: 1.15, heading: 1.25, body: 1.5, micro: 1.4, number: 1 } as const;
+export type LhRole = keyof typeof LH;
 export type Face = 'body' | 'display' | 'grotesk';
 
 // React Native has no font fallback chains, so pick the face per language:

@@ -5,7 +5,7 @@ import { useChrome } from '../lib/layout';
 import { useNazzim } from '../lib/store';
 import { useTimerSecs } from '../lib/timer';
 import { LogoMark } from './Logo';
-import { Btn, FadeIn, T } from './ui';
+import { Btn, Clock, FadeIn, T } from './ui';
 
 const fill = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
 
@@ -144,7 +144,7 @@ export function MiniTimer({ onPress }: { onPress: () => void }) {
       >
         <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.onHeroAccent, boxShadow: `0 0 8px ${C.onHeroAccent}` }} />
         <T w={600} s={12.5} c={C.onHero} numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{timer.task || L.freeFocus}</T>
-        <T f="grotesk" w={700} s={14} c={C.onHero} style={{ fontVariant: ['tabular-nums'] }}>{clockText(secs)}</T>
+        <Clock secs={secs} size={14} color={C.onHero} />
       </Btn>
     </FadeIn>
   );

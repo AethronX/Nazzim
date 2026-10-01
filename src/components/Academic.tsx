@@ -3,7 +3,7 @@ import Svg, { Circle } from 'react-native-svg';
 import type { Subject, SubjectColor, SubjectIcon } from '../domain/types';
 import { useNazzim } from '../lib/store';
 import { swatch } from '../lib/theme';
-import { Btn, Icon, T } from './ui';
+import { Btn, Icon, Pct, T } from './ui';
 
 export const SUBJECT_ICONS: SubjectIcon[] = ['chart', 'function', 'atom', 'code', 'book', 'flask', 'globe', 'pen'];
 export const SUBJECT_COLOR_KEYS: SubjectColor[] = ['indigo', 'green', 'amber', 'sky', 'rose', 'teal', 'violet'];
@@ -37,7 +37,7 @@ export function ProgressRing({ value, size = 44, stroke = 4, color, label }: { v
       </Svg>
       {label !== '' && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
-          <T f="grotesk" w={700} s={size * 0.26} c={C.ink}>{label ?? `${v}%`}</T>
+          {label === undefined ? <Pct value={v} size={Math.round(size * 0.26)} /> : <T f="grotesk" w={700} s={size * 0.26} c={C.ink}>{label}</T>}
         </View>
       )}
     </View>

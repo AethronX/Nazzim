@@ -1,8 +1,8 @@
+import { Btn, Clock, Icon, PrimaryBtn, T } from '../components/ui';
 import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { clockText } from '../components/Overlays';
 import { router } from 'expo-router';
-import { Btn, Icon, PrimaryBtn, T } from '../components/ui';
 import { Page } from '../components/Page';
 import { useNazzim } from '../lib/store';
 import { useTimerSecs } from '../lib/timer';
@@ -81,7 +81,7 @@ export default function Focus() {
               />
             </Svg>
             <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-              <T f="grotesk" w={700} s={56} ls={-2.8} lh={1} style={{ fontVariant: ['tabular-nums'] }}>{clockText(secs)}</T>
+              <Clock secs={secs} size={56} />
               <T w={800} s={10.5} ls={1.6} c={accent.fg}>{phase}</T>
             </View>
           </View>

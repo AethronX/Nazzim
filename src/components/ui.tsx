@@ -20,7 +20,20 @@ export function T({ f = 'body', w = 500, s = 14, c, ls, lh, style, ...rest }: TP
       maxFontSizeMultiplier={1.3}
       {...rest}
       style={[
-        { fontFamily: font(f, w, ar), fontSize: s, color: c ?? C.ink, letterSpacing: ls, lineHeight: lh ? s * lh : undefined, writingDirection: ar && f !== 'grotesk' ? 'rtl' : 'ltr', textAlign: ar ? 'right' : undefined },
+        {
+          fontFamily: font(f, w, ar),
+          fontSize: s,
+          color: c ?? C.ink,
+          letterSpacing: ls,
+          lineHeight: lh ? s * lh : undefined,
+          writingDirection: ar && f !== 'grotesk' ? 'rtl' : 'ltr',
+          textAlign: ar ? 'right' : undefined,
+          // Numbers (grotesk) are tabular everywhere: timer, percentages, days-left stop drifting.
+          fontVariant: f === 'grotesk' ? ['tabular-nums'] : undefined,
+          // Android: remove the extra vertical padding so Arabic/Latin align like iOS.
+          includeFontPadding: false,
+          textAlignVertical: 'center',
+        },
         style,
       ]}
     />
@@ -227,6 +240,32 @@ export function SectionHeader({ title, meta, action }: { title: string; meta?: s
           <T w={700} s={13} c={accent.fg}>{action.label}</T>
         </Btn>
       )}
+    </View>
+  );
+}
+
+// A percentage that reserves its slot (0–100 + %) so it never jumps a pixel as the number updates.
+export function Pct({ value, size = 20, color, weight = 700 }: { value: number; size?: number; color?: string; weight?: Weight }) {
+  const n = Math.max(0, Math.min(100, Math.round(value)));
+  return (
+    <View style={{ minWidth: size * 2.2, alignItems: 'flex-end' }} accessibilityLabel={`${n}%`}>
+      <T f="grotesk" w={weight} s={size} c={color} ls={size >= 20 ? -0.6 : 0} lh={1}>{`${n}%`}</T>
+    </View>
+  );
+}
+
+// A MM:SS clock whose colon never nudges the digits. Each digit pair is tabular; the colon has its own slot.
+export function Clock({ secs, size = 56, color, weight = 700 }: { secs: number; size?: number; color?: string; weight?: Weight }) {
+  const safe = Math.max(0, Math.floor(secs));
+  const mm = String(Math.floor(safe / 60)).padStart(2, '0');
+  const ss = String(safe % 60).padStart(2, '0');
+  const digit = { fontFamily: font('grotesk', weight, false), fontSize: size, lineHeight: size, color, fontVariant: ['tabular-nums' as const], letterSpacing: size >= 40 ? -2 : -0.4 };
+  const label = `${mm}:${ss}`;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }} accessibilityRole="timer" accessibilityLabel={label}>
+      <Text style={digit}>{mm}</Text>
+      <Text style={[digit, { width: size * 0.33, textAlign: 'center' }]}>:</Text>
+      <Text style={digit}>{ss}</Text>
     </View>
   );
 }
