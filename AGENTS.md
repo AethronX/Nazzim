@@ -49,6 +49,10 @@ Three scales live in `src/lib/theme.ts` and are enforced by `scripts/test-design
 - **Radius** — `RADIUS` (xs 6, sm 12, md 16, lg 20, xl 24, full 99). Circles (radius = half the box) are the
   only exception.
 - **Space** — a 4pt grid, `SPACE`.
+- **Colour** — every colour is generated in OKLCH at shared tiers; see `docs/COLOR_SYSTEM.md`. Never paste a
+  stock palette value in. `scripts/test-palette.js` fails the build if the tiers drift (status colours must
+  share a lightness band, subject hues stay ≥25° apart, the brand ramp stays monotonic, #285CE7 and #112357
+  are never regenerated).
 
 Counts shown to a student go through `counted()` / `unitOf()` in `src/lib/copy.ts`: Arabic needs four forms
 for a counted noun, and getting it wrong is what makes an app read as translated. See `docs/DESIGN_SYSTEM.md`.

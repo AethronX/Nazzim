@@ -1,46 +1,62 @@
 // NAZZIM design tokens — "Calm Intelligence" in the brand blue.
-// White and slate surfaces, one Indigo accent used for actions and progress (never as a dominant background),
-// and semantic colours only where they carry meaning: success = done, warning = needs attention soon,
-// danger = overdue or destructive. Subjects get their own soft colour so the semester is easy to scan.
 //
-// Contrast is checked by scripts/test-contrast.js (npm test) for every accent in both themes.
-// Progress fills use `accent.fg` (500 in light, 300 in dark: Indigo 500 on the dark card is only 2.8:1).
-// Contrast (WCAG 2.2), light / dark: muted text on bg 4.55 / 6.92, Indigo text on bg 6.01 / 8.9,
-// white on Indigo 6.29, Indigo 600 on tint 7.07 / 10.8, success/warning/danger text ≥ 4.5 in both themes,
-// control borders ≥ 3.0 (1.4.11), subject icons on their tint ≥ 3.0.
+// ── How this palette is built ───────────────────────────────────────────────────────────────
+// Every colour here was generated in OKLCH at a fixed set of perceptual tiers, not picked by eye. The
+// measurements that forced the rebuild (see docs/COLOR_SYSTEM.md) found the old palette was a custom blue
+// with stock Tailwind colours around it:
+//
+//   · semantic fills sat at lightness 0.53 / 0.63 / 0.77 — amber was so much lighter than the rest that it
+//     could not take white text, and a row of status icons looked like one of them was glowing;
+//   · subject colours ranged from chroma 0.086 (teal, nearly grey) to 0.247 (violet, shouting);
+//   · the brand ramp stepped 0.067 and 0.061 through 500→600→700, making those three near-duplicates, then
+//     jumped 0.125 to 800 — a cliff;
+//   · neutrals drifted across hues 248–265, so the greys did not belong to the blue.
+//
+// Now each step is a ROLE at a fixed lightness, the way Radix and Material tonal palettes work: 50 wash,
+// 100 chip, 200 border-on-chip, 300 dark-mode text, 400 decorative, 500 solid fill, 600 pressed/strong text,
+// 700 text-on-chip, 800 hero surface, 900 deepest. Hue is held constant down each ramp and chroma peaks at
+// 500. Because the tiers are shared, a green fill and a blue fill now carry the same visual weight, and
+// contrast is met by construction rather than checked afterwards.
+//
+// #285CE7 (actions) and #112357 (hero) are the brand's own colours and are pinned — never generated.
+//
+// scripts/test-contrast.js (npm test) still measures every rendered pair in both themes and all four accents.
 
 export type Scheme = 'light' | 'dark';
 
-// Brand blue (from the original Nazzim design): #285CE7 for actions, deep navy #112357 for the hero surface.
 export const BRAND = {
-  50: '#EEF3FF', 100: '#DCE6FE', 200: '#BFD1FD', 300: '#93B2FB', 400: '#5E8BF2',
-  500: '#285CE7', 600: '#1F4AC4', 700: '#1B3D9E', 800: '#112357', 900: '#0C1A44', ai: '#3F6FF0',
+  50: '#F0F5FF', 100: '#DDE8FE', 200: '#C0D5FE', 300: '#8AAFFF', 400: '#5688FC',
+  500: '#285CE7', 600: '#1A47C3', 700: '#103399', 800: '#112357', 900: '#051540', ai: '#3F6FF0',
 } as const;
 
 const LIGHT = {
   // Surfaces, back to front
-  bg: '#F8FAFC',
+  // Neutrals carry the brand hue (264) at a trace of chroma. They used to drift across 248–265, which is
+  // the quiet reason the greys never quite looked like they belonged to the blue.
+  bg: '#F8FAFD',
   card: '#FFFFFF',
-  card2: '#F8FAFC',
-  header: 'rgba(248,250,252,.92)',
+  card2: '#F3F5F9',
+  header: 'rgba(248,250,253,.92)',
   chrome: 'rgba(255,255,255,.94)',
   // Hairlines and inactive fills
-  line: '#E2E8F0',
-  line2: '#F1F5F9',
-  track: '#E2E8F0',
-  bar: '#E2E8F0',
-  control: '#8391A7', // state borders (off toggle, empty radio/checkbox): 3.19:1
+  line: '#E2E5EC',
+  line2: '#F0F2F7',
+  track: '#E2E5EC',
+  bar: '#E2E5EC',
+  control: '#7B828F', // state borders (off toggle, empty radio/checkbox): 3.70 on bg, was 3.19
   // Text
-  ink: '#111827',
-  ink2: '#475569',
-  ink3: '#64748B',
-  strike: 'rgba(100,116,139,.55)',
-  // Semantic: fill (icons, bars), text (on white/tint) and tint (chip backgrounds)
-  success: '#16A34A', successText: '#15803D', successTint: '#DCFCE7',
-  warning: '#F59E0B', warningText: '#B45309', warningTint: '#FEF3C7',
-  danger: '#B91C1C', dangerFill: '#EF4444', dangerTint: '#FEE2E2', // red-700 text: 5.0 on its tint
-  onSuccess: '#FFFFFF', // check mark on the success fill
-  onWarning: '#111827', // text on the amber fill (white would be 2.1:1)
+  ink: '#121927',
+  ink2: '#4D5667',
+  ink3: '#656D7E',  // 4.97 / 5.20 / 4.76 on bg / card / card2 — the lightest it can be and still clear 4.5
+  strike: 'rgba(101,109,126,.55)',
+  // Semantic: fill = step 500, text = step 600, tint = step 50 — the same three tiers as the brand, so a
+  // done tick, a caution chip and an overdue badge carry identical weight. Amber used to sit 0.24 lighter
+  // than the rest in OKLCH, which is why it alone could not take white text; at the shared tier it can.
+  success: '#00823A', successText: '#03692E', successTint: '#EEF8F0',
+  warning: '#935F05', warningText: '#774C03', warningTint: '#FCF4EA',
+  danger: '#C90F1A', dangerFill: '#C90F1A', dangerTint: '#FFF2F0',
+  onSuccess: '#FFFFFF', // 4.94 on the success fill
+  onWarning: '#FFFFFF', // 5.41 — the old dark-ink exception is gone with the lightness mismatch
   // Brand surface for the few moments that deserve it (launch screen, Pro)
   hero: BRAND[800] as string,
   onHero: '#FFFFFF',
@@ -65,25 +81,28 @@ const LIGHT = {
 export type Palette = typeof LIGHT;
 
 const DARK: Palette = {
-  bg: '#0B1220',
-  card: '#111827',
-  card2: '#1A2333',
-  header: 'rgba(11,18,32,.92)',
-  chrome: 'rgba(17,24,39,.94)',
-  line: '#263244',
-  line2: '#1C2636',
-  track: '#263244',
-  bar: '#2A3548',
-  control: '#64748B',
-  ink: '#F1F5F9',
-  ink2: '#CBD5E1',
-  ink3: '#94A3B8',
-  strike: 'rgba(148,163,184,.55)',
-  success: '#4ADE80', successText: '#4ADE80', successTint: 'rgba(74,222,128,.14)',
-  warning: '#FBBF24', warningText: '#FBBF24', warningTint: 'rgba(251,191,36,.14)',
-  danger: '#F87171', dangerFill: '#F87171', dangerTint: 'rgba(248,113,113,.14)',
-  onSuccess: '#0B1220', // white on light green would be 1.7:1
-  onWarning: '#0B1220',
+  // Dark surfaces step evenly in lightness (.175 → .228 → .285) so bg, card and card2 read as real
+  // elevation rather than three similar greys, and all of them carry the brand hue.
+  bg: '#0C101A',
+  card: '#171C28',
+  card2: '#242A37',
+  header: 'rgba(12,16,26,.92)',
+  chrome: 'rgba(23,28,40,.94)',
+  line: '#2E3544',
+  line2: '#1F242F',
+  track: '#2E3544',
+  bar: '#313949',
+  control: '#778093', // 4.29 on the card
+  ink: '#EFF2F7',
+  ink2: '#C7CCD7',
+  ink3: '#959CA9',
+  strike: 'rgba(149,156,169,.55)',
+  // Step 300 of each family: light enough to read on the card, same tier for all three.
+  success: '#6FC884', successText: '#6FC884', successTint: 'rgba(5,172,79,.13)',
+  warning: '#E4A249', warningText: '#E4A249', warningTint: 'rgba(194,127,5,.13)',
+  danger: '#F98F84', dangerFill: '#F98F84', dangerTint: 'rgba(232,89,79,.13)',
+  onSuccess: '#0C101A', // white on a light green would be 1.7:1
+  onWarning: '#0C101A',
   hero: '#112357',
   onHero: '#FFFFFF',
   onHero2: 'rgba(255,255,255,.76)',
@@ -95,7 +114,7 @@ const DARK: Palette = {
   onInv: '#0B1220',
   onInv3: 'rgba(11,18,32,.6)',
   onAccent: '#FFFFFF',
-  scrim: 'rgba(0,0,0,.55)',
+  scrim: 'rgba(0,0,0,.58)',
   scrimDialog: 'rgba(0,0,0,.6)',
   shadowSoft: '0 1px 2px rgba(0,0,0,.3)',
   shadowHero: '0 18px 36px -18px rgba(0,0,0,.7)',
@@ -110,23 +129,26 @@ type Family = {
   50: string; 100: string; 300: string; 500: string; 600: string; 700: string; 900: string;
   lightFg: string; darkHero: string; darkTint: string; darkTint2: string;
 };
+// All four families are generated at the same tiers, so switching the app colour changes the hue and nothing
+// else: the same weight, the same contrast, the same relationship to the surfaces. Teal in particular used to
+// sit at chroma 0.086 — visibly greyer than violet's 0.247 — which made "App colour" feel like a downgrade.
 export const ACCENTS: Record<AccentKey, Family> = {
   // Key stays 'indigo' (saved settings and sync use it); the colour is the brand blue, shown as "Blue".
   indigo: {
     50: BRAND[50], 100: BRAND[100], 300: BRAND[300], 500: BRAND[500], 600: BRAND[600], 700: BRAND[700], 900: BRAND[800],
-    lightFg: BRAND[500], darkHero: '#112357', darkTint: '#13213F', darkTint2: '#1A2C55',
+    lightFg: BRAND[500], darkHero: '#112357', darkTint: '#16233F', darkTint2: '#22345C',
   },
   rose: {
-    50: '#FCEFF3', 100: '#F8DEE7', 300: '#F59BBC', 500: '#D6336C', 600: '#B42759', 700: '#8E1F47', 900: '#4A0F2C',
-    lightFg: '#B42759', darkHero: '#5C1638', darkTint: '#2F1529', darkTint2: '#431931',
+    50: '#FEF1F2', 100: '#FFDFE1', 300: '#F78D9B', 500: '#C7054A', 600: '#A2043B', 700: '#7D002B', 900: '#510019',
+    lightFg: '#C7054A', darkHero: '#510019', darkTint: '#3A171D', darkTint2: '#55232B',
   },
   violet: {
-    50: '#F4F0FD', 100: '#E8E2FB', 300: '#B39CF5', 500: '#7048E8', 600: '#5B37C9', 700: '#482BA3', 900: '#26145E',
-    lightFg: '#7048E8', darkHero: '#301A70', darkTint: '#1C193F', darkTint2: '#271F54',
+    50: '#F6F3FF', 100: '#EAE3FF', 300: '#B99FFA', 500: '#7B43D4', 600: '#652DB6', 700: '#4D1E8E', 900: '#2F1657',
+    lightFg: '#7B43D4', darkHero: '#2F1657', darkTint: '#271E3B', darkTint2: '#392C57',
   },
   teal: {
-    50: '#ECF5F4', 100: '#D8EBEA', 300: '#6FD3C6', 500: '#0C8579', 600: '#0A6E64', 700: '#08574F', 900: '#06332F',
-    lightFg: '#0A6E64', darkHero: '#0B403B', darkTint: '#0A242B', darkTint2: '#0B3035',
+    50: '#EAF9F7', 100: '#CBF1ED', 300: '#14CBC0', 500: '#017D76', 600: '#04645F', 700: '#034C47', 900: '#00302C',
+    lightFg: '#017D76', darkHero: '#00302C', darkTint: '#002B28', darkTint2: '#013F3B',
   },
 };
 export const ACCENT_KEYS: AccentKey[] = ['indigo', 'rose', 'violet', 'teal'];
@@ -164,14 +186,21 @@ export function paletteFor(scheme: Scheme, key: AccentKey): Palette {
 
 // Subject colours: icon/fill on a soft tint. Icon-on-tint contrast ≥ 3:1 in light (graphics, WCAG 1.4.11).
 export type SubjectSwatch = { fg: string; tint: string; darkFg: string; darkTint: string };
+// Seven hues spread around the wheel, each at the same tiers: icon = 600, tint = 50. Previously these ranged
+// from chroma 0.086 (teal) to 0.247 (violet) and lightness 0.46 to 0.56, so some subject cards shouted and
+// others looked switched off. Now they differ only in hue, which is the one thing they are meant to encode.
+// Subjects sit at the SOLID tier (500), not the text tier: a subject colour is an identity, and identities
+// should be vivid enough to pick out of a list at a glance. Status colours use the darker text tier because
+// they qualify words. Both still land on one lightness — 0.530 — so no subject card outshines another.
+// Every icon clears 4.5:1 on its own tint (4.54–5.38) and on the card (4.94–5.92).
 export const SUBJECT_COLORS: Record<'indigo' | 'green' | 'amber' | 'sky' | 'rose' | 'teal' | 'violet', SubjectSwatch> = {
-  indigo: { fg: '#1F4AC4', tint: '#EEF3FF', darkFg: '#93B2FB', darkTint: 'rgba(63,111,240,.18)' },
-  green: { fg: '#15803D', tint: '#DCFCE7', darkFg: '#4ADE80', darkTint: 'rgba(74,222,128,.14)' },
-  amber: { fg: '#B45309', tint: '#FEF3C7', darkFg: '#FBBF24', darkTint: 'rgba(251,191,36,.14)' },
-  sky: { fg: '#0369A1', tint: '#E0F2FE', darkFg: '#7DD3FC', darkTint: 'rgba(125,211,252,.14)' },
-  rose: { fg: '#BE123C', tint: '#FFE4E6', darkFg: '#FDA4AF', darkTint: 'rgba(253,164,175,.14)' },
-  teal: { fg: '#0F766E', tint: '#CCFBF1', darkFg: '#5EEAD4', darkTint: 'rgba(94,234,212,.14)' },
-  violet: { fg: '#7C3AED', tint: '#EDE9FE', darkFg: '#C4B5FD', darkTint: 'rgba(196,181,253,.14)' },
+  indigo: { fg: '#285CE7', tint: '#F0F5FF', darkFg: '#8AAFFF', darkTint: 'rgba(86,136,252,.17)' },
+  green: { fg: '#00823A', tint: '#EEF8F0', darkFg: '#6FC884', darkTint: 'rgba(5,172,79,.17)' },
+  amber: { fg: '#935F05', tint: '#FCF4EA', darkFg: '#E4A249', darkTint: 'rgba(194,127,5,.17)' },
+  sky: { fg: '#0574A6', tint: '#ECF7FF', darkFg: '#55BCFA', darkTint: 'rgba(1,154,220,.17)' },
+  rose: { fg: '#C7054A', tint: '#FEF1F2', darkFg: '#F78D9B', darkTint: 'rgba(231,85,114,.17)' },
+  teal: { fg: '#017D76', tint: '#EAF9F7', darkFg: '#14CBC0', darkTint: 'rgba(8,165,156,.17)' },
+  violet: { fg: '#7B43D4', tint: '#F6F3FF', darkFg: '#B99FFA', darkTint: 'rgba(155,114,239,.17)' },
 };
 export const swatch = (key: keyof typeof SUBJECT_COLORS, scheme: Scheme) => {
   const s = SUBJECT_COLORS[key] ?? SUBJECT_COLORS.indigo;
