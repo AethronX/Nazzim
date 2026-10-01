@@ -1,0 +1,49 @@
+import { router } from 'expo-router';
+import { ScrollView, View } from 'react-native';
+import { Avatar, Row, Section } from '../../components/Page';
+import { ExamCard } from '../../components/Study';
+import { Btn, Eyebrow, Icon, T } from '../../components/ui';
+import { useChrome } from '../../lib/layout';
+import { useNazzim } from '../../lib/store';
+
+// MORE: who you are, what's coming up, and everything that isn't a daily action.
+export default function More() {
+  const { C, L, ar, me, tier, exams, today, account, syncState } = useNazzim();
+  const { headerTop, scrollBottom } = useChrome();
+  const upcoming = exams.filter(e => e.date > today).slice(0, 3);
+
+  return (
+    <View style={{ flex: 1, direction: ar ? 'rtl' : 'ltr' }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headerTop, paddingHorizontal: 18, paddingBottom: scrollBottom, gap: 12 }}>
+        <T f="display" w={700} s={26} ls={ar ? 0 : -0.8} accessibilityRole="header" style={{ marginBottom: 4 }}>{L.more}</T>
+
+        <Btn pressScale={0.99} onPress={() => router.push('/profile')}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.line }}>
+          <Avatar name={me.name} size={48} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <T f="display" w={700} s={17} numberOfLines={1}>{me.name || L.noName}</T>
+            <T w={600} s={12} c={C.ink3} numberOfLines={1}>{[me.major, L.tiers[tier].name].filter(Boolean).join(' · ')}</T>
+          </View>
+          <Icon name="chevron" size={15} color={C.ink3} stroke={2.3} flip={ar} />
+        </Btn>
+
+        {!!upcoming.length && (
+          <View style={{ gap: 8, marginTop: 8 }}>
+            <View style={{ paddingHorizontal: 4 }}><Eyebrow>{L.upcomingExams}</Eyebrow></View>
+            {upcoming.map(e => <ExamCard key={e.id} exam={e} />)}
+          </View>
+        )}
+
+        <View style={{ height: 8 }} />
+        <Section>
+          <Row icon="user" title={L.acTitle} sub={account ? (syncState === 'error' ? L.acSyncError : account.email) : L.acSub} onPress={() => router.push('/account')} />
+          <Row icon="chart" title={L.progressMenu} onPress={() => router.push('/progress')} />
+          <Row icon="reset" title={L.rescueMenu} onPress={() => router.push('/rescue')} />
+          <Row icon="gear" title={L.settings} onPress={() => router.push('/settings')} />
+          <Row icon="crown" title={L.plans} onPress={() => router.push('/subscription')} />
+          <Row icon="help" title={L.support} onPress={() => router.push('/settings')} last />
+        </Section>
+      </ScrollView>
+    </View>
+  );
+}
