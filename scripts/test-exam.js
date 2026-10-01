@@ -39,3 +39,27 @@ assert.equal(r.status, 'ready'); assert.equal(r.phase, 'final'); assert(r.topics
 // Past exam.
 assert.equal(E.examReport(exam, plan, X.addDays(exam.date, 1)).status, 'over');
 console.log('all exam report checks passed');
+
+// ── Status calibration must track the readiness formula, not a hard-coded number ──
+// Readiness was rewritten to be hard to inflate, which pushed every honest score down. If `expected` had
+// stayed a fixed fraction, a student following the plan perfectly would be marked "behind" forever.
+{
+  const day = '2026-10-05';
+  const ex = { id: 'cal', subject: 'Stats', date: '2026-10-12', chapters: ['1', '2', '3', '4'] };
+  const plan = X.planExam(ex, '2026-10-01');
+  const upTo = (focus) => plan.map(s => (s.date < day ? { ...s, done: true, doneAt: s.date, focusedMin: focus(s) } : s));
+
+  const diligent = E.examReport(ex, upTo(s => s.minutes), day);
+  assert.equal(diligent.status, 'onTrack', `following the plan with real focus must read onTrack, got ${diligent.status}`);
+  assert.ok(diligent.readiness >= diligent.expected, 'the model student must not fall short of the bar they define');
+
+  const tapper = E.examReport(ex, upTo(() => 0), day);
+  assert.equal(tapper.status, 'behind', `ticking without studying must read behind, got ${tapper.status}`);
+  assert.ok(tapper.readiness < diligent.readiness, 'tapping must score below real work');
+
+  const absent = E.examReport(ex, plan, day);
+  assert.equal(absent.status, 'behind');
+  assert.equal(absent.readiness, 0);
+  console.log('calibration:', 'diligent', diligent.readiness + '%', '· tapper', tapper.readiness + '%', '· bar', diligent.expected + '%');
+}
+console.log('all exam calibration checks passed');

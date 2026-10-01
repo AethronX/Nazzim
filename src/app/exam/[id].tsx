@@ -6,6 +6,7 @@ import { Page, Section } from '../../components/Page';
 import { SessionRow } from '../../components/Study';
 import { Btn, Icon, PrimaryBtn, T, type IconName } from '../../components/ui';
 import { examReport, type TopicState } from '../../engine/exam';
+import { recallStats } from '../../engine/recall';
 import { hours, useAcademic } from '../../lib/academic';
 import { fmtDate, relDay } from '../../lib/format';
 import { useNazzim } from '../../lib/store';
@@ -14,7 +15,7 @@ import { useNazzim } from '../../lib/store';
 // and one primary action: the next session. The full day-by-day plan sits below.
 export default function ExamDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { C, L, ar, accent, exams, study, today, deleteExam, startFocusOn } = useNazzim();
+  const { C, L, ar, accent, exams, study, cards, today, deleteExam, startFocusOn } = useNazzim();
   const { chapterTitle, subjectById } = useAcademic();
   const [confirm, setConfirm] = useState(false);
   const [showDone, setShowDone] = useState(false);
@@ -22,6 +23,7 @@ export default function ExamDetail() {
   if (!exam) return <Page title={L.exams}><T c={C.ink3}>{L.exNone}</T></Page>;
 
   const r = examReport(exam, study, today);
+  const dueN = recallStats(cards, exam.id, today).due;
   const subject = exam.subjectId ? subjectById.get(exam.subjectId) : undefined;
   const mine = study.filter(s => s.examId === exam.id);
   const dates = [...new Set(mine.filter(s => showDone || !s.done || s.date >= today).map(s => s.date))].sort();
@@ -50,8 +52,16 @@ export default function ExamDetail() {
             </View>
             <T w={600} s={12.5} c={C.ink3}>{L.xReadiness}</T>
             <T w={600} s={12} c={C.ink3}>{L.xPhase[r.phase]}</T>
+            {/* The number is auditable: one tap shows the evidence it rests on. */}
+            <Btn label={L.rdWhy} onPress={() => router.push(`/readiness/${exam.id}`)} pressScale={0.97}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', marginTop: 2 }}>
+              <Icon name="help" size={13} color={accent.fg} stroke={2.2} />
+              <T w={700} s={12} c={accent.fg}>{L.rdWhy}</T>
+            </Btn>
           </View>
-          <ProgressRing value={r.readiness} size={88} stroke={8} />
+          <Btn label={L.rdWhy} onPress={() => router.push(`/readiness/${exam.id}`)} pressScale={0.96}>
+            <ProgressRing value={r.readiness} size={88} stroke={8} />
+          </Btn>
         </View>
         <View style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: 14, backgroundColor: tone.bg, alignItems: 'flex-start' }}>
           <Icon name={tone.icon} size={16} color={tone.fg} stroke={2.4} />
@@ -75,6 +85,14 @@ export default function ExamDetail() {
       )}
       {!!r.weakest && r.weakest.state === 'weak' && (
         <T w={600} s={12.5} c={C.warningText} style={{ textAlign: 'center' }}>{L.xFocusOn.replace('{t}', r.weakest.title)}</T>
+      )}
+      {/* Self-test sits beside the study action, never behind it: recall is what the exam actually asks for. */}
+      {r.daysLeft >= 0 && (
+        <Btn onPress={() => router.push(`/recall/${exam.id}`)} pressScale={0.98}
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 15, borderRadius: 16, borderWidth: 1, borderColor: C.line, backgroundColor: C.card }}>
+          <Icon name="sparkle" size={17} color={accent.fg} stroke={2.3} />
+          <T w={700} s={14.5} c={accent.fg}>{dueN ? `${L.rcOpen} · ${L.rcDue.replace('{n}', String(dueN))}` : L.rcOpen}</T>
+        </Btn>
       )}
 
       {/* Topics */}

@@ -10,7 +10,7 @@ const ORDER: Tier[] = ['free', 'plus', 'pro'];
 // Free is a plain card. App Store Guideline 3.1.2: price, period, trial, auto-renewal and how to cancel are
 // shown before purchase, with Restore / Terms / Privacy. Purchases are not wired to StoreKit yet.
 export default function Subscription() {
-  const { C, L, ar, accent, tier, plan: billing, set, subscribe } = useNazzim();
+  const { C, L, ar, accent, tier, plan: billing, set, subscribe, restorePurchase, purchasesAvailable } = useNazzim();
   const yearly = billing === 'year';
 
   // Prices come from the plan config (remote-overridable), never from copy.
@@ -38,6 +38,13 @@ export default function Subscription() {
           );
         })}
       </View>
+
+      {!purchasesAvailable && (
+        <View style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 16, backgroundColor: C.card2, alignItems: 'flex-start' }}>
+          <Icon name="shield" size={16} color={C.ink2} stroke={2.2} />
+          <T w={600} s={12.5} lh={1.5} c={C.ink2} style={{ flex: 1 }}>{L.payOff}</T>
+        </View>
+      )}
 
       {ORDER.map(k => {
         const t = L.tiers[k];
@@ -88,7 +95,7 @@ export default function Subscription() {
 
             <Btn
               disabled={current}
-              onPress={() => subscribe(k)}
+              onPress={() => { void subscribe(k, billing); }}
               pressedBg={pro ? accent.wash : plus ? accent.strong : undefined}
               accessibilityState={{ disabled: current, selected: current }}
               style={{
@@ -111,7 +118,9 @@ export default function Subscription() {
           </Btn>
         ))}
       </View>
+      <Btn onPress={() => { void restorePurchase(); }} pressScale={0.98} style={{ alignItems: 'center', paddingVertical: 14 }}>
+        <T w={700} s={13.5} c={C.ink3}>{L.payRestore}</T>
+      </Btn>
     </Page>
   );
 }
-

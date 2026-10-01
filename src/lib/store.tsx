@@ -7,8 +7,10 @@ import type { PlanProposal } from '../ai/planner';
 import { canAddExam } from '../config/plans';
 import { recommendNextAction } from '../engine/academic';
 import { reminderTime, studyStreak, type StudyTime } from '../engine/habits';
+import { newCard, review as reviewCard, type Card, type Grade } from '../engine/recall';
 import { DEFAULT_DAILY_MIN, type RescuePlan } from '../engine/rescue';
 import { track } from '../services/analytics';
+import { entitlementFromServer, purchase, purchasesAvailable, restore, type Period } from '../services/billing';
 import * as Sync from '../services/sync';
 import { COPY, type Copy, type Lang } from './copy';
 import { addDays, daysBetween, newId, planExam, rate, readiness, rollForward, todayKey, type Confidence, type StudySession } from './exams';
@@ -17,7 +19,7 @@ import { cancelFocusEnd, DEFAULT_REMINDERS, requestPermission, scheduleFocusEnd,
 import { makeAccent, normalizeAccent, paletteFor, type Accent, type AccentKey, type Palette, type Scheme } from './theme';
 
 const STORAGE_KEY = 'nazzim.v2';
-const SCHEMA = 3;
+const SCHEMA = 4;
 
 type Persisted = {
   schema: number;
@@ -31,6 +33,7 @@ type Persisted = {
   haptics: boolean; rewards: boolean; aiTips: boolean; accentKey: AccentKey;
   // Academic context. `study` is the revision plan; `sessions` above counts finished focus sessions.
   subjects: Subject[]; tasks: Task[]; exams: Exam[]; study: StudySession[]; examsSeeded: boolean;
+  cards: Card[]; // retrieval-practice cards the student wrote; the evidence behind the recall part of readiness
   dailyMinutes: number; // usual study capacity per day; Rescue Mode plans within it
   focusLog: Record<string, number>; // focused minutes per day, for consistency and weekly study time
   onboarded: boolean;
@@ -58,7 +61,7 @@ const deviceLang = (): Lang => {
 
 const INITIAL: Persisted = { schema: SCHEMA, lang: deviceLang(), ticks: {}, xp: 0, preset: 25, plan: 'year', sessions: 0, reviewAsked: false, appearance: 'system', reminders: DEFAULT_REMINDERS,
   profile: { name: '', uni: '', major: '', year: '' }, tier: 'free', haptics: true, rewards: true, aiTips: true, accentKey: 'indigo',
-  subjects: [], tasks: [], exams: [], study: [], examsSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false, studyTime: 'afternoon', recapSeen: null, checklistHidden: false };
+  subjects: [], tasks: [], exams: [], study: [], cards: [], examsSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false, studyTime: 'afternoon', recapSeen: null, checklistHidden: false };
 
 // What the focus timer is working on, so a finished session can update that item's progress.
 export type FocusTarget = { kind: 'session' | 'task'; id: string } | null;
@@ -93,6 +96,7 @@ type Store = Persisted & {
   toggleTick: (key: string, on: boolean) => void;
   setDay: (key: string) => void; setSound: (n: number) => void; toggleLock: () => void;
   addExam: (e: Omit<Exam, 'id'>, source?: 'manual' | 'planner') => string; deleteExam: (id: string) => void; rateSession: (id: string, c: Confidence) => void;
+  addCard: (examId: string, chapter: number, q: string, a: string) => string; deleteCard: (id: string) => void; gradeCard: (id: string, g: Grade) => void;
   addSubject: (s: Omit<Subject, 'id'>) => string; updateSubject: (id: string, patch: Partial<Subject>) => void; deleteSubject: (id: string) => void;
   addTask: (t: Omit<Task, 'id' | 'done'>) => string; toggleTask: (id: string) => void; deleteTask: (id: string) => void;
   setPreset: (m: number) => void;
@@ -101,7 +105,10 @@ type Store = Persisted & {
   toggleTimer: () => void; resetTimer: () => void; finishNow: () => void;
   applyPlan: (p: PlanProposal) => void;
   setDel: (on: boolean) => void; confirmDel: () => Promise<void>;
-  subscribe: (tier: Tier) => void; saveProfile: (profile: Profile) => void;
+  purchasesAvailable: boolean;
+  subscribe: (tier: Tier, period?: Period) => Promise<string>;
+  restorePurchase: () => Promise<string>;
+  saveProfile: (profile: Profile) => void;
   remDenied: boolean; setReminders: (patch: Partial<ReminderSettings>) => void;
 };
 
@@ -127,7 +134,7 @@ function migrate(p: Persisted): Persisted {
     }
     return { ...e, subjectId: subj.id };
   });
-  return { ...p, schema: SCHEMA, subjects, exams, tasks: p.tasks ?? [], accentKey: normalizeAccent(p.accentKey) };
+  return { ...p, schema: SCHEMA, subjects, exams, tasks: p.tasks ?? [], cards: p.cards ?? [], accentKey: normalizeAccent(p.accentKey) };
 }
 
 // "Explore with a sample semester" on the welcome screen: three subjects, one exam with its plan, three tasks.
@@ -208,18 +215,21 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
     const s0 = pRef.current;
     try {
       const pulled = await Sync.sync({
-        local: { subjects: s0.subjects, tasks: s0.tasks, exams: s0.exams, study: s0.study, focusLog: s0.focusLog },
+        local: { subjects: s0.subjects, tasks: s0.tasks, exams: s0.exams, study: s0.study, cards: s0.cards, focusLog: s0.focusLog },
         profile: { ...s0.profile, lang: s0.lang, dailyMinutes: s0.dailyMinutes },
       });
       setP(s => {
-        const r = Sync.mergePulled({ subjects: s.subjects, tasks: s.tasks, exams: s.exams, study: s.study, focusLog: s.focusLog }, pulled);
+        const r = Sync.mergePulled({ subjects: s.subjects, tasks: s.tasks, exams: s.exams, study: s.study, cards: s.cards, focusLog: s.focusLog }, pulled);
         let next = r.changed ? { ...s, ...r.local, onboarded: true } : s;
         const sp = pulled.profile;
         if (sp) {
           // A new device fills empty profile fields from the account; the plan tier is decided by the server.
           const profile = { name: s.profile.name || sp.name, uni: s.profile.uni || sp.university, major: s.profile.major || sp.major, year: s.profile.year || sp.year };
           if (JSON.stringify(profile) !== JSON.stringify(s.profile)) next = { ...next, profile };
-          if (sp.tier !== 'free' && sp.tier !== s.tier) next = { ...next, tier: sp.tier };
+          // The server's answer wins outright, including a downgrade: a lapsed subscription must actually
+          // lapse on the device, and a locally forged tier must not survive a sync.
+          const granted = entitlementFromServer(sp.tier);
+          if (granted !== s.tier) next = { ...next, tier: granted };
         }
         return next;
       });
@@ -264,12 +274,17 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
     setP(s => {
       const day = todayKey();
       const focusLog = { ...s.focusLog, [day]: (s.focusLog[day] ?? 0) + done.minutes };
+      // Credit the minutes to the block they were spent on. Readiness is built from these, never from a tick,
+      // so they are recorded here — the moment the time was actually spent — and not when the student rates it.
+      const study = done.target?.kind === 'session'
+        ? s.study.map(x => (x.id === done.target!.id ? { ...x, focusedMin: (x.focusedMin ?? 0) + done.minutes } : x))
+        : s.study;
       const sessions = s.sessions + 1;
       if (!s.reviewAsked && sessions >= REVIEW_AFTER_SESSIONS) {
         setTimeout(askForReview, 2000);
-        return { ...s, sessions, focusLog, reviewAsked: true };
+        return { ...s, sessions, focusLog, study, reviewAsked: true };
       }
-      return { ...s, sessions, focusLog };
+      return { ...s, sessions, focusLog, study };
     });
   }, [award]);
 
@@ -432,7 +447,25 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
       if (done) { tapDone(); award(20, L.toastTask); track({ name: 'task_completed' }); }
     },
     deleteTask: id => setP(s => ({ ...s, tasks: s.tasks.filter(x => x.id !== id) })),
-    deleteExam: id => setP(s => ({ ...s, exams: s.exams.filter(e => e.id !== id), study: s.study.filter(x => x.examId !== id) })),
+    deleteExam: id => setP(s => ({ ...s, exams: s.exams.filter(e => e.id !== id), study: s.study.filter(x => x.examId !== id), cards: s.cards.filter(c => c.examId !== id) })),
+
+    // ── Retrieval practice ──────────────────────────────────────────────────────────────────
+    addCard: (examId, chapter, q, a) => {
+      const id = newId('c');
+      setP(s => ({ ...s, cards: [...s.cards, newCard(examId, chapter, q.trim(), a.trim(), id, today)] }));
+      track({ name: 'card_added' });
+      return id;
+    },
+    deleteCard: id => setP(s => ({ ...s, cards: s.cards.filter(c => c.id !== id) })),
+    gradeCard: (id, g) => {
+      setP(s => {
+        const card = s.cards.find(c => c.id === id);
+        const exam = card && s.exams.find(e => e.id === card.examId);
+        return card ? { ...s, cards: s.cards.map(c => (c.id === id ? reviewCard(c, g, today, exam?.date) : c)) } : s;
+      });
+      tapDone();
+      track({ name: 'card_graded', props: { grade: g } });
+    },
     rateSession: (id, c) => {
       // Peak-end: close the session on visible progress ("Statistics readiness 34% → 41%").
       const ses = p.study.find(x => x.id === id), ex = p.exams.find(e => e.id === ses?.examId);
@@ -502,7 +535,22 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
     },
     setDel,
     // Demo only: no StoreKit yet, so choosing a plan just records it (the toast says so).
-    subscribe: tier => { set({ tier }); tapDone(); if (tier !== 'free') track({ name: 'subscription_started', props: { tier, period: p.plan } }); award(0, tier === 'free' ? L.toastFree : L.toastPlan.replace('{name}', L.tiers[tier].name)); },
+    purchasesAvailable: purchasesAvailable(),
+    // Buying goes to the store and nowhere else. The tier arrives later, from the server, after it has
+    // validated the receipt — this function deliberately has no way to set it.
+    subscribe: async (tier, period) => {
+      if (tier === 'free') { award(0, L.toastFree); return 'ok'; }
+      const r = await purchase(tier, period ?? p.plan);
+      if (r.ok) { tapDone(); award(0, L.toastPurchasePending); runSync(); return 'ok'; }
+      award(0, r.reason === 'unavailable' ? L.toastPurchaseOff : r.reason === 'cancelled' ? L.toastPurchaseCancelled : L.toastPurchaseFailed);
+      return r.reason;
+    },
+    restorePurchase: async () => {
+      const r = await restore();
+      if (r.ok) { runSync(); award(0, L.toastRestored); return 'ok'; }
+      award(0, r.reason === 'unavailable' ? L.toastPurchaseOff : L.toastRestoreNone);
+      return r.reason;
+    },
     saveProfile: profile => { set({ profile }); award(0, L.toastSaved); },
     // Real deletion: the account on the server (and this device), or, signed out, this device's data.
     confirmDel: async () => {

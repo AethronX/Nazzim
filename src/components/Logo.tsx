@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Animated, View } from 'react-native';
+import { Animated, Platform, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 // The Nazzim mark (ن): same geometry as assets/brand/nazzim-mark.svg, cropped to its bounds.
@@ -27,12 +27,19 @@ export function LogoMark({ width, bowl, dot, draw, drop }: Props) {
   return (
     <View style={{ width, height }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <Svg width={width} height={height} viewBox={`${VB.x} ${VB.y} ${VB.w} ${VB.h}`}>
-        <AnimatedPath
-          d={BOWL} fill="none" stroke={bowl} strokeWidth={SW} strokeLinecap="round"
-          strokeDasharray={`${BOWL_LEN} ${BOWL_LEN}`}
-          strokeDashoffset={d.interpolate({ inputRange: [0, 1], outputRange: [BOWL_LEN, 0] })}
-          opacity={d.interpolate({ inputRange: [0, 0.02, 1], outputRange: [0, 1, 1] })}
-        />
+        {/* react-native-svg's web shim forwards the animated wrapper's `collapsable` prop straight to the
+            DOM, which React rejects with a console error on every splash. The stroke animation is a native
+            nicety, so the web build draws the finished mark instead of animating it. */}
+        {Platform.OS === 'web' ? (
+          <Path d={BOWL} fill="none" stroke={bowl} strokeWidth={SW} strokeLinecap="round" />
+        ) : (
+          <AnimatedPath
+            d={BOWL} fill="none" stroke={bowl} strokeWidth={SW} strokeLinecap="round"
+            strokeDasharray={`${BOWL_LEN} ${BOWL_LEN}`}
+            strokeDashoffset={d.interpolate({ inputRange: [0, 1], outputRange: [BOWL_LEN, 0] })}
+            opacity={d.interpolate({ inputRange: [0, 0.02, 1], outputRange: [0, 1, 1] })}
+          />
+        )}
       </Svg>
       <Animated.View
         style={{

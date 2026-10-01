@@ -18,6 +18,7 @@ account adds sync and backup, not features. No data is collected because it is t
 | Password | Authentication | Supabase GoTrue, hashed (bcrypt). **Never seen by Nazzim's code** | Until deletion | Yes |
 | Name, university, major, year | Greeting, and context for planning | `public.profiles`; device | Until deletion | **Yes** — every field is skippable at onboarding |
 | Subjects, exams, tasks, study sessions | The core product — the plan itself | Device first; `public.subjects/exams/tasks/study_sessions` when signed in | Until deletion | Required for the app to do anything |
+| Self-test cards (question + answer, written by the student) | Retrieval practice, and the evidence behind exam readiness | Device first; `public.cards` when signed in | Until deletion | Optional — readiness is capped without them, nothing is blocked |
 | Focused minutes per day | Progress, consistency, streak | Device; `public.focus_days` | Until deletion | Required for Progress |
 | Chosen study time, daily capacity, language, theme, accent | Personalisation of plan and reminders | Device; `profiles` | Until deletion | Yes |
 | Product events (names + counts) | Which features help students; see §4 | `public.events` | Until deletion | Signed-out users send none |

@@ -18,7 +18,9 @@ export default function Progress() {
   const { ctx, subjectById } = useAcademic();
   const p = summarizeProgress(ctx, focusLog);
   const insights = generateStudyInsights(ctx, focusLog, limitsFor(tier).insights);
-  const maxMin = Math.max(30, ...p.week.map(d => d.minutes));
+  const best = Math.max(0, ...p.week.map(d => d.minutes));
+  const maxMin = Math.max(20, best);
+  const anyMinutes = best > 0;
 
   return (
     <Page title={L.me} sub={L.meSub}>
@@ -26,10 +28,10 @@ export default function Progress() {
       <View style={{ backgroundColor: C.card, borderWidth: 1, borderColor: C.line, borderRadius: 22, padding: 16, gap: 14 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
           <View style={{ flex: 1 }}>
-            <T f="display" w={700} s={16}>{L.prSemester}</T>
-            {gamification && <T w={600} s={11.5} c={C.ink3} style={{ marginTop: 3 }}>{`${L.level.charAt(0) + L.level.slice(1).toLowerCase()} ${level} · ${xpIn}/1000 XP`}</T>}
+            <T f="display" w={700} s={16}>{p.readiness === undefined ? L.prTasks : L.prSemester}</T>
+            <T w={600} s={11.5} c={C.ink3} style={{ marginTop: 3 }}>{p.readiness === undefined ? L.prNoExams : L.prReadySub}</T>
           </View>
-          <ProgressRing value={p.semester} size={64} stroke={6} />
+          <ProgressRing value={p.readiness ?? p.tasksPct} size={64} stroke={6} />
         </View>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Stat icon="clock" value={`${p.consistency}%`} label={L.prConsistency} sub={L.prActive.replace('{n}', String(p.activeDays))} />
@@ -40,6 +42,11 @@ export default function Progress() {
           <T w={600} s={12.5} c={C.ink2} style={{ flex: 1 }}>{L.prWeek}</T>
           <T f="grotesk" w={700} s={16}>{hours(p.weekMinutes, ar)}</T>
         </View>
+        {gamification && (
+          <T w={600} s={11} c={C.ink3} style={{ textAlign: 'center' }}>
+            {`${L.level.charAt(0) + L.level.slice(1).toLowerCase()} ${level} · ${xpIn}/1000 XP`}
+          </T>
+        )}
       </View>
 
       {/* Insights: few, specific, each one leads somewhere useful */}
@@ -61,9 +68,9 @@ export default function Progress() {
 
       {/* Focus minutes, this calendar week */}
       <Section label={L.prWeekBars}>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 8, height: 132, padding: 14 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 8, height: anyMinutes ? 132 : 92, padding: 14 }}>
           {p.week.map((d, i) => {
-            const h = d.future ? 6 : Math.max(6, Math.round((d.minutes / maxMin) * BAR_MAX));
+            const h = d.future ? 6 : d.minutes ? Math.max(14, Math.round((d.minutes / maxMin) * BAR_MAX)) : 6;
             return (
               <View key={d.date} style={{ flex: 1, alignItems: 'center', gap: 5 }} accessible accessibilityLabel={`${L.dow[i]} ${d.minutes} ${L.min}`}>
                 {/* Values as text so bars don't carry meaning alone (WCAG 1.4.11). */}
@@ -87,10 +94,12 @@ export default function Progress() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <SubjectTile subject={subj} size={28} />
                 <T w={700} s={13.5} style={{ flex: 1 }} numberOfLines={1}>{subj.name}</T>
-                <T f="grotesk" w={700} s={13} c={sw.fg}>{`${s.progress}%`}</T>
+                <T f="grotesk" w={700} s={13} c={sw.fg}>{`${s.readiness ?? s.progress}%`}</T>
               </View>
-              <Bar value={s.progress} color={sw.fg} height={5} />
-              {s.readiness !== undefined && <T w={600} s={11} c={C.ink3}>{L.prReady.replace('{n}', String(s.readiness))}</T>}
+              <Bar value={s.readiness ?? s.progress} color={sw.fg} height={5} />
+              <T w={600} s={11} c={C.ink3}>
+                {s.readiness === undefined ? L.sbDone : L.sbReady} · {L.prWorkDone.replace('{n}', String(s.progress))}
+              </T>
             </Btn>
           );
         })}

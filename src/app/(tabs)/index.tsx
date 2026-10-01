@@ -6,7 +6,7 @@ import { ActivationChecklist, StreakChip, WeeklyRecapCard } from '../../componen
 import { Avatar } from '../../components/Page';
 import { Btn, Card, Icon, SectionHeader, T } from '../../components/ui';
 import { ai } from '../../ai';
-import { agendaFor, semesterProgress } from '../../engine/academic';
+import { agendaFor, overallReadiness, semesterProgress } from '../../engine/academic';
 import { hours, reasonText, useAcademic } from '../../lib/academic';
 import { addDays } from '../../lib/exams';
 import { fmtDateLine, relDay } from '../../lib/format';
@@ -24,7 +24,11 @@ export default function Today() {
   const behind = ai.assessBehind(ctx);
   const agenda = agendaFor(ctx, today, { exam: L.kExam, task: L.kTaskB, kind: k => ({ learn: L.kLearn, review: L.kReview, mock: L.kMock })[k] }, chapterTitle, studyStart);
   const load = ai.analyzeAcademicLoad(ctx, today, 7);
-  const progress = semesterProgress(ctx);
+  // One headline number, and it is the one that matters: readiness for the exams still ahead. With no exam
+  // to be ready for there is nothing to be ready *for*, so we show task completion and say so.
+  const ready = overallReadiness(ctx);
+  const headline = ready ?? semesterProgress(ctx);
+  const headlineLabel = ready === undefined ? L.glanceNoExam : L.glanceSemester;
   const hour = new Date().getHours();
   const greet = L.greetings[hour < 12 ? 0 : hour < 18 ? 1 : 2];
 
@@ -44,9 +48,16 @@ export default function Today() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={{ flex: 1, minWidth: 0 }}>
             <T w={700} s={11} ls={ar ? 0 : 0.6} c={C.ink3}>{fmtDateLine(today, L, ar)}</T>
-            <T f="display" w={700} s={23} ls={ar ? 0 : -0.8} style={{ marginTop: 2 }} accessibilityRole="header" numberOfLines={2}>
-              {me.name ? `${greet}${ar ? '، ' : ', '}${me.name.split(/\s+/)[0]}` : greet}
-            </T>
+            {me.name ? (
+              <>
+                <T w={600} s={13} c={C.ink3} numberOfLines={1} style={{ marginTop: 3 }}>{greet}</T>
+                <T f="display" w={700} s={23} ls={ar ? 0 : -0.8} accessibilityRole="header" numberOfLines={1} style={{ marginTop: -1 }}>
+                  {me.name.split(/\s+/)[0]}
+                </T>
+              </>
+            ) : (
+              <T f="display" w={700} s={23} ls={ar ? 0 : -0.8} style={{ marginTop: 2 }} accessibilityRole="header" numberOfLines={1}>{greet}</T>
+            )}
             {/* Where the day stands, in one line */}
             {!!blocks.length && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
@@ -145,11 +156,11 @@ export default function Today() {
         {/* At a glance: three numbers, one card, each opens its detail */}
         <Card pad={0}>
           <View style={{ flexDirection: 'row' }}>
-            <Btn pressScale={0.98} onPress={() => router.push('/progress')} label={`${L.glanceSemester} ${progress}%`} style={{ flex: 1, padding: 14, gap: 6, alignItems: 'flex-start' }}>
-              <T w={600} s={11.5} c={C.ink3}>{L.glanceSemester}</T>
+            <Btn pressScale={0.98} onPress={() => router.push(nextExam ? `/readiness/${nextExam.id}` : '/progress')} label={`${headlineLabel} ${headline}%`} style={{ flex: 1, padding: 14, gap: 6, alignItems: 'flex-start' }}>
+              <T w={600} s={11.5} c={C.ink3} numberOfLines={1}>{headlineLabel}</T>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <ProgressRing value={progress} size={26} stroke={3.5} label="" />
-                <T f="grotesk" w={700} s={18}>{`${progress}%`}</T>
+                <ProgressRing value={headline} size={26} stroke={3.5} label="" />
+                <T f="grotesk" w={700} s={18}>{`${headline}%`}</T>
               </View>
             </Btn>
             <View style={{ width: 1, backgroundColor: C.line2, marginVertical: 12 }} />

@@ -5,12 +5,13 @@
 //  · Insights are few (max 3), specific and actionable; each one points at a screen that helps.
 import type { AcademicContext, DateKey, Exam } from '../domain/types';
 import { addDays, daysBetween, fromKey, readiness } from '../lib/exams';
-import { analyzeAcademicLoad, semesterProgress, subjectProgress } from './academic';
+import { analyzeAcademicLoad, overallReadiness, semesterProgress, subjectProgress } from './academic';
 
 export type FocusLog = Record<DateKey, number>;
 
 export type ProgressSummary = {
-  semester: number; // 0–100
+  readiness?: number; // 0–100 for the exams still ahead — the headline. undefined when no exam is scheduled.
+  semester: number; // 0–100 share of planned work ticked off. A different question, always labelled as one.
   activeDays: number; // days with any study in the last 7 (including today)
   consistency: number; // activeDays / 7 as %
   tasksDone: number; tasksTotal: number; tasksPct: number;
@@ -27,10 +28,14 @@ export type Insight =
   | { code: 'behind'; overdue: number }
   | { code: 'start' };
 
-// Days with any recorded study: focus minutes, a finished session or a finished task.
+/**
+ * Days the student actually studied. A streak is only worth protecting if it cannot be bought with a tap,
+ * so a revision block counts only when real minutes were focused on it. Tasks still count on being ticked:
+ * an essay handed in is a real outcome, and the app has no other way to see it.
+ */
 export function activeDaySet(ctx: AcademicContext, log: FocusLog): Set<DateKey> {
   const days = new Set<DateKey>(Object.keys(log).filter(d => log[d] > 0));
-  ctx.sessions.forEach(s => s.done && s.doneAt && days.add(s.doneAt));
+  ctx.sessions.forEach(s => s.done && s.doneAt && (s.focusedMin ?? 0) > 0 && days.add(s.doneAt));
   ctx.tasks.forEach(t => t.done && t.doneAt && days.add(t.doneAt));
   return days;
 }
@@ -43,6 +48,7 @@ export function summarizeProgress(ctx: AcademicContext, log: FocusLog): Progress
   const tasksDone = ctx.tasks.filter(t => t.done).length;
   const start = addDays(today, -fromKey(today).getDay());
   return {
+    readiness: overallReadiness(ctx),
     semester: semesterProgress(ctx),
     activeDays,
     consistency: Math.round((activeDays / 7) * 100),

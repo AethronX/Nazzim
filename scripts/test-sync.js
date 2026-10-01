@@ -5,7 +5,7 @@ const S = require('../src/services/sync/core.ts');
 
 const sub = (id, name) => ({ id, name, color: 'indigo', icon: 'book', targetGrade: 'A' });
 const task = (id, done = false) => ({ id, title: id, due: '2026-10-02', estimateMin: 30, done });
-const local = { subjects: [sub('s1', 'Stats'), sub('s2', 'Calc')], tasks: [task('t1')], exams: [], study: [], focusLog: { '2026-10-01': 25 } };
+const local = { subjects: [sub('s1', 'Stats'), sub('s2', 'Calc')], tasks: [task('t1')], exams: [], study: [], cards: [], focusLog: { '2026-10-01': 25 } };
 
 // 1. First sync pushes everything.
 let snap = S.emptySnapshot();
@@ -37,7 +37,7 @@ assert.equal(r.local.focusLog['2026-10-01'], 40); assert.equal(r.local.focusLog[
 // Pulled rows are in the snapshot, so they are not pushed back.
 assert(S.isEmptyPush(S.diffForPush(r.local, r.snap)));
 // 5. Focus never goes down when the server has less than this device.
-const r2 = S.applyPull({ ...r.local, focusLog: { '2026-10-01': 90 } }, r.snap, { subjects: [], tasks: [], exams: [], study_sessions: [] }, [{ day: '2026-10-01', minutes: 40, updated_at: 'x' }]);
+const r2 = S.applyPull({ ...r.local, focusLog: { '2026-10-01': 90 } }, r.snap, { subjects: [], tasks: [], exams: [], study_sessions: [], cards: [] }, [{ day: '2026-10-01', minutes: 40, updated_at: 'x' }]);
 assert.equal(r2.local.focusLog['2026-10-01'], 90);
 // 6. Re-applying the same pull is a no-op (overlapping cursor is safe).
 assert(!S.applyPull(r.local, r.snap, rows, focus).changed);

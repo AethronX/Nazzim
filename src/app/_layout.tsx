@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BackHandler, View } from 'react-native';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { DeleteDialog, Toast } from '../components/Overlays';
 import { NazzimProvider, useNazzim } from '../lib/store';
 
@@ -33,7 +34,9 @@ function Gate() {
     // Toast and the delete dialog sit above every screen, including pushed ones (Profile, Settings, Plans).
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg } }} />
+      <ErrorBoundary where="screen">
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg } }} />
+      </ErrorBoundary>
       {del && <DeleteDialog />}
       <Toast />
     </View>
@@ -42,10 +45,13 @@ function Gate() {
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <NazzimProvider>
-        <Gate />
-      </NazzimProvider>
-    </SafeAreaProvider>
+    // Outermost so a crash in the provider itself still reaches a screen the student can read and recover from.
+    <ErrorBoundary where="root">
+      <SafeAreaProvider>
+        <NazzimProvider>
+          <Gate />
+        </NazzimProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }

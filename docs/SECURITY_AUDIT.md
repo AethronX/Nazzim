@@ -122,3 +122,22 @@ when the named feature lands:
 - **File upload validation** — the app accepts no uploads.
 - **Admin access control** — no admin surface exists.
 - **Webhook signature verification** — no webhooks yet (first one will be the IAP receipt webhook).
+
+## Entitlements (added after the readiness rewrite)
+
+**Finding.** `subscribe(tier)` wrote the tier straight into local state: the client granted itself Plus or Pro
+with one tap. This is the `isPremium = true` pattern the brief forbids, and it is why a test device showed a
+"Pro" badge without any purchase.
+
+**Fix.** `subscribe()` no longer has any path that sets a tier. It calls the store adapter, and the tier
+arrives only from the server on the next sync, via `entitlementFromServer()`. The server's answer now wins
+in both directions, so a lapsed subscription actually lapses and a locally forged tier does not survive a
+sync. `src/services/billing.ts` carries the rule in a comment at the top of the file.
+
+**Already correct, verified again.** `grant update (name, university, major, year, lang, daily_minutes) on
+public.profiles to authenticated` — `tier` is absent from the column grant, so the database refuses a
+client-side write regardless of what the app sends. The client-side hole was the only one.
+
+**Still required before charging anyone (M-series, unchanged).** A store adapter must be registered, and an
+Edge Function must validate the Apple/Google receipt before writing `profiles.tier` with the service role.
+Until that exists `purchasesAvailable` is false, the paywall says so in plain language, and nothing is sold.

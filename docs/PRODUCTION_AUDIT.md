@@ -157,3 +157,31 @@ What was actually executed, not assumed:
 - iOS and web bundles exported successfully.
 - End-to-end browser runs of: onboarding (ar + en), rescue flow, planner, focus completion, plan limit,
   account error states, weekly recap.
+
+---
+
+## Round 2 — integrity audit (1 October 2026)
+
+Triggered by a screen-by-screen review against the running app. Each finding was reproduced by executing the
+real code, not by reading it.
+
+| # | Finding | Evidence | Fix |
+| --- | --- | --- | --- |
+| **R1** | Readiness could be driven to 90% with four taps and zero minutes studied | ran `readiness()` on a four-chapter exam | Rewritten as an evidence model. Tapping now caps a chapter at 35%. See `READINESS_MODEL.md` |
+| **R2** | Three screens showed different numbers for one subject (67% / 72% / 31%), none labelled | screenshots of Subjects, More, Progress | One headline everywhere — readiness — each with its own words. Work completed is stated in a sentence, never as a bare second percentage |
+| **R3** | "This week" meant planned minutes on Today and focused minutes on Progress — 11h10m vs 1m | `analyzeAcademicLoad` vs `weekMinutes` | Relabelled "Planned ahead" and "Actually focused" |
+| **R4** | "Semester progress 31%" sat beside "310/1000 XP"; a game score and an academic one at equal weight | Progress screen | Headline is readiness; XP moved to a quiet line at the foot of the card |
+| **R5** | The streak counted a tapped session as a study day | `activeDaySet` | A revision block now needs real focused minutes. Tasks still count on being ticked |
+| **R6** | The client granted itself any tier | `subscribe: tier => set({ tier })` | Removed; see `SECURITY_AUDIT.md` |
+| **R7** | No error boundary — a render crash meant a white screen and a silent uninstall | — | `ErrorBoundary` at root and screen level, reporting `app_error` with no user content |
+| **R8** | Weekly chart drew a 1-minute day as an invisible bar in a 132pt frame | Progress screen | Scales to the week's own best day, with a visible floor for any real study |
+| **R9** | Greeting wrapped mid-phrase ("مساء الخير، / Osama") | Today screen | Greeting and name are separate lines by design |
+| **R10** | Subjects with no exam were dead cards: 0%, "nothing due", no action | Subjects tab | Each now offers "Add exam" |
+| **R11** | Status thresholds were calibrated against the old, inflated readiness | — | `expected` is now simulated with the same function, so the bar moves with the formula |
+| **R12** | Web splash logged a React DOM error on every launch | console | Static mark on web; the stroke animation stays on native |
+
+**Not a defect.** The blue circle at the bottom-left of the reported screenshots is Expo Go's own dev-menu
+bubble, not a Nazzim element.
+
+**Still open and unchanged:** the M-series manual steps. Nothing above makes the app sellable — see
+`SUBSCRIPTION_ARCHITECTURE.md` for what receipt validation still requires.

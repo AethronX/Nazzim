@@ -2,20 +2,21 @@
 // one JSON document per entity, stamped with server time. A sync is: push local changes (diff against the last
 // synced snapshot), then pull rows changed on the server since the last cursor. Same id → last write wins.
 import type { Exam, Subject, Task } from '../../domain/types';
+import type { Card } from '../../engine/recall';
 import type { StudySession } from '../../lib/exams';
 
-export const COLLECTIONS = ['subjects', 'tasks', 'exams', 'study_sessions'] as const;
+export const COLLECTIONS = ['subjects', 'tasks', 'exams', 'study_sessions', 'cards'] as const;
 export type Collection = (typeof COLLECTIONS)[number];
 
 export type LocalAcademic = {
-  subjects: Subject[]; tasks: Task[]; exams: Exam[]; study: StudySession[]; focusLog: Record<string, number>;
+  subjects: Subject[]; tasks: Task[]; exams: Exam[]; study: StudySession[]; cards: Card[]; focusLog: Record<string, number>;
 };
 export type RemoteRow = { id: string; data: unknown; deleted: boolean; updated_at: string };
 export type RemoteFocus = { day: string; minutes: number; updated_at: string };
 
 // What was last agreed with the server: id → JSON text, per collection; and minutes per focus day.
 export type Snapshot = Record<Collection, Record<string, string>> & { focus: Record<string, number> };
-export const emptySnapshot = (): Snapshot => ({ subjects: {}, tasks: {}, exams: {}, study_sessions: {}, focus: {} });
+export const emptySnapshot = (): Snapshot => ({ subjects: {}, tasks: {}, exams: {}, study_sessions: {}, cards: {}, focus: {} });
 
 const listOf = (s: LocalAcademic, c: Collection): { id: string }[] =>
   c === 'study_sessions' ? s.study : (s[c] as { id: string }[]);

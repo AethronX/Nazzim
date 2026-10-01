@@ -120,6 +120,22 @@ export function subjectProgress(ctx: AcademicContext, subjectId: string): number
   return Math.round(((sess.filter(s => s.done).length + tasks.filter(t => t.done).length) / total) * 100);
 }
 
+/**
+ * The one headline number: how ready the student is for the exams still ahead, weighted by size.
+ * Returns undefined when there is no exam to be ready for, so the UI can say something true instead of 0%.
+ *
+ * Every screen that shows "how am I doing" shows this. Task completion is a different question and is
+ * labelled as such — showing two unlabelled percentages for one subject is what made the old build
+ * impossible to trust.
+ */
+export function overallReadiness(ctx: AcademicContext): number | undefined {
+  const upcoming = ctx.exams.filter(e => e.date >= ctx.today);
+  if (!upcoming.length) return undefined;
+  const weights = upcoming.map(e => Math.max(1, e.chapters.length));
+  const sum = upcoming.reduce((a, e, i) => a + readiness(e, ctx.sessions, ctx.today) * weights[i], 0);
+  return Math.round(sum / weights.reduce((a, b) => a + b, 0));
+}
+
 // Overall semester progress: average of subject progress, weighted by how much work each subject has.
 export function semesterProgress(ctx: AcademicContext): number {
   const examIds = new Set(ctx.exams.map(e => e.id));

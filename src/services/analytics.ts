@@ -13,8 +13,20 @@ export type AnalyticsEvent =
   | { name: 'study_session_completed'; props: { confidence: number } }
   | { name: 'focus_completed'; props: { minutes: number } }
   | { name: 'rescue_plan_created'; props: { moves: number; dropped: number; tight: number } }
+  // Retrieval practice: the evidence loop behind readiness
+  | { name: 'card_added' }
+  | { name: 'card_graded'; props: { grade: number } }
+  | { name: 'recall_session_completed'; props: { cards: number; correct: number } }
+  | { name: 'readiness_explained' }
+  // Monetisation funnel (so the paywall can be measured rather than guessed at)
+  | { name: 'paywall_viewed'; props: { trigger: string } }
+  | { name: 'paywall_dismissed'; props: { trigger: string } }
+  | { name: 'purchase_started'; props: { tier: string; period: string } }
+  | { name: 'purchase_failed'; props: { reason: string } }
   | { name: 'subscription_started'; props: { tier: string; period: string } }
   | { name: 'subscription_cancelled' }
+  // Stability. `where` is a component name and `message` an error class — never user content.
+  | { name: 'app_error'; props: { where: string; message: string; fatal: boolean } }
   // Retention loops (measure each mechanism's effect on D7 / D30)
   | { name: 'reminders_enabled' }
   | { name: 'study_time_set'; props: { time: string } }

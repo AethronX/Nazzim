@@ -9,11 +9,17 @@
 export type Confidence = 1 | 2 | 3; // Hard, OK, Easy
 export type SessionKind = 'learn' | 'review' | 'mock';
 
-export type ExamItem = { id: string; subject: string; date: string; chapters: string[] };
+// A chapter's last retrieval-practice result: the only evidence that the student can actually recall it.
+export type Recall = { score: number; at: string }; // score 0..1, `at` = day of the attempt
+export type ExamItem = {
+  id: string; subject: string; date: string; chapters: string[];
+  recall?: Record<number, Recall>; // chapter index → latest self-test result
+};
 export type StudySession = {
   id: string; examId: string; chapter: number; // -1 = whole exam (mock test)
   kind: SessionKind; date: string; minutes: number; done: boolean; confidence?: Confidence;
   doneAt?: string; // the day it was actually done (feeds consistency and weekly insights)
+  focusedMin?: number; // minutes actually spent in the focus timer on this block — never inferred from `minutes`
 };
 
 export const REVIEW_GAPS = [1, 3, 7];
@@ -84,20 +90,125 @@ export function rollForward(sessions: StudySession[], exams: ExamItem[], today: 
     .map(s => (!s.done && s.date < today ? { ...s, date: today } : s));
 }
 
-// 0–100: share of each chapter's sessions done, weighted by the last confidence rating; mock test adds 10.
-export function readiness(exam: ExamItem, sessions: StudySession[]): number {
+// ── Readiness ────────────────────────────────────────────────────────────────────────────────
+//
+// Readiness answers one question: *how likely is this student to perform on the day?* Ticking a box is the
+// weakest possible evidence for that, so a tick alone can never carry a chapter past WEAK_CEILING. Real
+// minutes in the focus timer raise the ceiling; proving recall in a self-test raises it the rest of the way.
+// Knowledge also fades, so a chapter last touched weeks ago is discounted.
+//
+// The rule we refuse to break: the number must be hard to inflate and easy to explain. `readinessDetail`
+// returns the parts so the UI can always show *why*, and `nextEvidence` says what would move it.
+
+export const WEAK_CEILING = 0.35; // ticked done, nothing else
+export const EFFORT_CEILING = 0.7; // ticked done + the planned minutes actually focused
+const DECAY_FLOOR = 0.75; // knowledge fades, but earned evidence never drops below three quarters
+const DECAY_DAYS = 60; // days over which an untouched chapter decays to the floor
+
+export type ChapterEvidence = {
+  chapter: number;
+  planned: number; // sessions planned for this chapter
+  done: number; // sessions ticked done
+  plannedMin: number; // minutes planned by the done sessions
+  focusedMin: number; // minutes actually focused on them
+  effort: number; // 0..1 focusedMin / plannedMin
+  recall?: number; // 0..1 latest self-test score, undefined = never tested
+  decay: number; // 0..1 recency multiplier
+  score: number; // 0..1 this chapter's contribution
+  ceiling: number; // 0..1 the most this chapter can reach on current evidence
+};
+
+export type ReadinessDetail = {
+  score: number; // 0–100, what the UI shows
+  ceiling: number; // 0–100, the most reachable without new evidence
+  coverage: number; // 0–100, share of chapters with any work done
+  focusedMin: number;
+  plannedMin: number;
+  untested: number; // chapters never self-tested
+  mockDone: boolean;
+  chapters: ChapterEvidence[];
+};
+
+const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+
+// Per chapter: coverage × evidence ceiling × decay. Nothing here can be raised by tapping alone.
+export function readinessDetail(exam: ExamItem, sessions: StudySession[], today = todayKey()): ReadinessDetail {
   const mine = sessions.filter(s => s.examId === exam.id);
-  if (!mine.length || !exam.chapters.length) return 0;
-  const conf = { 1: 0.25, 2: 0.65, 3: 1 } as const;
-  const chapterScores = exam.chapters.map((_, i) => {
+  const empty: ReadinessDetail = { score: 0, ceiling: 0, coverage: 0, focusedMin: 0, plannedMin: 0, untested: exam.chapters.length, mockDone: false, chapters: [] };
+  if (!exam.chapters.length) return empty;
+
+  const chapters: ChapterEvidence[] = exam.chapters.map((_, i) => {
     const ch = mine.filter(s => s.chapter === i);
-    if (!ch.length) return 0;
     const done = ch.filter(s => s.done);
-    const last = [...done].sort((a, b) => a.date.localeCompare(b.date)).pop();
-    return (done.length / ch.length) * 0.7 + (last?.confidence ? conf[last.confidence] * 0.3 : 0);
+    const plannedMin = done.reduce((a, s) => a + s.minutes, 0);
+    const focusedMin = done.reduce((a, s) => a + (s.focusedMin ?? 0), 0);
+    const effort = plannedMin ? clamp01(focusedMin / plannedMin) : 0;
+    const recall = exam.recall?.[i]?.score;
+
+    // The ceiling rises only with evidence the student cannot fake by tapping.
+    let ceiling = WEAK_CEILING;
+    ceiling += (EFFORT_CEILING - WEAK_CEILING) * effort;
+    if (recall !== undefined) ceiling = Math.max(ceiling + (1 - EFFORT_CEILING) * clamp01(recall), clamp01(recall) * 0.9);
+
+    // Recency: measured from the last thing that actually happened on this chapter.
+    const touched = [...done.map(s => s.doneAt ?? s.date), exam.recall?.[i]?.at].filter(Boolean).sort().pop();
+    const idle = touched ? Math.max(0, daysBetween(touched, today)) : 0;
+    const decay = done.length ? Math.max(DECAY_FLOOR, 1 - idle / DECAY_DAYS) : 1;
+
+    const coverage = ch.length ? done.length / ch.length : 0;
+    // Proven recall stands on its own. A student who revises from a book and then demonstrates they can
+    // recall the chapter is ready for it, whether or not they ran our timer — and tying the score only to
+    // our own sessions would reward ticking boxes, which is the behaviour this rewrite exists to remove.
+    const fromSessions = coverage * ceiling;
+    const fromRecall = recall === undefined ? 0 : clamp01(recall) * 0.9;
+    return { chapter: i, planned: ch.length, done: done.length, plannedMin, focusedMin, effort, recall, decay, ceiling, score: Math.max(fromSessions, fromRecall) * decay };
   });
-  const mockDone = mine.some(s => s.kind === 'mock' && s.done) ? 10 : 0;
-  return Math.round((chapterScores.reduce((a, b) => a + b, 0) / chapterScores.length) * 90 + mockDone);
+
+  const n = chapters.length;
+  const mock = mine.find(s => s.kind === 'mock' && s.done);
+  // The mock test only counts when it was actually sat, not merely ticked.
+  const mockDone = !!mock && (mock.focusedMin ?? 0) >= mock.minutes * 0.5;
+  const bonus = mockDone ? 8 : 0;
+
+  const base = chapters.reduce((a, c) => a + c.score, 0) / n;
+  const ceil = chapters.reduce((a, c) => a + c.ceiling, 0) / n;
+  return {
+    score: Math.min(100, Math.round(base * 92 + bonus)),
+    ceiling: Math.min(100, Math.round(ceil * 92 + 8)),
+    coverage: Math.round((chapters.filter(c => c.done > 0).length / n) * 100),
+    focusedMin: chapters.reduce((a, c) => a + c.focusedMin, 0) + (mock?.focusedMin ?? 0),
+    plannedMin: chapters.reduce((a, c) => a + c.plannedMin, 0),
+    untested: chapters.filter(c => c.recall === undefined).length,
+    mockDone,
+    chapters,
+  };
+}
+
+// 0–100. Kept as the one number every screen shows.
+export function readiness(exam: ExamItem, sessions: StudySession[], today = todayKey()): number {
+  return readinessDetail(exam, sessions, today).score;
+}
+
+export type EvidenceGap = { kind: 'study' | 'focus' | 'recall' | 'mock' | 'ready'; chapter?: number };
+
+// The single most useful thing the student could do next to make the number mean more.
+export function nextEvidence(exam: ExamItem, sessions: StudySession[], today = todayKey()): EvidenceGap {
+  const d = readinessDetail(exam, sessions, today);
+  const untouched = d.chapters.find(c => c.done === 0);
+  if (untouched) return { kind: 'study', chapter: untouched.chapter };
+  const lowEffort = d.chapters.find(c => c.effort < 0.5);
+  if (lowEffort) return { kind: 'focus', chapter: lowEffort.chapter };
+  const untested = d.chapters.find(c => c.recall === undefined);
+  if (untested) return { kind: 'recall', chapter: untested.chapter };
+  const weakest = [...d.chapters].sort((a, b) => a.score - b.score)[0];
+  if (weakest && (weakest.recall ?? 1) < 0.7) return { kind: 'recall', chapter: weakest.chapter };
+  if (!d.mockDone) return { kind: 'mock' };
+  return { kind: 'ready' };
+}
+
+// Record a self-test result for one chapter. Returns a new exam — nothing is mutated.
+export function recordRecall<T extends ExamItem>(exam: T, chapter: number, score: number, today = todayKey()): T {
+  return { ...exam, recall: { ...(exam.recall ?? {}), [chapter]: { score: clamp01(score), at: today } } };
 }
 
 // Last confidence per chapter (undefined = not rated yet).

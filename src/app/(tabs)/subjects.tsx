@@ -35,7 +35,7 @@ export default function Subjects() {
             : sum.pendingTasks ? (sum.pendingTasks === 1 ? L.subjTask1 : L.subjTasks.replace('{n}', String(sum.pendingTasks))) : L.subjClear;
           return (
             <Btn key={s.id} pressScale={0.99} onPress={() => router.push(`/subject/${s.id}`)}
-              accessibilityLabel={`${s.name}, ${L.target.replace('{g}', s.targetGrade)}, ${sum.progress}%`}
+              accessibilityLabel={`${s.name}, ${L.target.replace('{g}', s.targetGrade)}, ${sum.readiness === undefined ? L.sbDone : L.sbReady} ${sum.readiness ?? sum.progress}%`}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, boxShadow: C.shadowSoft }}>
               <SubjectTile subject={s} size={48} />
               <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
@@ -47,8 +47,18 @@ export default function Subjects() {
                   {/* The single most useful fact: the next exam, else what's open */}
                   <T w={600} s={12} c={soon ? C.warningText : C.ink3} numberOfLines={1} style={{ flexShrink: 1 }}>{fact}</T>
                 </View>
+                {!sum.nextExam && !sum.pendingTasks && (
+                  <Btn label={L.exAdd} onPress={() => router.push(`/exam/new?subject=${s.id}`)} pressScale={0.96}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', marginTop: 2 }}>
+                    <Icon name="plus" size={12} color={accent.fg} stroke={2.6} />
+                    <T w={700} s={11.5} c={accent.fg}>{L.exAdd}</T>
+                  </Btn>
+                )}
               </View>
-              <ProgressRing value={sum.progress} size={50} stroke={4.5} color={sw.fg} />
+              <View style={{ alignItems: 'center', gap: 3 }}>
+                <ProgressRing value={sum.readiness ?? sum.progress} size={50} stroke={4.5} color={sw.fg} />
+                <T w={600} s={9.5} c={C.ink3}>{sum.readiness === undefined ? L.sbDone : L.sbReady}</T>
+              </View>
             </Btn>
           );
         })}

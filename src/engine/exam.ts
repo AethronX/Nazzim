@@ -28,10 +28,17 @@ export type ExamReport = {
 export function examReport(exam: Exam, all: Session[], today: DateKey): ExamReport {
   const mine = all.filter(s => s.examId === exam.id).sort((a, b) => a.date.localeCompare(b.date) || kindOrder(a) - kindOrder(b));
   const daysLeft = daysBetween(today, exam.date);
-  const ready = readiness(exam, all);
-  // What the plan expected to be done by now (sessions dated before today), as readiness points.
-  const due = mine.filter(s => s.date < today).length;
-  const expected = mine.length ? Math.round((due / mine.length) * 90) : 0;
+  const ready = readiness(exam, all, today);
+  // What the plan expected by now, expressed in the SAME currency as the score it is compared against.
+  //
+  // A fixed fraction of 90 used to work when readiness was just a tick count. It cannot now: evidence-based
+  // readiness tops out around the effort ceiling for a student who follows the plan perfectly but never
+  // self-tests, so a constant bar would mark every diligent student "behind". Instead we simulate the model
+  // student — every session due so far done, with the planned minutes actually focused, and no extra
+  // self-testing — and score them with the same function. The bar then moves with the formula automatically.
+  const modelStudent = mine.map(s =>
+    s.date < today ? { ...s, done: true, doneAt: s.date, focusedMin: s.minutes } : { ...s, done: false, focusedMin: undefined });
+  const expected = readiness({ ...exam, recall: undefined }, modelStudent, today);
 
   const topics: Topic[] = exam.chapters.map((title, index) => {
     const ch = mine.filter(s => s.chapter === index);
@@ -46,11 +53,13 @@ export function examReport(exam: Exam, all: Session[], today: DateKey): ExamRepo
   const overdue = open.filter(s => s.date < today).length;
   const phase: ExamPhase = open.some(s => s.kind === 'learn') ? 'learn' : open.some(s => s.kind === 'review') ? 'review' : 'final';
 
+  // Thresholds are relative to `expected`, never to an absolute number, for the same reason.
   let status: ExamStatus;
   if (daysLeft < 0) status = 'over';
-  else if (ready >= 85 || (!open.length && mine.length)) status = 'ready';
-  else if (daysLeft <= 3 && ready < 50) status = 'atRisk';
-  else if (ready < expected - 15 || overdue >= 2) status = 'behind';
+  else if (!open.length && mine.length && ready >= expected * 0.9) status = 'ready';
+  else if (ready >= 85) status = 'ready';
+  else if (daysLeft <= 3 && ready < expected * 0.6) status = 'atRisk';
+  else if (ready < expected * 0.7 || overdue >= 2) status = 'behind';
   else status = 'onTrack';
 
   // Weakest: rated Hard first, then the earliest chapter not started.
