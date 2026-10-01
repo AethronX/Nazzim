@@ -25,11 +25,11 @@ export default function Progress() {
   return (
     <Page title={L.me} sub={L.meSub}>
       {/* Semester + two headline stats */}
-      <View style={{ backgroundColor: C.card, borderWidth: 1, borderColor: C.line, borderRadius: 22, padding: 16, gap: 14 }}>
+      <View style={{ backgroundColor: C.card, borderWidth: 1, borderColor: C.line, borderRadius: 20, padding: 16, gap: 14 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
           <View style={{ flex: 1 }}>
-            <T f="display" w={700} s={16}>{p.readiness === undefined ? L.prTasks : L.prSemester}</T>
-            <T w={600} s={11.5} c={C.ink3} style={{ marginTop: 3 }}>{p.readiness === undefined ? L.prNoExams : L.prReadySub}</T>
+            <T f="display" w={700} s="body">{p.readiness === undefined ? L.prTasks : L.prSemester}</T>
+            <T w={600} s="caption" c={C.ink3} style={{ marginTop: 3 }}>{p.readiness === undefined ? L.prNoExams : L.prReadySub}</T>
           </View>
           <ProgressRing value={p.readiness ?? p.tasksPct} size={64} stroke={6} />
         </View>
@@ -37,13 +37,13 @@ export default function Progress() {
           <Stat icon="clock" value={`${p.consistency}%`} label={L.prConsistency} sub={L.prActive.replace('{n}', String(p.activeDays))} />
           <Stat icon="check" value={p.tasksTotal ? `${p.tasksPct}%` : '–'} label={L.prTasks} sub={L.prTasksN.replace('{d}', String(p.tasksDone)).replace('{t}', String(p.tasksTotal))} />
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, backgroundColor: C.card2 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: C.card2 }}>
           <Icon name="target" size={16} color={accent.fg} />
-          <T w={600} s={12.5} c={C.ink2} style={{ flex: 1 }}>{L.prWeek}</T>
-          <T f="grotesk" w={700} s={16}>{hours(p.weekMinutes, ar)}</T>
+          <T w={600} s="caption" c={C.ink2} style={{ flex: 1 }}>{L.prWeek}</T>
+          <T f="grotesk" w={700} s="body">{hours(p.weekMinutes, ar)}</T>
         </View>
         {gamification && (
-          <T w={600} s={11} c={C.ink3} style={{ textAlign: 'center' }}>
+          <T w={600} s="caption" c={C.ink3} style={{ textAlign: 'center' }}>
             {`${L.level.charAt(0) + L.level.slice(1).toLowerCase()} ${level} · ${xpIn}/1000 XP`}
           </T>
         )}
@@ -59,7 +59,7 @@ export default function Progress() {
             <Btn key={i} pressScale={go ? 0.99 : 1} disabled={!go} onPress={() => go && router.push(go)}
               style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', padding: 14, borderRadius: 16, backgroundColor: tone.bg }}>
               <Icon name={tone.icon} size={16} color={tone.fg} stroke={2.3} />
-              <T w={600} s={13} lh={1.45} c={tone.fg} style={{ flex: 1 }}>{insightText(it, L, ar)}</T>
+              <T w={600} s="label" lh={1.45} c={tone.fg} style={{ flex: 1 }}>{insightText(it, L, ar)}</T>
               {!!go && <Icon name="chevron" size={14} color={tone.fg} flip={ar} />}
             </Btn>
           );
@@ -74,9 +74,9 @@ export default function Progress() {
             return (
               <View key={d.date} style={{ flex: 1, alignItems: 'center', gap: 5 }} accessible accessibilityLabel={`${L.dow[i]} ${d.minutes} ${L.min}`}>
                 {/* Values as text so bars don't carry meaning alone (WCAG 1.4.11). */}
-                <T f="grotesk" w={700} s={9.5} c={d.isToday ? accent.fg : C.ink3}>{d.future ? '–' : String(d.minutes)}</T>
+                <T f="grotesk" w={700} s="micro" c={d.isToday ? accent.fg : C.ink3}>{d.future ? '–' : String(d.minutes)}</T>
                 <View style={{ width: '100%', height: h, borderRadius: 6, backgroundColor: d.isToday ? accent.fg : d.future || !d.minutes ? C.line2 : accent.tint2 }} />
-                <T w={d.isToday ? 800 : 700} s={9.5} c={d.isToday ? accent.fg : C.ink3}>{L.dow[i]}</T>
+                <T w={d.isToday ? 800 : 700} s="micro" c={d.isToday ? accent.fg : C.ink3}>{L.dow[i]}</T>
               </View>
             );
           })}
@@ -93,17 +93,17 @@ export default function Progress() {
               style={{ paddingVertical: 12, paddingHorizontal: 14, gap: 8, borderBottomWidth: i === p.subjects.length - 1 ? 0 : 1, borderBottomColor: C.line2 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <SubjectTile subject={subj} size={28} />
-                <T w={700} s={13.5} style={{ flex: 1 }} numberOfLines={1}>{subj.name}</T>
-                <T f="grotesk" w={700} s={13} c={sw.fg}>{`${s.readiness ?? s.progress}%`}</T>
+                <T w={700} s="label" style={{ flex: 1 }} numberOfLines={1}>{subj.name}</T>
+                <T f="grotesk" w={700} s="label" c={sw.fg}>{`${s.readiness ?? s.progress}%`}</T>
               </View>
               <Bar value={s.readiness ?? s.progress} color={sw.fg} height={5} />
-              <T w={600} s={11} c={C.ink3}>
+              <T w={600} s="caption" c={C.ink3}>
                 {s.readiness === undefined ? L.sbDone : L.sbReady} · {L.prWorkDone.replace('{n}', String(s.progress))}
               </T>
             </Btn>
           );
         })}
-        {!p.subjects.length && <T w={600} s={13} c={C.ink3} style={{ padding: 14 }}>{L.prNoSubjects}</T>}
+        {!p.subjects.length && <T w={600} s="label" c={C.ink3} style={{ padding: 14 }}>{L.prNoSubjects}</T>}
       </Section>
     </Page>
   );
@@ -112,11 +112,11 @@ export default function Progress() {
 function Stat({ icon, value, label, sub }: { icon: IconName; value: string; label: string; sub: string }) {
   const { C, accent } = useNazzim();
   return (
-    <View style={{ flex: 1, minWidth: 0, padding: 12, borderRadius: 14, borderWidth: 1, borderColor: C.line, gap: 3 }}>
+    <View style={{ flex: 1, minWidth: 0, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: C.line, gap: 3 }}>
       <Icon name={icon} size={15} color={accent.fg} />
-      <T w={600} s={11.5} c={C.ink3} style={{ marginTop: 4 }}>{label}</T>
-      <T f="grotesk" w={700} s={20}>{value}</T>
-      <T w={600} s={11} c={C.ink3}>{sub}</T>
+      <T w={600} s="caption" c={C.ink3} style={{ marginTop: 4 }}>{label}</T>
+      <T f="grotesk" w={700} s="title">{value}</T>
+      <T w={600} s="caption" c={C.ink3}>{sub}</T>
     </View>
   );
 }

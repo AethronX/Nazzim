@@ -39,7 +39,7 @@ export default function NewExam() {
     <Page title={L.exNew}>
       <Section>
         <View style={{ paddingVertical: 12, paddingHorizontal: 16, gap: 2 }}>
-          <T w={700} s={10.5} ls={ar ? 0 : 0.6} c={C.ink3}>{L.exSubject}</T>
+          <T w={700} s="micro" ls={ar ? 0 : 0.6} c={C.ink3}>{L.exSubject}</T>
           {!!subjects.length && <View style={{ paddingVertical: 8 }}><SubjectPicker value={subjectId} onChange={setSubjectId} allowNone /></View>}
           {!picked && <TextInput value={typed} onChangeText={setTyped} placeholder={L.exSubjectPh} placeholderTextColor={C.ink3} autoCapitalize="words" returnKeyType="next" style={input} />}
         </View>
@@ -49,14 +49,14 @@ export default function NewExam() {
         <View style={{ padding: 16, gap: 14 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Btn label="−1" onPress={() => setInDays(n => Math.max(1, n - 1))} style={stepper(C.line)}>
-              <T f="grotesk" w={700} s={20} c={C.ink2}>−</T>
+              <T f="grotesk" w={700} s="title" c={C.ink2}>−</T>
             </Btn>
             <View style={{ flex: 1, alignItems: 'center' }}>
-              <T f="display" w={700} s={20} ls={ar ? 0 : -0.4}>{fmtDate(date, L)}</T>
-              <T w={600} s={12} c={accent.fg} style={{ marginTop: 2 }}>{relDay(date, today, L)}</T>
+              <T f="display" w={700} s="title" ls={ar ? 0 : -0.4}>{fmtDate(date, L)}</T>
+              <T w={600} s="caption" c={accent.fg} style={{ marginTop: 2 }}>{relDay(date, today, L, ar)}</T>
             </View>
             <Btn label="+1" onPress={() => setInDays(n => Math.min(120, n + 1))} style={stepper(C.line)}>
-              <T f="grotesk" w={700} s={20} c={C.ink2}>+</T>
+              <T f="grotesk" w={700} s="title" c={C.ink2}>+</T>
             </Btn>
           </View>
           <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'center' }} accessibilityRole="radiogroup">
@@ -65,7 +65,7 @@ export default function NewExam() {
               return (
                 <Btn key={n} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setInDays(n)}
                   style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 99, backgroundColor: on ? accent.tint : 'transparent', borderWidth: 1, borderColor: on ? accent.tint : C.line }}>
-                  <T w={700} s={12} c={on ? accent.strong : C.ink3}>{L.dIn.replace('{n}', String(n))}</T>
+                  <T w={700} s="caption" c={on ? accent.strong : C.ink3}>{L.dIn.replace('{n}', String(n))}</T>
                 </Btn>
               );
             })}
@@ -83,14 +83,14 @@ export default function NewExam() {
 
       <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 4, alignItems: 'flex-start' }}>
         <Icon name="sparkle" size={15} color={accent.fg} stroke={2.1} />
-        <T w={600} s={12.5} lh={1.5} c={C.ink2} style={{ flex: 1 }}>
+        <T w={600} s="caption" lh={1.5} c={C.ink2} style={{ flex: 1 }}>
           {chapters.length === 0 ? L.exNeedsChapters : L.exPreview.replace('{s}', String(preview.length)).replace('{d}', String(inDays))}
         </T>
       </View>
 
       <Btn onPress={create} disabled={!canCreate} pressedBg={accent.strong} accessibilityState={{ disabled: !canCreate }}
         style={{ padding: 16, borderRadius: 16, alignItems: 'center', backgroundColor: canCreate ? accent.a1 : C.line2, boxShadow: canCreate ? accent.glow : undefined }}>
-        <T w={800} s={15} c={canCreate ? C.onAccent : C.ink3}>{L.exCreate}</T>
+        <T w={800} s="body" c={canCreate ? C.onAccent : C.ink3}>{L.exCreate}</T>
       </Btn>
     </Page>
   );

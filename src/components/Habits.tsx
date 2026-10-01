@@ -20,7 +20,7 @@ export function StreakChip() {
       style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 40, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1.5,
         borderColor: s.atRisk ? C.warning : C.line, backgroundColor: C.card }}>
       <Icon name="flame" size={16} color={s.atRisk ? C.warningText : accent.fg} />
-      <T f="grotesk" w={700} s={15}>{String(s.days)}</T>
+      <T f="grotesk" w={700} s="body">{String(s.days)}</T>
     </Btn>
   );
 }
@@ -45,10 +45,10 @@ export function ActivationChecklist() {
   return (
     <Card style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <T f="display" w={700} s={16} style={{ flex: 1 }}>{L.clTitle}</T>
-        <T w={700} s={12.5} c={accent.fg}>{L.clProgress.replace('{d}', String(c.done)).replace('{t}', String(c.total))}</T>
+        <T f="display" w={700} s="body" style={{ flex: 1 }}>{L.clTitle}</T>
+        <T w={700} s="caption" c={accent.fg}>{L.clProgress.replace('{d}', String(c.done)).replace('{t}', String(c.total))}</T>
         <Btn onPress={() => set({ checklistHidden: true })} style={{ paddingVertical: 4, paddingHorizontal: 8 }}>
-          <T w={700} s={12} c={C.ink3}>{L.clHide}</T>
+          <T w={700} s="caption" c={C.ink3}>{L.clHide}</T>
         </Btn>
       </View>
       <Bar value={(c.done / c.total) * 100} height={5} />
@@ -59,7 +59,7 @@ export function ActivationChecklist() {
             <View style={{ width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', borderWidth: st.done ? 0 : 2, borderColor: C.control, backgroundColor: st.done ? C.success : 'transparent' }}>
               {st.done && <Icon name="check" size={12} color={C.onSuccess} stroke={3.2} />}
             </View>
-            <T w={600} s={13.5} c={st.done ? C.ink3 : C.ink} style={[{ flex: 1 }, st.done && { textDecorationLine: 'line-through' }]}>{L.clSteps[st.id]}</T>
+            <T w={600} s="label" c={st.done ? C.ink3 : C.ink} style={[{ flex: 1 }, st.done && { textDecorationLine: 'line-through' }]}>{L.clSteps[st.id]}</T>
             {!st.done && <Icon name="chevron" size={13} color={C.ink3} stroke={2.3} />}
           </Btn>
         ))}
@@ -78,17 +78,17 @@ export function WeeklyRecapCard() {
     <Card style={{ gap: 8, backgroundColor: accent.tint, borderColor: accent.tint }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Icon name="chart" size={16} color={accent.strong} />
-        <T f="display" w={700} s={15.5} c={accent.strong} style={{ flex: 1 }}>{L.recapTitle}</T>
+        <T f="display" w={700} s="body" c={accent.strong} style={{ flex: 1 }}>{L.recapTitle}</T>
         <Btn label={L.aClose} onPress={() => set({ recapSeen: r.weekKey })} style={{ padding: 4 }}>
-          <T w={700} s={16} c={accent.strong}>✕</T>
+          <T w={700} s="body" c={accent.strong}>✕</T>
         </Btn>
       </View>
-      <T w={600} s={13.5} lh={1.45} c={C.ink}>
+      <T w={600} s="label" lh={1.45} c={C.ink}>
         {L.recapBody.replace('{m}', hours(r.minutes, ar)).replace('{d}', String(r.activeDays)).replace('{s}', String(r.sessions + r.tasks))}
       </T>
-      {r.nextWeekMin > 0 && <T w={500} s={13} c={C.ink2}>{L.recapNext.replace('{m}', hours(r.nextWeekMin, ar))}</T>}
+      {r.nextWeekMin > 0 && <T w={500} s="label" c={C.ink2}>{L.recapNext.replace('{m}', hours(r.nextWeekMin, ar))}</T>}
       <Btn onPress={() => { set({ recapSeen: r.weekKey }); track({ name: 'weekly_recap_opened' }); router.push('/plan'); }} style={{ alignSelf: 'flex-start', marginTop: 4, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 99, backgroundColor: accent.a1 }}>
-        <T w={700} s={13} c={C.onAccent}>{L.recapCta}</T>
+        <T w={700} s="label" c={C.onAccent}>{L.recapCta}</T>
       </Btn>
     </Card>
   );
@@ -104,11 +104,11 @@ export function ReminderAsk() {
         <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="bell" size={17} color={accent.strong} />
         </View>
-        <T w={700} s={14.5} style={{ flex: 1 }}>{L.remAskT}</T>
+        <T w={700} s="label" style={{ flex: 1 }}>{L.remAskT}</T>
       </View>
-      <T w={500} s={13} lh={1.45} c={C.ink2}>{L.remAskB.replace('{t}', hhmm(reminderTime(studyTime)))}</T>
-      <Btn onPress={() => setReminders({ on: true })} pressedBg={accent.strong} style={{ padding: 13, borderRadius: 14, backgroundColor: accent.a1, alignItems: 'center' }}>
-        <T w={700} s={14} c={C.onAccent}>{L.remAskYes}</T>
+      <T w={500} s="label" lh={1.45} c={C.ink2}>{L.remAskB.replace('{t}', hhmm(reminderTime(studyTime)))}</T>
+      <Btn onPress={() => setReminders({ on: true })} pressedBg={accent.strong} style={{ padding: 13, borderRadius: 12, backgroundColor: accent.a1, alignItems: 'center' }}>
+        <T w={700} s="label" c={C.onAccent}>{L.remAskYes}</T>
       </Btn>
     </Card>
   );

@@ -28,10 +28,10 @@ export default function Subscription() {
           return (
             <Btn key={k} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => set({ plan: k })}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 99, backgroundColor: on ? C.inv : 'transparent' }}>
-              <T w={700} s={13} c={on ? C.onInv : C.ink2}>{k === 'month' ? L.monthly : L.yearly}</T>
+              <T w={700} s="label" c={on ? C.onInv : C.ink2}>{k === 'month' ? L.monthly : L.yearly}</T>
               {k === 'year' && (
                 <View style={{ paddingVertical: 2, paddingHorizontal: 7, borderRadius: 99, backgroundColor: on ? accent.a1 : accent.tint }}>
-                  <T w={800} s={9.5} c={on ? C.onAccent : accent.strong}>{L.save.replace('{n}', String(yearlySaving('plus')))}</T>
+                  <T w={800} s="micro" c={on ? C.onAccent : accent.strong}>{L.save.replace('{n}', String(yearlySaving('plus')))}</T>
                 </View>
               )}
             </Btn>
@@ -42,7 +42,7 @@ export default function Subscription() {
       {!purchasesAvailable && (
         <View style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 16, backgroundColor: C.card2, alignItems: 'flex-start' }}>
           <Icon name="shield" size={16} color={C.ink2} stroke={2.2} />
-          <T w={600} s={12.5} lh={1.5} c={C.ink2} style={{ flex: 1 }}>{L.payOff}</T>
+          <T w={600} s="caption" lh={1.5} c={C.ink2} style={{ flex: 1 }}>{L.payOff}</T>
         </View>
       )}
 
@@ -62,33 +62,33 @@ export default function Subscription() {
               boxShadow: pro ? C.shadowHero : undefined,
             }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <T f="display" w={700} s={22} ls={ar ? 0 : -0.5} c={ink} style={{ flex: 1 }}>{L.appName + ' ' + t.name}</T>
+              <T f="display" w={700} s="title" ls={ar ? 0 : -0.5} c={ink} style={{ flex: 1 }}>{L.appName + ' ' + t.name}</T>
               {pro && !current && (
                 <View style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 99, backgroundColor: accent.a1 }}>
-                  <T w={800} s={10} c={C.onAccent}>{L.bestValue}</T>
+                  <T w={800} s="micro" c={C.onAccent}>{L.bestValue}</T>
                 </View>
               )}
               {current && (
                 <View style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 99, backgroundColor: pro ? C.onHeroTrack : accent.tint }}>
-                  <T w={800} s={10} c={pro ? C.onHero : accent.strong}>{L.currentPlan}</T>
+                  <T w={800} s="micro" c={pro ? C.onHero : accent.strong}>{L.currentPlan}</T>
                 </View>
               )}
             </View>
-            <T w={600} s={13} c={ink2} style={{ marginTop: -8 }}>{t.tag}</T>
+            <T w={600} s="label" c={ink2} style={{ marginTop: -8 }}>{t.tag}</T>
 
             <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-              <T f="grotesk" w={700} s={36} ls={-1.4} c={ink}>{priceOf(k)}</T>
-              <T w={600} s={13} c={ink3}>{k === 'free' ? t.per : yearly ? L.perYear : L.perMonth}</T>
+              <T f="grotesk" w={700} s="hero" ls={-1.4} c={ink}>{priceOf(k)}</T>
+              <T w={600} s="label" c={ink3}>{k === 'free' ? t.per : yearly ? L.perYear : L.perMonth}</T>
             </View>
             {yearly && k !== 'free' && (
-              <T w={600} s={12} c={pro ? C.onHeroAccent : accent.fg} style={{ marginTop: -10 }}>{L.yearNote.replace('{m}', perMonthOnYear(k))}</T>
+              <T w={600} s="caption" c={pro ? C.onHeroAccent : accent.fg} style={{ marginTop: -10 }}>{L.yearNote.replace('{m}', perMonthOnYear(k))}</T>
             )}
 
             <View style={{ gap: 9, borderTopWidth: 1, borderTopColor: pro ? C.onHeroLine : C.line2, paddingTop: 14 }}>
               {t.features.map(f => (
                 <View key={f} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <Icon name="check" size={15} color={check} stroke={3} />
-                  <T w={600} s={13.5} c={ink} style={{ flex: 1 }}>{f}</T>
+                  <T w={600} s="label" c={ink} style={{ flex: 1 }}>{f}</T>
                 </View>
               ))}
             </View>
@@ -99,27 +99,27 @@ export default function Subscription() {
               pressedBg={pro ? accent.wash : plus ? accent.strong : undefined}
               accessibilityState={{ disabled: current, selected: current }}
               style={{
-                padding: 15, borderRadius: 15, alignItems: 'center',
+                padding: 15, borderRadius: 16, alignItems: 'center',
                 backgroundColor: current ? (pro ? C.onHeroTrack : C.line2) : pro ? C.onHero : plus ? accent.a1 : 'transparent',
                 borderWidth: !current && k === 'free' ? 1 : 0, borderColor: C.line,
                 boxShadow: !current && plus ? accent.glow : undefined,
               }}>
-              <T w={800} s={14.5} c={current ? ink3 : pro ? accent.deep : plus ? C.onAccent : C.ink2}>{cta}</T>
+              <T w={800} s="label" c={current ? ink3 : pro ? accent.deep : plus ? C.onAccent : C.ink2}>{cta}</T>
             </Btn>
           </View>
         );
       })}
 
-      <T w={500} s={11} lh={1.55} c={C.ink3} style={{ textAlign: 'center', paddingHorizontal: 8 }}>{legal}</T>
+      <T w={500} s="caption" lh={1.55} c={C.ink3} style={{ textAlign: 'center', paddingHorizontal: 8 }}>{legal}</T>
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 18 }}>
         {[L.restore, L.terms, L.privacyL].map(l => (
           <Btn key={l} accessibilityRole="link" pressScale={1} style={{ paddingVertical: 6 }}>
-            <T w={700} s={12} c={C.ink2}>{l}</T>
+            <T w={700} s="caption" c={C.ink2}>{l}</T>
           </Btn>
         ))}
       </View>
       <Btn onPress={() => { void restorePurchase(); }} pressScale={0.98} style={{ alignItems: 'center', paddingVertical: 14 }}>
-        <T w={700} s={13.5} c={C.ink3}>{L.payRestore}</T>
+        <T w={700} s="label" c={C.ink3}>{L.payRestore}</T>
       </Btn>
     </Page>
   );

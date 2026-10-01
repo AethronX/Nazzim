@@ -20,7 +20,7 @@ export function Timeline({ items }: { items: AgendaItem[] }) {
       {exams.map(e => (
         <View key={e.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 16, backgroundColor: C.warningTint }}>
           <Icon name="exam" size={16} color={C.warningText} stroke={2.2} />
-          <T w={700} s={13.5} c={C.warningText} style={{ flex: 1 }}>{`${L.examToday} · ${e.title}`}</T>
+          <T w={700} s="label" c={C.warningText} style={{ flex: 1 }}>{`${L.examToday} · ${e.title}`}</T>
         </View>
       ))}
       <View>
@@ -44,8 +44,8 @@ function TimelineRow({ item, first, last, now }: { item: AgendaItem; first: bool
     <View style={{ flexDirection: 'row', gap: 10 }}>
       {/* Time column */}
       <View style={{ width: 46, alignItems: 'flex-end', paddingTop: 13 }}>
-        <T f="grotesk" w={700} s={13} c={item.done ? C.ink3 : C.ink}>{item.start ?? ''}</T>
-        <T w={600} s={10.5} c={C.ink3}>{`${item.minutes}${ar ? ' د' : 'm'}`}</T>
+        <T f="grotesk" w={700} s="label" c={item.done ? C.ink3 : C.ink}>{item.start ?? ''}</T>
+        <T w={600} s="micro" c={C.ink3}>{`${item.minutes}${ar ? ' د' : 'm'}`}</T>
       </View>
       {/* Rail + node (the node is the checkbox) */}
       <View style={{ width: 26, alignItems: 'center' }}>
@@ -61,21 +61,21 @@ function TimelineRow({ item, first, last, now }: { item: AgendaItem; first: bool
         <View style={{ padding: 12, borderRadius: 16, borderWidth: now ? 1.5 : 1, borderColor: now ? accent.a1 : C.line, backgroundColor: now ? accent.tint : C.card, opacity: item.done ? 0.6 : 1, gap: 3 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: sw.fg }} />
-            <T w={600} s={11.5} c={C.ink3} numberOfLines={1} style={{ flex: 1 }}>
+            <T w={600} s="caption" c={C.ink3} numberOfLines={1} style={{ flex: 1 }}>
               {[subject?.name, item.kind === 'task' ? L.kTaskB : item.detail.split(' · ').pop()].filter(Boolean).join(' · ')}
             </T>
-            {now && <T w={800} s={10} ls={ar ? 0 : 0.8} c={accent.strong}>{L.nowL}</T>}
+            {now && <T w={800} s="micro" ls={ar ? 0 : 0.8} c={accent.strong}>{L.nowL}</T>}
           </View>
-          <T w={700} s={14.5} numberOfLines={2} style={item.done ? { textDecorationLine: 'line-through', color: C.ink3 } : undefined}>{item.title}</T>
+          <T w={700} s="label" numberOfLines={2} style={item.done ? { textDecorationLine: 'line-through', color: C.ink3 } : undefined}>{item.title}</T>
         </View>
         {asking && !item.done && (
           <View style={{ gap: 8, paddingTop: 10 }}>
-            <T w={600} s={12} c={C.ink2}>{L.rateQ}</T>
+            <T w={600} s="caption" c={C.ink2}>{L.rateQ}</T>
             <View style={{ flexDirection: 'row', gap: 6 }} accessibilityRole="radiogroup">
               {([1, 2, 3] as Confidence[]).map(c => (
                 <Btn key={c} accessibilityRole="radio" onPress={() => { setAsking(false); rateSession(item.refId, c); }} pressedBg={accent.tint2}
                   style={{ flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: c === 3 ? accent.a1 : C.line, backgroundColor: C.card }}>
-                  <T w={700} s={13} c={c === 3 ? accent.fg : C.ink}>{L.rates[c - 1]}</T>
+                  <T w={700} s="label" c={c === 3 ? accent.fg : C.ink}>{L.rates[c - 1]}</T>
                 </Btn>
               ))}
             </View>

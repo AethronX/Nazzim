@@ -6,15 +6,18 @@ import {
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import type { Kind } from '../lib/copy';
 import { useNazzim } from '../lib/store';
-import { font, type Face, type Weight } from '../lib/theme';
+import { font, TEXT, type Face, type TextRole, type Weight } from '../lib/theme';
 
 type TProps = TextProps & {
-  f?: Face; w?: Weight; s?: number; c?: string; ls?: number; lh?: number; style?: StyleProp<TextStyle>;
+  f?: Face; w?: Weight; c?: string; ls?: number; lh?: number; style?: StyleProp<TextStyle>;
+  /** A role from the type scale ('body', 'label', …) or, where a one-off is genuinely needed, a number. */
+  s?: TextRole | number;
 };
 
 // Text with the design's font stacks resolved for the current language.
-export function T({ f = 'body', w = 500, s = 14, c, ls, lh, style, ...rest }: TProps) {
+export function T({ f = 'body', w = 500, s = 'label', c, ls, lh, style, ...rest }: TProps) {
   const { ar, C } = useNazzim();
+  const size = typeof s === 'number' ? s : TEXT[s];
   return (
     <Text
       maxFontSizeMultiplier={1.3}
@@ -22,10 +25,10 @@ export function T({ f = 'body', w = 500, s = 14, c, ls, lh, style, ...rest }: TP
       style={[
         {
           fontFamily: font(f, w, ar),
-          fontSize: s,
+          fontSize: size,
           color: c ?? C.ink,
           letterSpacing: ls,
-          lineHeight: lh ? s * lh : undefined,
+          lineHeight: lh ? size * lh : undefined,
           writingDirection: ar && f !== 'grotesk' ? 'rtl' : 'ltr',
           textAlign: ar ? 'right' : undefined,
           // Numbers (grotesk) are tabular everywhere: timer, percentages, days-left stop drifting.
@@ -108,7 +111,7 @@ export function Marker({ kind, done = false }: { kind: Kind; done?: boolean }) {
       <View style={{ width: 9, height: 9, marginVertical: 1.5, transform: [{ rotate: '45deg' }], borderWidth: 2, borderColor: accent.a1, backgroundColor: done ? accent.a1 : C.card }} />
     );
   }
-  return <View style={{ width: 13, height: 13, borderRadius: 7, borderWidth: 2, borderColor: done ? accent.a1 : C.ink2, backgroundColor: done ? accent.a1 : C.card }} />;
+  return <View style={{ width: 13, height: 13, borderRadius: 6, borderWidth: 2, borderColor: done ? accent.a1 : C.ink2, backgroundColor: done ? accent.a1 : C.card }} />;
 }
 
 export type IconName =
@@ -206,7 +209,7 @@ export function Header({ top, children, pb = 13 }: { top: number; children: Reac
 
 export function Eyebrow({ children, color }: { children: ReactNode; color?: string }) {
   const { C } = useNazzim();
-  return <T w={800} s={10.5} ls={0.8} c={color ?? C.ink3}>{children}</T>;
+  return <T w={800} s="micro" ls={0.8} c={color ?? C.ink3}>{children}</T>;
 }
 
 // The one primary action on a screen: full width, indigo, white label.
@@ -216,7 +219,7 @@ export function PrimaryBtn({ title, onPress, disabled, icon }: { title: string; 
     <Btn onPress={onPress} disabled={disabled} pressedBg={accent.strong} accessibilityState={{ disabled: !!disabled }}
       style={{ flexDirection: 'row', gap: 8, padding: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: disabled ? C.line2 : accent.a1, boxShadow: disabled ? undefined : accent.glow }}>
       {!!icon && <Icon name={icon} size={15} color={disabled ? C.ink3 : C.onAccent} stroke={2.4} />}
-      <T w={800} s={15} c={disabled ? C.ink3 : C.onAccent}>{title}</T>
+      <T w={800} s="body" c={disabled ? C.ink3 : C.onAccent}>{title}</T>
     </Btn>
   );
 }
@@ -233,11 +236,11 @@ export function SectionHeader({ title, meta, action }: { title: string; meta?: s
   const { C, ar, accent } = useNazzim();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, paddingHorizontal: 2 }}>
-      <T f="display" w={700} s={18} ls={ar ? 0 : -0.4} style={{ flex: 1 }} accessibilityRole="header">{title}</T>
-      {!!meta && <T f="grotesk" w={700} s={12} c={C.ink3}>{meta}</T>}
+      <T f="display" w={700} s="heading" ls={ar ? 0 : -0.4} style={{ flex: 1 }} accessibilityRole="header">{title}</T>
+      {!!meta && <T f="grotesk" w={700} s="caption" c={C.ink3}>{meta}</T>}
       {!!action && (
         <Btn onPress={action.onPress} style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 99 }}>
-          <T w={700} s={13} c={accent.fg}>{action.label}</T>
+          <T w={700} s="label" c={accent.fg}>{action.label}</T>
         </Btn>
       )}
     </View>
@@ -262,7 +265,9 @@ export function Clock({ secs, size = 56, color, weight = 800 }: { secs: number; 
   const digit = { fontFamily: font('grotesk', weight, false), fontSize: size, lineHeight: size, color, fontVariant: ['tabular-nums' as const], letterSpacing: size >= 40 ? -2 : -0.4 };
   const label = `${mm}:${ss}`;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center' }} accessibilityRole="timer" accessibilityLabel={label}>
+    // direction is pinned LTR: the three parts are separate children, so on an RTL screen the row would
+    // otherwise render them seconds-first and a 25-minute timer would read "00:25".
+    <View style={{ flexDirection: 'row', alignItems: 'center', direction: 'ltr' }} accessibilityRole="timer" accessibilityLabel={label}>
       <Text style={digit}>{mm}</Text>
       <Text style={[digit, { width: size * 0.33, textAlign: 'center' }]}>:</Text>
       <Text style={digit}>{ss}</Text>

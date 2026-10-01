@@ -5,6 +5,7 @@ import { Page, Section } from '../../components/Page';
 import { Btn, Card, Icon, PrimaryBtn, T } from '../../components/ui';
 import { dueCards, mastery, recallStats, type Grade } from '../../engine/recall';
 import { useAcademic } from '../../lib/academic';
+import { counted } from '../../lib/copy';
 import { relDay } from '../../lib/format';
 import { readiness } from '../../lib/exams';
 import { useNazzim } from '../../lib/store';
@@ -66,13 +67,13 @@ export default function Recall() {
             <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: C.successTint, alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="check" size={26} color={C.successText} stroke={2.6} />
             </View>
-            <T f="display" w={700} s={20}>{L.rcScore.replace('{c}', String(correct)).replace('{n}', String(list.length))}</T>
+            <T f="display" w={700} s="title">{L.rcScore.replace('{c}', String(correct)).replace('{n}', String(list.length))}</T>
             {/* Peak-end: close on the thing the work was actually for, not on a confetti animation. */}
             {gained > 0 && (
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 6 }}>
-                <T w={600} s={13} c={C.ink3}>{L.xReadiness}</T>
-                <T f="display" w={800} s={22} c={accent.fg}>{readyNow}%</T>
-                <T w={700} s={13} c={C.successText}>+{gained}</T>
+                <T w={600} s="label" c={C.ink3}>{L.xReadiness}</T>
+                <T f="display" w={800} s="title" c={accent.fg}>{readyNow}%</T>
+                <T w={700} s="label" c={C.successText}>+{gained}</T>
               </View>
             )}
           </View>
@@ -88,8 +89,8 @@ export default function Recall() {
     return (
       <Page title={L.rcTitle} sub={`${exam.subject} · ${L.rcProgress.replace('{i}', String(at + 1)).replace('{n}', String(list.length))}`}>
         <Card pad={20}>
-          <T w={700} s={11} c={C.ink3} style={{ marginBottom: 8 }}>{chapter.toUpperCase()}</T>
-          <T f="display" w={700} s={19} lh={1.35}>{card.q}</T>
+          <T w={700} s="caption" c={C.ink3} style={{ marginBottom: 8 }}>{chapter.toUpperCase()}</T>
+          <T f="display" w={700} s="heading" lh={1.35}>{card.q}</T>
         </Card>
 
         {!revealed ? (
@@ -107,16 +108,16 @@ export default function Recall() {
         ) : (
           <>
             <Section label={L.rcA}>
-              <View style={{ padding: 16 }}><T w={600} s={15} lh={1.55} c={C.ink2}>{card.a}</T></View>
+              <View style={{ padding: 16 }}><T w={600} s="body" lh={1.55} c={C.ink2}>{card.a}</T></View>
             </Section>
-            <T w={700} s={11} ls={ar ? 0 : 0.6} c={C.ink3} style={{ marginTop: 6, paddingHorizontal: 4 }}>{L.rcGradeQ.toUpperCase()}</T>
+            <T w={700} s="caption" ls={ar ? 0 : 0.6} c={C.ink3} style={{ marginTop: 6, paddingHorizontal: 4 }}>{L.rcGradeQ.toUpperCase()}</T>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               {([0, 1, 2] as Grade[]).map(g => {
                 const tone = [{ bg: C.dangerTint, fg: C.danger }, { bg: C.warningTint, fg: C.warningText }, { bg: C.successTint, fg: C.successText }][g];
                 return (
                   <Btn key={g} onPress={() => grade(g)} pressScale={0.96}
                     style={{ flex: 1, paddingVertical: 15, borderRadius: 16, backgroundColor: tone.bg, alignItems: 'center' }}>
-                    <T w={700} s={13.5} c={tone.fg}>{L.rcGrades[g]}</T>
+                    <T w={700} s="label" c={tone.fg}>{L.rcGrades[g]}</T>
                   </Btn>
                 );
               })}
@@ -133,22 +134,22 @@ export default function Recall() {
     <Page title={L.rcTitle} sub={exam.subject}>
       {!stats?.total ? (
         <Card pad={20}>
-          <T w={600} s={14.5} lh={1.6} c={C.ink2}>{L.rcEmpty}</T>
-          <T w={600} s={12.5} lh={1.55} c={C.ink3} style={{ marginTop: 10 }}>{L.rcEmptyWhy}</T>
+          <T w={600} s="label" lh={1.6} c={C.ink2}>{L.rcEmpty}</T>
+          <T w={600} s="caption" lh={1.55} c={C.ink3} style={{ marginTop: 10 }}>{L.rcEmptyWhy}</T>
         </Card>
       ) : (
         <Card pad={18}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
             <View style={{ flex: 1 }}>
-              <T f="display" w={700} s={22}>{L.rcCards.replace('{n}', String(stats.total))}</T>
-              <T w={600} s={12.5} c={C.ink3} style={{ marginTop: 3 }}>
-                {stats.due ? L.rcDue.replace('{n}', String(stats.due)) : L.rcAllCaught.replace('{d}', nextDue ? relDay(nextDue.due, today, L) : '')}
+              <T f="display" w={700} s="title">{counted(stats.total, 'card', L, ar)}</T>
+              <T w={600} s="caption" c={C.ink3} style={{ marginTop: 3 }}>
+                {stats.due ? L.rcDue.replace('{n}', String(stats.due)) : L.rcAllCaught.replace('{d}', nextDue ? relDay(nextDue.due, today, L, ar) : '')}
               </T>
             </View>
             {stats.score !== undefined && (
               <View style={{ alignItems: 'center' }}>
-                <T f="display" w={800} s={26} c={C.ink}>{Math.round(stats.score * 100)}%</T>
-                <T w={600} s={10.5} c={C.ink3}>{L.rdRecall}</T>
+                <T f="display" w={800} s="display" c={C.ink}>{Math.round(stats.score * 100)}%</T>
+                <T w={600} s="micro" c={C.ink3}>{L.rdRecall}</T>
               </View>
             )}
           </View>
@@ -167,8 +168,8 @@ export default function Recall() {
               <View key={c.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderBottomWidth: i === arr.length - 1 ? 0 : 1, borderBottomColor: C.line }}>
                 <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: dot }} />
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <T w={600} s={13.5} numberOfLines={2}>{c.q}</T>
-                  <T w={600} s={11} c={C.ink3} style={{ marginTop: 2 }}>
+                  <T w={600} s="label" numberOfLines={2}>{c.q}</T>
+                  <T w={600} s="caption" c={C.ink3} style={{ marginTop: 2 }}>
                     {c.chapter < 0 ? L.exAll : exam.chapters[c.chapter] ?? ''}
                   </T>
                 </View>

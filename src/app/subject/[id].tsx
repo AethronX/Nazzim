@@ -13,7 +13,7 @@ import { swatch } from '../../lib/theme';
 // One subject: progress toward the target, its next study task, then tasks, exams and study sessions.
 export default function SubjectDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { C, L, accent, scheme, subjects, today, toggleTask, deleteSubject, startFocusOn } = useNazzim();
+  const { C, L, ar, accent, scheme, subjects, today, toggleTask, deleteSubject, startFocusOn } = useNazzim();
   const { ctx, chapterTitle } = useAcademic();
   const [confirm, setConfirm] = useState(false);
   const subject = subjects.find(s => s.id === id);
@@ -31,8 +31,8 @@ export default function SubjectDetail() {
       <View style={{ backgroundColor: C.card, borderRadius: 20, borderWidth: 1, borderColor: C.line, padding: 16, gap: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <SubjectTile subject={subject} size={40} />
-          <T w={700} s={14} style={{ flex: 1 }}>{L.progressL}</T>
-          <T f="grotesk" w={700} s={20} c={sw.fg}>{`${sum.progress}%`}</T>
+          <T w={700} s="label" style={{ flex: 1 }}>{L.progressL}</T>
+          <T f="grotesk" w={700} s="title" c={sw.fg}>{`${sum.progress}%`}</T>
         </View>
         <Bar value={sum.progress} color={sw.fg} />
       </View>
@@ -43,10 +43,10 @@ export default function SubjectDetail() {
           <Btn pressScale={0.99} onPress={() => startFocusOn(`${next.title} · ${subject.name}`, { kind: next.kind, id: next.id }, next.minutes)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: accent.a1 }}>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <T w={700} s={15}>{next.title}</T>
+              <T w={700} s="body">{next.title}</T>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}>
                 <Icon name="clock" size={14} color={C.ink3} />
-                <T w={600} s={12} c={C.ink3}>{`${next.minutes} ${L.min} · ${reasonText(next.reason, L)}`}</T>
+                <T w={600} s="caption" c={C.ink3}>{`${next.minutes} ${L.min} · ${reasonText(next.reason, L)}`}</T>
               </View>
             </View>
             <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: accent.a1, alignItems: 'center', justifyContent: 'center' }}>
@@ -73,7 +73,7 @@ export default function SubjectDetail() {
 
       <Section label={L.examsL.toUpperCase()}>
         {sum.upcomingExams.map(e => (
-          <Row key={e.id} icon="exam" title={`${e.subject}`} sub={`${fmtDate(e.date, L)} · ${relDay(e.date, today, L)}`} onPress={() => router.push(`/exam/${e.id}`)} />
+          <Row key={e.id} icon="exam" title={`${e.subject}`} sub={`${fmtDate(e.date, L)} · ${relDay(e.date, today, L, ar)}`} onPress={() => router.push(`/exam/${e.id}`)} />
         ))}
         <Row icon="plus" title={L.exAdd} onPress={() => router.push({ pathname: '/exam/new', params: { subject: subject.id } })} last chevron={false} />
       </Section>
@@ -83,8 +83,8 @@ export default function SubjectDetail() {
       </Section>
 
       <Btn onPress={() => { if (confirm) { deleteSubject(subject.id); router.back(); } else setConfirm(true); }}
-        style={{ marginTop: 6, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: confirm ? C.danger : C.line, alignItems: 'center', backgroundColor: C.card }}>
-        <T w={700} s={14} c={C.danger}>{confirm ? L.exDeleteConfirm : L.deleteSubject}</T>
+        style={{ marginTop: 6, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: confirm ? C.danger : C.line, alignItems: 'center', backgroundColor: C.card }}>
+        <T w={700} s="label" c={C.danger}>{confirm ? L.exDeleteConfirm : L.deleteSubject}</T>
       </Btn>
     </Page>
   );

@@ -39,10 +39,10 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
             pressScale={1}
             style={{ flex: 1, alignItems: 'center', gap: 4, paddingTop: 4 }}
           >
-            <View style={{ width: 46, height: 30, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? accent.tint : 'transparent' }}>
+            <View style={{ width: 46, height: 30, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? accent.tint : 'transparent' }}>
               <Icon name={tab.icon} size={21} color={color} stroke={1.9} />
             </View>
-            <T w={700} s={10} c={color}>{L[tab.label]}</T>
+            <T w={700} s="micro" c={color}>{L[tab.label]}</T>
           </Btn>
         );
       })}

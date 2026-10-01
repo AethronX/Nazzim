@@ -41,7 +41,7 @@ export default function NewTask() {
       <Section label={L.due}>
         <View style={{ padding: 14, gap: 8 }}>
           <Choice options={DUE_IN} value={dueIn} onChange={setDueIn} labels={dueLabels} />
-          <T w={600} s={12} c={C.ink3}>{fmtDate(addDays(today, dueIn), L)}</T>
+          <T w={600} s="caption" c={C.ink3}>{fmtDate(addDays(today, dueIn), L)}</T>
         </View>
       </Section>
       <Section label={L.estimate}>
@@ -51,7 +51,7 @@ export default function NewTask() {
       </Section>
       <Btn onPress={create} disabled={!ok} pressedBg={accent.strong}
         style={{ padding: 16, borderRadius: 16, alignItems: 'center', backgroundColor: ok ? accent.a1 : C.line2, boxShadow: ok ? accent.glow : undefined }}>
-        <T w={800} s={15} c={ok ? C.onAccent : C.ink3}>{L.create}</T>
+        <T w={800} s="body" c={ok ? C.onAccent : C.ink3}>{L.create}</T>
       </Btn>
     </Page>
   );

@@ -20,7 +20,7 @@ export default function Account() {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(t); }, []);
   const valid = /^\S+@\S+\.\S+$/.test(email.trim()) && password.length >= 8;
-  const input = { fontFamily: font('body', 600, ar), fontSize: 15.5, color: C.ink, paddingVertical: 13, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, textAlign: ar ? 'right' : 'left' } as const;
+  const input = { fontFamily: font('body', 600, ar), fontSize: 15.5, color: C.ink, paddingVertical: 13, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, textAlign: ar ? 'right' : 'left' } as const;
 
   const submit = async () => {
     if (!valid || busy) return;
@@ -43,7 +43,7 @@ export default function Account() {
           <Row icon={syncState === 'error' ? 'alert' : 'check'} title={status} last
             right={syncState === 'syncing' ? <ActivityIndicator color={accent.fg} /> : (
               <Btn onPress={syncNow} style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, backgroundColor: accent.tint }}>
-                <T w={700} s={12} c={accent.strong}>{L.acSyncNow}</T>
+                <T w={700} s="caption" c={accent.strong}>{L.acSyncNow}</T>
               </Btn>
             )} />
         </Section>
@@ -61,7 +61,7 @@ export default function Account() {
         {L.acBenefits.map(b => (
           <View key={b} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <Icon name="check" size={15} color={C.successText} stroke={2.6} />
-            <T w={600} s={13.5} c={C.ink2}>{b}</T>
+            <T w={600} s="label" c={C.ink2}>{b}</T>
           </View>
         ))}
       </View>
@@ -69,7 +69,7 @@ export default function Account() {
       {confirmSent && (
         <View style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 16, backgroundColor: accent.tint }}>
           <Icon name="bell" size={16} color={accent.strong} />
-          <T w={600} s={13} lh={1.45} c={accent.strong} style={{ flex: 1 }}>{L.acConfirm}</T>
+          <T w={600} s="label" lh={1.45} c={accent.strong} style={{ flex: 1 }}>{L.acConfirm}</T>
         </View>
       )}
 
@@ -80,16 +80,16 @@ export default function Account() {
           secureTextEntry autoCapitalize="none" textContentType={mode === 'create' ? 'newPassword' : 'password'}
           onSubmitEditing={submit} returnKeyType="go" accessibilityLabel={L.acPassword} />
       </View>
-      {!!error && <T w={600} s={13} c={C.danger} accessibilityLiveRegion="polite">{L.acErr[error]}</T>}
-      {!syncAvailable && <T w={600} s={13} c={C.ink3}>{L.acErr.unavailable}</T>}
+      {!!error && <T w={600} s="label" c={C.danger} accessibilityLiveRegion="polite">{L.acErr[error]}</T>}
+      {!syncAvailable && <T w={600} s="label" c={C.ink3}>{L.acErr.unavailable}</T>}
 
       <PrimaryBtn title={busy ? '…' : mode === 'signIn' ? L.acSignIn : L.acCreate} disabled={!valid || busy || !syncAvailable} onPress={submit} />
       <Btn onPress={() => { setMode(m => (m === 'signIn' ? 'create' : 'signIn')); setError(null); }} style={{ padding: 10, alignItems: 'center' }}>
-        <T w={700} s={13.5} c={accent.fg}>{mode === 'signIn' ? L.acToCreate : L.acToSignIn}</T>
+        <T w={700} s="label" c={accent.fg}>{mode === 'signIn' ? L.acToCreate : L.acToSignIn}</T>
       </Btn>
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
         <Icon name="lock" size={13} color={C.ink3} />
-        <T w={500} s={12} c={C.ink3}>{L.acLocalNote}</T>
+        <T w={500} s="caption" c={C.ink3}>{L.acLocalNote}</T>
       </View>
     </Page>
   );

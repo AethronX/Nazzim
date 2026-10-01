@@ -45,7 +45,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <TouchableOpacity
           accessibilityRole="button"
           onPress={this.retry}
-          style={{ marginTop: 6, backgroundColor: '#285CE7', paddingVertical: 14, paddingHorizontal: 30, borderRadius: 14 }}>
+          style={{ marginTop: 6, backgroundColor: '#285CE7', paddingVertical: 14, paddingHorizontal: 30, borderRadius: 12 }}>
           <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 15 }}>Try again</Text>
         </TouchableOpacity>
       </View>

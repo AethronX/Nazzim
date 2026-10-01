@@ -39,3 +39,19 @@ Docs: https://docs.expo.dev/eas/index.md
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+## Design system
+
+Three scales live in `src/lib/theme.ts` and are enforced by `scripts/test-design.js` (runs in `npm test`):
+
+- **Type** — `<T s="body">`, never `<T s={15}>`. Roles: mega, hero, display, title, heading, body, label,
+  caption, micro.
+- **Radius** — `RADIUS` (xs 6, sm 12, md 16, lg 20, xl 24, full 99). Circles (radius = half the box) are the
+  only exception.
+- **Space** — a 4pt grid, `SPACE`.
+
+Counts shown to a student go through `counted()` / `unitOf()` in `src/lib/copy.ts`: Arabic needs four forms
+for a counted noun, and getting it wrong is what makes an app read as translated. See `docs/DESIGN_SYSTEM.md`.
+
+Readiness is the product's one load-bearing number. Before changing anything that feeds it, read
+`docs/READINESS_MODEL.md` — in particular why a tick alone can never carry a chapter past 35%.

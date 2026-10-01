@@ -29,7 +29,7 @@ export default function Settings() {
     <Page title={L.settings}>
       <Section label={L.sGeneral}>
         <Row icon="globe" title={L.language} onPress={() => set({ lang: ar ? 'en' : 'ar' })}
-          right={<T w={700} s={12.5} c={C.ink2}>{L.langValue}</T>} chevron />
+          right={<T w={700} s="caption" c={C.ink2}>{L.langValue}</T>} chevron />
         <Row icon="contrast" title={L.appearance}
           right={<Choice options={APPEARANCES} value={appearance} onChange={a => set({ appearance: a })} labels={L.appearances} />} />
         <Row icon="palette" title={L.accentColor} sub={L.accentNames[ACCENT_KEYS.indexOf(accentKey)]} last
@@ -53,7 +53,7 @@ export default function Settings() {
         <Row icon="bell" title={L.reminders} sub={remindersSupported ? L.remindersSub : L.remWeb} last={!reminders.on && !remDenied}
           right={<Toggle on={reminders.on} disabled={!remindersSupported} onPress={() => setReminders({ on: !reminders.on })} label={L.reminders} />} />
         {remDenied && !reminders.on && (
-          <T w={600} s={11.5} lh={1.45} c={C.danger} style={{ paddingHorizontal: 16, paddingBottom: 13 }}>{L.remDenied}</T>
+          <T w={600} s="caption" lh={1.45} c={C.danger} style={{ paddingHorizontal: 16, paddingBottom: 13 }}>{L.remDenied}</T>
         )}
         {reminders.on && (
           <>
@@ -89,7 +89,7 @@ export default function Settings() {
       </Section>
 
       <View style={{ alignItems: 'center', paddingTop: 8 }}>
-        <T w={600} s={11.5} c={C.ink3}>{L.version}</T>
+        <T w={600} s="caption" c={C.ink3}>{L.version}</T>
       </View>
     </Page>
   );

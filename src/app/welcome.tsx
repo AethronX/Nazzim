@@ -25,7 +25,7 @@ export default function Welcome() {
   const [inDays, setInDays] = useState(7);
   const [chapters, setChapters] = useState(4);
   const [studyTime, setStudyTime] = useState<StudyTime>('afternoon');
-  const input = { fontFamily: font('body', 600, ar), fontSize: 15.5, color: C.ink, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, textAlign: ar ? 'right' : 'left' } as const;
+  const input = { fontFamily: font('body', 600, ar), fontSize: 15.5, color: C.ink, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, textAlign: ar ? 'right' : 'left' } as const;
 
   const addSubject = () => {
     const name = draft.trim();
@@ -45,16 +45,16 @@ export default function Welcome() {
           <View style={{ flex: 1, justifyContent: 'center', gap: 28 }}>
             <View style={{ alignItems: 'center', gap: 16 }}>
               <LogoMark width={72} bowl={accent.a1} dot={accent.a1} />
-              <T f="display" w={700} s={34} ls={ar ? 0 : -1}>{L.appName}</T>
-              <T w={600} s={17} lh={1.45} c={C.ink2} style={{ textAlign: 'center', maxWidth: 300 }}>{L.obTag}</T>
+              <T f="display" w={700} s="hero" ls={ar ? 0 : -1}>{L.appName}</T>
+              <T w={600} s="heading" lh={1.45} c={C.ink2} style={{ textAlign: 'center', maxWidth: 300 }}>{L.obTag}</T>
             </View>
             <View style={{ gap: 10 }}>
               <PrimaryBtn title={L.obStart} onPress={() => setStep(1)} />
               <Btn onPress={() => { loadSample(); router.replace('/'); }} style={{ padding: 14, borderRadius: 16, alignItems: 'center' }}>
-                <T w={700} s={14} c={accent.fg}>{L.obSample}</T>
+                <T w={700} s="label" c={accent.fg}>{L.obSample}</T>
               </Btn>
               <Btn onPress={() => router.push('/account')} style={{ padding: 10, alignItems: 'center' }}>
-                <T w={700} s={13.5} c={C.ink2}>{L.obHaveAccount}</T>
+                <T w={700} s="label" c={C.ink2}>{L.obHaveAccount}</T>
               </Btn>
               <View style={{ alignItems: 'center' }}>
                 <Choice options={['en', 'ar'] as const} value={lang} onChange={v => set({ lang: v })} labels={['English', 'العربية']} />
@@ -71,48 +71,48 @@ export default function Welcome() {
                 {[1, 2, 3].map(n => <View key={n} style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: n <= step ? accent.fg : C.line }} />)}
               </View>
             </View>
-            <T w={700} s={11.5} c={C.ink3}>{L.obStep.replace('{n}', String(step))}</T>
+            <T w={700} s="caption" c={C.ink3}>{L.obStep.replace('{n}', String(step))}</T>
 
             {step === 1 && (
               <View style={{ gap: 12 }}>
-                <T f="display" w={700} s={26} ls={ar ? 0 : -0.6}>{L.obAboutT}</T>
-                <T w={500} s={14} c={C.ink2}>{L.obAboutS}</T>
+                <T f="display" w={700} s="display" ls={ar ? 0 : -0.6}>{L.obAboutT}</T>
+                <T w={500} s="label" c={C.ink2}>{L.obAboutS}</T>
                 {(['name', 'uni', 'major'] as const).map(k => (
                   <TextInput key={k} value={profile[k]} onChangeText={v => setProfile(p => ({ ...p, [k]: v }))} placeholder={L[{ name: 'fName', uni: 'fUni', major: 'fMajor' }[k] as 'fName']}
                     placeholderTextColor={C.ink3} autoCapitalize="words" style={input} accessibilityLabel={L[{ name: 'fName', uni: 'fUni', major: 'fMajor' }[k] as 'fName']} />
                 ))}
                 {/* Implementation intention: deciding *when* doubles follow-through */}
-                <T w={700} s={13} c={C.ink2} style={{ marginTop: 8 }}>{L.studyTimeQ}</T>
+                <T w={700} s="label" c={C.ink2} style={{ marginTop: 8 }}>{L.studyTimeQ}</T>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="radiogroup">
                   {(['morning', 'afternoon', 'evening', 'night'] as const).map((k, i) => {
                     const on = studyTime === k;
                     return (
                       <Btn key={k} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setStudyTime(k)}
                         style={{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: 99, borderWidth: 1.5, borderColor: on ? accent.a1 : C.line, backgroundColor: on ? accent.tint : C.card }}>
-                        <T w={700} s={13} c={on ? accent.strong : C.ink2}>{L.studyTimes[i]}</T>
+                        <T w={700} s="label" c={on ? accent.strong : C.ink2}>{L.studyTimes[i]}</T>
                       </Btn>
                     );
                   })}
                 </View>
-                <T w={500} s={12} c={C.ink3}>{L.studyTimeSub}</T>
+                <T w={500} s="caption" c={C.ink3}>{L.studyTimeSub}</T>
               </View>
             )}
 
             {step === 2 && (
               <View style={{ gap: 12 }}>
-                <T f="display" w={700} s={26} ls={ar ? 0 : -0.6}>{L.obSubjT}</T>
-                <T w={500} s={14} c={C.ink2}>{L.obSubjS}</T>
+                <T f="display" w={700} s="display" ls={ar ? 0 : -0.6}>{L.obSubjT}</T>
+                <T w={500} s="label" c={C.ink2}>{L.obSubjS}</T>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   <TextInput value={draft} onChangeText={setDraft} placeholder={L.obSubjPh} placeholderTextColor={C.ink3} autoFocus
                     onSubmitEditing={addSubject} blurOnSubmit={false} returnKeyType="done" style={[input, { flex: 1 }]} accessibilityLabel={L.subjName} />
-                  <Btn label={L.addSubject} onPress={addSubject} style={{ width: 50, borderRadius: 14, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
+                  <Btn label={L.addSubject} onPress={addSubject} style={{ width: 50, borderRadius: 12, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="plus" size={18} color={accent.strong} stroke={2.6} />
                   </Btn>
                 </View>
                 {subjects.map((s, i) => (
-                  <View key={s.name} style={{ padding: 12, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, gap: 10 }}>
+                  <View key={s.name} style={{ padding: 12, borderRadius: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, gap: 10 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <T w={700} s={14.5} style={{ flex: 1 }}>{s.name}</T>
+                      <T w={700} s="label" style={{ flex: 1 }}>{s.name}</T>
                       <Btn label={L.deleteSubject} onPress={() => setSubjects(x => x.filter((_, j) => j !== i))} style={{ padding: 4 }}>
                         <Icon name="trash" size={16} color={C.ink3} />
                       </Btn>
@@ -125,25 +125,25 @@ export default function Welcome() {
 
             {step === 3 && (
               <View style={{ gap: 14 }}>
-                <T f="display" w={700} s={26} ls={ar ? 0 : -0.6}>{L.obExamT}</T>
-                <T w={500} s={14} c={C.ink2}>{L.obExamS}</T>
-                <T w={700} s={12} c={C.ink3}>{L.obWhich}</T>
+                <T f="display" w={700} s="display" ls={ar ? 0 : -0.6}>{L.obExamT}</T>
+                <T w={500} s="label" c={C.ink2}>{L.obExamS}</T>
+                <T w={700} s="caption" c={C.ink3}>{L.obWhich}</T>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="radiogroup">
                   {[...subjects.map((s, i) => ({ label: s.name, v: i as number | null })), { label: L.obNoExam, v: null }].map(o => {
                     const on = examSubject === o.v;
                     return (
                       <Btn key={String(o.v)} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setExamSubject(o.v)}
                         style={{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: 99, borderWidth: 1.5, borderColor: on ? accent.a1 : C.line, backgroundColor: on ? accent.tint : C.card }}>
-                        <T w={700} s={13} c={on ? accent.strong : C.ink2}>{o.label}</T>
+                        <T w={700} s="label" c={on ? accent.strong : C.ink2}>{o.label}</T>
                       </Btn>
                     );
                   })}
                 </View>
                 {examSubject !== null && (
                   <>
-                    <T w={700} s={12} c={C.ink3}>{L.obWhen}</T>
+                    <T w={700} s="caption" c={C.ink3}>{L.obWhen}</T>
                     <Choice options={IN_DAYS} value={inDays} onChange={setInDays} labels={IN_DAYS.map(n => L.dIn.replace('{n}', String(n)))} />
-                    <T w={700} s={12} c={C.ink3}>{L.obChapters}</T>
+                    <T w={700} s="caption" c={C.ink3}>{L.obChapters}</T>
                     <Choice options={[2, 3, 4, 5, 6, 8]} value={chapters} onChange={setChapters} labels={['2', '3', '4', '5', '6', '8']} mono />
                   </>
                 )}
@@ -156,7 +156,7 @@ export default function Welcome() {
               : <PrimaryBtn title={L.obBuild} icon="sparkle" onPress={finish} />}
             {step === 2 && !subjects.length && (
               <Btn onPress={() => { setExamSubject(null); setStep(3); }} style={{ padding: 10, alignItems: 'center' }}>
-                <T w={700} s={13.5} c={C.ink3}>{L.obSkip}</T>
+                <T w={700} s="label" c={C.ink3}>{L.obSkip}</T>
               </Btn>
             )}
           </>

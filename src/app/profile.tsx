@@ -30,15 +30,15 @@ export default function Profile() {
         <Avatar name={editing ? draft.name || me.name : me.name} size={88} />
         {!editing && (
           <View style={{ alignItems: 'center', gap: 3 }}>
-            <T f="display" w={700} s={24} ls={ar ? 0 : -0.6}>{me.name || L.noName}</T>
-            <T w={600} s={13} c={C.ink2} style={{ textAlign: 'center' }}>{[me.major, me.year].filter(Boolean).join(' · ')}</T>
-            <T w={600} s={12} c={C.ink3} style={{ textAlign: 'center' }}>{me.uni}</T>
+            <T f="display" w={700} s="display" ls={ar ? 0 : -0.6}>{me.name || L.noName}</T>
+            <T w={600} s="label" c={C.ink2} style={{ textAlign: 'center' }}>{[me.major, me.year].filter(Boolean).join(' · ')}</T>
+            <T w={600} s="caption" c={C.ink3} style={{ textAlign: 'center' }}>{me.uni}</T>
           </View>
         )}
         {!editing && (
           <Btn onPress={startEdit} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 99, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, marginTop: 4 }}>
             <Icon name="pencil" size={14} color={C.ink2} />
-            <T w={700} s={12.5} c={C.ink2}>{L.editProfile}</T>
+            <T w={700} s="caption" c={C.ink2}>{L.editProfile}</T>
           </Btn>
         )}
       </View>
@@ -47,7 +47,7 @@ export default function Profile() {
         <Section>
           {FIELDS.map((f, i) => (
             <View key={f.key} style={{ paddingVertical: 10, paddingHorizontal: 16, borderBottomWidth: i === FIELDS.length - 1 ? 0 : 1, borderBottomColor: C.line2, gap: 2 }}>
-              <T w={700} s={10.5} ls={ar ? 0 : 0.6} c={C.ink3}>{L[f.label]}</T>
+              <T w={700} s="micro" ls={ar ? 0 : 0.6} c={C.ink3}>{L[f.label]}</T>
               <TextInput
                 value={draft[f.key]}
                 onChangeText={v => setDraft(d => ({ ...d, [f.key]: v }))}
@@ -63,11 +63,11 @@ export default function Profile() {
       )}
       {editing && (
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Btn onPress={() => setEditing(false)} style={{ flex: 1, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, alignItems: 'center' }}>
-            <T w={700} s={14}>{L.cancel}</T>
+          <Btn onPress={() => setEditing(false)} style={{ flex: 1, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, alignItems: 'center' }}>
+            <T w={700} s="label">{L.cancel}</T>
           </Btn>
-          <Btn onPress={save} pressedBg={accent.strong} style={{ flex: 1, padding: 14, borderRadius: 14, backgroundColor: accent.a1, alignItems: 'center', boxShadow: accent.glow }}>
-            <T w={700} s={14} c={C.onAccent}>{L.saveProfile}</T>
+          <Btn onPress={save} pressedBg={accent.strong} style={{ flex: 1, padding: 14, borderRadius: 12, backgroundColor: accent.a1, alignItems: 'center', boxShadow: accent.glow }}>
+            <T w={700} s="label" c={C.onAccent}>{L.saveProfile}</T>
           </Btn>
         </View>
       )}
@@ -80,9 +80,9 @@ export default function Profile() {
             [`${stats.activeDays}/7`, L.prActiveDays, C.ink],
             [hours(stats.weekMinutes, ar), L.prWeek, C.ink],
           ].filter(Boolean) as [string, string, string][]).map(([v, label, color]) => (
-            <View key={label} style={{ flex: 1, minWidth: 0, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 10, alignItems: 'center' }}>
-              <T f="grotesk" w={700} s={21} ls={-0.6} c={color}>{v}</T>
-              <T w={700} s={10.5} c={C.ink3} numberOfLines={1} style={{ marginTop: 3, textAlign: 'center' }}>{label}</T>
+            <View key={label} style={{ flex: 1, minWidth: 0, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10, alignItems: 'center' }}>
+              <T f="grotesk" w={700} s="title" ls={-0.6} c={color}>{v}</T>
+              <T w={700} s="micro" c={C.ink3} numberOfLines={1} style={{ marginTop: 3, textAlign: 'center' }}>{label}</T>
             </View>
           ))}
         </View>
@@ -91,17 +91,17 @@ export default function Profile() {
       {/* Plan */}
       {!editing && (
         <Btn pressScale={0.99} onPress={() => router.push('/subscription')}
-          style={{ backgroundColor: C.hero, borderRadius: 22, padding: 18, gap: 12, boxShadow: C.shadowHero }}>
+          style={{ backgroundColor: C.hero, borderRadius: 20, padding: 18, gap: 12, boxShadow: C.shadowHero }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <Icon name="crown" size={18} color={C.onHeroAccent} stroke={2} />
-            <T w={800} s={10.5} ls={ar ? 0 : 1} c={C.onHero2} style={{ flex: 1 }}>{L.yourPlan}</T>
+            <T w={800} s="micro" ls={ar ? 0 : 1} c={C.onHero2} style={{ flex: 1 }}>{L.yourPlan}</T>
             <View style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, backgroundColor: tier === 'pro' ? C.onHeroTrack : accent.a1 }}>
-              <T w={700} s={12} c={C.onHero}>{tier === 'pro' ? L.manage : L.upgrade}</T>
+              <T w={700} s="caption" c={C.onHero}>{tier === 'pro' ? L.manage : L.upgrade}</T>
             </View>
           </View>
           <View>
-            <T f="display" w={700} s={26} ls={ar ? 0 : -0.8} c={C.onHero}>{L.appName + ' ' + t.name}</T>
-            <T w={600} s={12.5} c={C.onHero2} style={{ marginTop: 2 }}>{t.tag}</T>
+            <T f="display" w={700} s="display" ls={ar ? 0 : -0.8} c={C.onHero}>{L.appName + ' ' + t.name}</T>
+            <T w={600} s="caption" c={C.onHero2} style={{ marginTop: 2 }}>{t.tag}</T>
           </View>
         </Btn>
       )}

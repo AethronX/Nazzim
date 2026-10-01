@@ -63,12 +63,12 @@ export function Splash({ onDone }: { onDone: () => void }) {
           <T f="display" w={700} s={ar ? 58 : 54} ls={ar ? 0 : -2.3} c={C.onHero} accessibilityRole="header">{L.appName}</T>
         </Animated.View>
         <Animated.View style={[{ alignItems: 'center', marginTop: 14, gap: 10 }, rise(rest, 8)]}>
-          <T w={600} s={16} lh={1.4} c={C.onHero2} style={{ textAlign: 'center' }}>{L.splashTag}</T>
-          <T w={700} s={12} ls={ar ? 0 : 0.6} c={C.onHeroAccent} style={{ textAlign: 'center' }}>{L.splashParts.join('  ·  ')}</T>
+          <T w={600} s="body" lh={1.4} c={C.onHero2} style={{ textAlign: 'center' }}>{L.splashTag}</T>
+          <T w={700} s="caption" ls={ar ? 0 : 0.6} c={C.onHeroAccent} style={{ textAlign: 'center' }}>{L.splashParts.join('  ·  ')}</T>
         </Animated.View>
       </Pressable>
       <Animated.View style={{ position: 'absolute', left: 0, right: 0, bottom: 44, alignItems: 'center', opacity: rest }}>
-        <T w={600} s={11} ls={ar ? 0 : 0.4} c={C.onHero3}>{L.madeIn}</T>
+        <T w={600} s="caption" ls={ar ? 0 : 0.4} c={C.onHero3}>{L.madeIn}</T>
       </Animated.View>
     </Animated.View>
   );
@@ -79,16 +79,16 @@ export function DeleteDialog() {
   const { C, L, ar, setDel, confirmDel, account } = useNazzim();
   return (
     <View style={[fill, { zIndex: 75, alignItems: 'center', justifyContent: 'center', padding: 28, backgroundColor: C.scrimDialog, direction: ar ? 'rtl' : 'ltr' }]}>
-      <FadeIn duration={220} style={{ width: '100%', backgroundColor: C.card, borderRadius: 22, padding: 22 }}>
+      <FadeIn duration={220} style={{ width: '100%', backgroundColor: C.card, borderRadius: 20, padding: 22 }}>
         <View accessibilityViewIsModal accessibilityRole="alert">
-          <T f="display" w={700} s={18} ls={-0.4}>{account ? L.delTitle : L.delLocalTitle}</T>
-          <T w={400} s={13} lh={1.5} c={C.ink2} style={{ marginTop: 8 }}>{account ? L.delBody : L.delLocalBody}</T>
+          <T f="display" w={700} s="heading" ls={-0.4}>{account ? L.delTitle : L.delLocalTitle}</T>
+          <T w={400} s="label" lh={1.5} c={C.ink2} style={{ marginTop: 8 }}>{account ? L.delBody : L.delLocalBody}</T>
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 18 }}>
-            <Btn onPress={() => setDel(false)} style={{ flex: 1, padding: 13, borderRadius: 13, borderWidth: 1, borderColor: C.line, alignItems: 'center' }}>
-              <T w={700} s={13.5}>{L.cancel}</T>
+            <Btn onPress={() => setDel(false)} style={{ flex: 1, padding: 13, borderRadius: 12, borderWidth: 1, borderColor: C.line, alignItems: 'center' }}>
+              <T w={700} s="label">{L.cancel}</T>
             </Btn>
-            <Btn onPress={confirmDel} style={{ flex: 1, padding: 13, borderRadius: 13, backgroundColor: C.danger, alignItems: 'center' }}>
-              <T w={700} s={13.5} c={C.onAccent}>{L.delConfirm}</T>
+            <Btn onPress={confirmDel} style={{ flex: 1, padding: 13, borderRadius: 12, backgroundColor: C.danger, alignItems: 'center' }}>
+              <T w={700} s="label" c={C.onAccent}>{L.delConfirm}</T>
             </Btn>
           </View>
         </View>
@@ -121,7 +121,7 @@ export function Toast() {
         }}
       >
         <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.onHeroAccent, boxShadow: `0 0 8px ${C.onHeroAccent}` }} />
-        <T w={700} s={12.5} c={C.onHero} numberOfLines={1}>{toast.msg}</T>
+        <T w={700} s="caption" c={C.onHero} numberOfLines={1}>{toast.msg}</T>
       </Animated.View>
     </View>
   );
@@ -143,7 +143,7 @@ export function MiniTimer({ onPress }: { onPress: () => void }) {
         style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 16, backgroundColor: C.hero, boxShadow: C.shadowFloat, direction: ar ? 'rtl' : 'ltr' }}
       >
         <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.onHeroAccent, boxShadow: `0 0 8px ${C.onHeroAccent}` }} />
-        <T w={600} s={12.5} c={C.onHero} numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{timer.task || L.freeFocus}</T>
+        <T w={600} s="caption" c={C.onHero} numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{timer.task || L.freeFocus}</T>
         <Clock secs={secs} size={14} color={C.onHero} />
       </Btn>
     </FadeIn>

@@ -183,6 +183,37 @@ export const TAB_BAR_CONTENT = 59;
 
 export type Weight = 400 | 500 | 600 | 700 | 800;
 
+// ── Scales ───────────────────────────────────────────────────────────────────────────────────
+//
+// Before these existed the app used 15 distinct font sizes (12, 12.5, 13, 13.5, 14, 14.5 …), 14 corner
+// radii and padding on no grid at all. No one can see the difference between 12.5pt and 13pt; what they can
+// see is that nothing quite lines up, everywhere, which is the gap between a careful app and a polished one.
+//
+// Seven type steps, six radii, one 4pt space grid. Every screen draws from these and nothing else, so a
+// change to density or rhythm happens once rather than in 155 places.
+
+/** Type scale. Each step is a role, not a number — `heading` stays a heading if the scale is retuned. */
+export const TEXT = {
+  mega: 40,    // the one biggest figure on a screen
+  hero: 32,    // a readiness percentage, a price — the number the screen is about
+  display: 28, // screen titles
+  title: 22,   // card headlines, big numbers
+  heading: 18, // section and list-item titles
+  body: 15.5,  // primary reading text
+  label: 13.5, // secondary text, buttons, most UI
+  caption: 12, // meta, timestamps, helper text
+  micro: 10.5, // eyebrows, badges, chart ticks
+} as const;
+export type TextRole = keyof typeof TEXT;
+
+/** Corner radii. `full` is a pill; everything else steps with the element's size. */
+export const RADIUS = { xs: 6, sm: 12, md: 16, lg: 20, xl: 24, full: 99 } as const;
+export type RadiusRole = keyof typeof RADIUS;
+
+/** 4pt space grid, for padding and gaps. */
+export const SPACE = { '0.5': 2, 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 7: 28, 8: 32 } as const;
+
+
 // Line-height scale by role, not by language. Arabic has deeper descenders than Latin, so a single ratio
 // clips at display sizes and over-breathes at number sizes. Encode once; use everywhere.
 export const LH = { display: 1.15, heading: 1.25, body: 1.5, micro: 1.4, number: 1 } as const;

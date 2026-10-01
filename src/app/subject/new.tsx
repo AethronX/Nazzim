@@ -30,7 +30,7 @@ export default function NewSubject() {
       </View>
       <Section>
         <View style={{ paddingVertical: 12, paddingHorizontal: 16, gap: 2 }}>
-          <T w={700} s={10.5} c={C.ink3}>{L.subjName}</T>
+          <T w={700} s="micro" c={C.ink3}>{L.subjName}</T>
           <TextInput value={name} onChangeText={setName} placeholder={L.subjNamePh} placeholderTextColor={C.ink3} autoFocus autoCapitalize="words"
             returnKeyType="done" onSubmitEditing={create}
             style={{ fontFamily: font('body', 600, ar), fontSize: 16, color: C.ink, paddingVertical: 4, textAlign: ar ? 'right' : 'left' }} />
@@ -44,7 +44,7 @@ export default function NewSubject() {
             return (
               <Btn key={g} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setGrade(g)}
                 style={{ minWidth: 48, paddingVertical: 9, paddingHorizontal: 12, borderRadius: 12, alignItems: 'center', borderWidth: 1.5, borderColor: on ? accent.a1 : C.line, backgroundColor: on ? accent.tint : C.card }}>
-                <T f="grotesk" w={700} s={14} c={on ? accent.strong : C.ink2}>{g}</T>
+                <T f="grotesk" w={700} s="label" c={on ? accent.strong : C.ink2}>{g}</T>
               </Btn>
             );
           })}
@@ -71,7 +71,7 @@ export default function NewSubject() {
             const on = ic === icon, sw = swatch(color, scheme);
             return (
               <Btn key={ic} accessibilityRole="radio" accessibilityLabel={ic} accessibilityState={{ checked: on }} onPress={() => setIcon(ic)} pressScale={0.9}
-                style={{ width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? sw.tint : C.card2, borderWidth: 1.5, borderColor: on ? sw.fg : C.line }}>
+                style={{ width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? sw.tint : C.card2, borderWidth: 1.5, borderColor: on ? sw.fg : C.line }}>
                 <Icon name={ic} size={22} color={on ? sw.fg : C.ink3} stroke={2} />
               </Btn>
             );
@@ -81,7 +81,7 @@ export default function NewSubject() {
 
       <Btn onPress={create} disabled={!ok} pressedBg={accent.strong}
         style={{ padding: 16, borderRadius: 16, alignItems: 'center', backgroundColor: ok ? accent.a1 : C.line2, boxShadow: ok ? accent.glow : undefined }}>
-        <T w={800} s={15} c={ok ? C.onAccent : C.ink3}>{L.create}</T>
+        <T w={800} s="body" c={ok ? C.onAccent : C.ink3}>{L.create}</T>
       </Btn>
     </Page>
   );

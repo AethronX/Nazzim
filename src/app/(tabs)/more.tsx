@@ -19,14 +19,14 @@ export default function More() {
   return (
     <View style={{ flex: 1, direction: ar ? 'rtl' : 'ltr' }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headerTop, paddingHorizontal: 18, paddingBottom: scrollBottom, gap: 12 }}>
-        <T f="display" w={700} s={26} ls={ar ? 0 : -0.8} accessibilityRole="header" style={{ marginBottom: 4 }}>{L.more}</T>
+        <T f="display" w={700} s="display" ls={ar ? 0 : -0.8} accessibilityRole="header" style={{ marginBottom: 4 }}>{L.more}</T>
 
         <Btn pressScale={0.99} onPress={() => router.push('/profile')}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.line }}>
           <Avatar name={me.name} size={48} />
           <View style={{ flex: 1, minWidth: 0 }}>
-            <T f="display" w={700} s={17} numberOfLines={1}>{me.name || L.noName}</T>
-            <T w={600} s={12} c={C.ink3} numberOfLines={1}>{[me.major, L.tiers[tier].name].filter(Boolean).join(' · ')}</T>
+            <T f="display" w={700} s="heading" numberOfLines={1}>{me.name || L.noName}</T>
+            <T w={600} s="caption" c={C.ink3} numberOfLines={1}>{[me.major, L.tiers[tier].name].filter(Boolean).join(' · ')}</T>
           </View>
           <Icon name="chevron" size={15} color={C.ink3} stroke={2.3} flip={ar} />
         </Btn>

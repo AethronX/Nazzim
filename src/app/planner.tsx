@@ -50,13 +50,13 @@ export default function Planner() {
           {missing && (
             <View style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 16, backgroundColor: accent.tint }}>
               <Icon name="help" size={16} color={accent.strong} />
-              <T w={600} s={13} lh={1.45} c={accent.strong} style={{ flex: 1 }}>{L.plNeed}</T>
+              <T w={600} s="label" lh={1.45} c={accent.strong} style={{ flex: 1 }}>{L.plNeed}</T>
             </View>
           )}
           {L.plTry.map(ex => (
-            <Btn key={ex} onPress={() => run(ex)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1, borderColor: C.line, backgroundColor: C.card }}>
+            <Btn key={ex} onPress={() => run(ex)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.card }}>
               <Icon name="arrow" size={14} color={accent.fg} flip={ar} />
-              <T w={600} s={13} c={C.ink2} style={{ flex: 1 }}>{ex}</T>
+              <T w={600} s="label" c={C.ink2} style={{ flex: 1 }}>{ex}</T>
             </Btn>
           ))}
         </View>
@@ -69,12 +69,12 @@ export default function Planner() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <SubjectTile subject={subject ?? { color: 'indigo', icon: 'book' }} size={44} />
               <View style={{ flex: 1, minWidth: 0 }}>
-                <T f="display" w={700} s={18} numberOfLines={1}>{subject ? subject.name : L.plNewSubject.replace('{s}', req.subjectName)}</T>
-                <T w={600} s={12} c={C.ink3}>{`${L.plWhen} · ${fmtDate(prop.examDate, L)} · ${relDay(prop.examDate, today, L)}`}</T>
+                <T f="display" w={700} s="heading" numberOfLines={1}>{subject ? subject.name : L.plNewSubject.replace('{s}', req.subjectName)}</T>
+                <T w={600} s="caption" c={C.ink3}>{`${L.plWhen} · ${fmtDate(prop.examDate, L)} · ${relDay(prop.examDate, today, L, ar)}`}</T>
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Stepper label={L.plWhen} value={relDay(prop.examDate, today, L)} onMinus={() => adjust({ inDays: Math.max(1, req.inDays - 1) })} onPlus={() => adjust({ inDays: Math.min(90, req.inDays + 1) })} />
+              <Stepper label={L.plWhen} value={relDay(prop.examDate, today, L, ar)} onMinus={() => adjust({ inDays: Math.max(1, req.inDays - 1) })} onPlus={() => adjust({ inDays: Math.min(90, req.inDays + 1) })} />
               <Stepper label={L.plChapters} value={String(req.chapters)} onMinus={() => adjust({ chapters: Math.max(1, req.chapters - 1) })} onPlus={() => adjust({ chapters: Math.min(20, req.chapters + 1) })} />
             </View>
           </View>
@@ -83,14 +83,14 @@ export default function Planner() {
             {prop.days.map((d, i) => (
               <View key={d.date} style={{ flexDirection: 'row', gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderBottomWidth: i === prop.days.length - 1 ? 0 : 1, borderBottomColor: C.line2 }}>
                 <View style={{ width: 78 }}>
-                  <T w={700} s={12.5}>{cap(relDay(d.date, today, L))}</T>
-                  <T f="grotesk" w={600} s={11} c={C.ink3}>{hours(d.minutes, ar)}</T>
+                  <T w={700} s="caption">{cap(relDay(d.date, today, L, ar))}</T>
+                  <T f="grotesk" w={600} s="caption" c={C.ink3}>{hours(d.minutes, ar)}</T>
                 </View>
                 <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
                   {d.sessions.map(s => (
                     <View key={s.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: s.kind === 'mock' ? C.warning : s.kind === 'learn' ? accent.a1 : accent.tint2 }} />
-                      <T w={600} s={12.5} c={C.ink2} numberOfLines={1} style={{ flex: 1 }}>{sessionLabel(s.kind, s.chapter)}</T>
+                      <T w={600} s="caption" c={C.ink2} numberOfLines={1} style={{ flex: 1 }}>{sessionLabel(s.kind, s.chapter)}</T>
                     </View>
                   ))}
                 </View>
@@ -103,13 +103,13 @@ export default function Planner() {
               {prop.reasons.map(r => (
                 <View key={r.code} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
                   <Icon name={r.code === 'perDay' && r.over ? 'alert' : 'check'} size={14} color={r.code === 'perDay' && r.over ? C.warningText : C.successText} stroke={2.6} />
-                  <T w={500} s={13} lh={1.45} c={C.ink2} style={{ flex: 1 }}>{reasonLine(r, L, ar)}</T>
+                  <T w={500} s="label" lh={1.45} c={C.ink2} style={{ flex: 1 }}>{reasonLine(r, L, ar)}</T>
                 </View>
               ))}
             </View>
           </Section>
 
-          {!!req.replacesExamId && <T w={600} s={12} c={C.ink3} style={{ textAlign: 'center' }}>{L.plReplaces.replace('{s}', req.subjectName)}</T>}
+          {!!req.replacesExamId && <T w={600} s="caption" c={C.ink3} style={{ textAlign: 'center' }}>{L.plReplaces.replace('{s}', req.subjectName)}</T>}
           <PrimaryBtn title={L.plApply} icon="check" onPress={() => {
             if (atExamLimit && !req.replacesExamId) { hitLimit(); return; }
             applyPlan(prop); router.dismissTo('/');
@@ -136,12 +136,12 @@ function Stepper({ label, value, onMinus, onPlus }: { label: string; value: stri
   const { C } = useNazzim();
   const btn = { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' } as const;
   return (
-    <View style={{ flex: 1, minWidth: 0, borderRadius: 14, backgroundColor: C.card2, padding: 10, gap: 6 }}>
-      <T w={700} s={10.5} c={C.ink3}>{label}</T>
+    <View style={{ flex: 1, minWidth: 0, borderRadius: 12, backgroundColor: C.card2, padding: 10, gap: 6 }}>
+      <T w={700} s="micro" c={C.ink3}>{label}</T>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <Btn label="−" onPress={onMinus} style={btn}><T f="grotesk" w={700} s={17} c={C.ink2}>−</T></Btn>
-        <T w={700} s={13} numberOfLines={1} style={{ flex: 1, textAlign: 'center' }}>{value}</T>
-        <Btn label="+" onPress={onPlus} style={btn}><T f="grotesk" w={700} s={17} c={C.ink2}>+</T></Btn>
+        <Btn label="−" onPress={onMinus} style={btn}><T f="grotesk" w={700} s="heading" c={C.ink2}>−</T></Btn>
+        <T w={700} s="label" numberOfLines={1} style={{ flex: 1, textAlign: 'center' }}>{value}</T>
+        <Btn label="+" onPress={onPlus} style={btn}><T f="grotesk" w={700} s="heading" c={C.ink2}>+</T></Btn>
       </View>
     </View>
   );

@@ -30,26 +30,26 @@ export default function Focus() {
           <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: C.successTint, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="check" size={34} color={C.successText} stroke={2.6} />
           </View>
-          <T f="display" w={700} s={24} ls={ar ? 0 : -0.5}>{L.sessionComplete}</T>
-          <T w={600} s={13.5} c={C.ink2} style={{ textAlign: 'center' }}>{review.title}</T>
-          <T f="grotesk" w={700} s={13} c={accent.fg}>{L.focusMin.replace('{n}', String(review.minutes))}</T>
+          <T f="display" w={700} s="display" ls={ar ? 0 : -0.5}>{L.sessionComplete}</T>
+          <T w={600} s="label" c={C.ink2} style={{ textAlign: 'center' }}>{review.title}</T>
+          <T f="grotesk" w={700} s="label" c={accent.fg}>{L.focusMin.replace('{n}', String(review.minutes))}</T>
         </View>
         <View style={{ backgroundColor: C.card, borderRadius: 20, borderWidth: 1, borderColor: C.line, padding: 16, gap: 14 }}>
-          <T w={600} s={14} style={{ textAlign: 'center' }}>{review.target?.kind === 'task' ? L.taskDoneQ : L.howWent}</T>
+          <T w={600} s="label" style={{ textAlign: 'center' }}>{review.target?.kind === 'task' ? L.taskDoneQ : L.howWent}</T>
           {review.target?.kind === 'session' ? (
             <View style={{ flexDirection: 'row', gap: 8 }}>
               {([[1, L.rHard, C.dangerTint, C.danger], [2, L.rOk, accent.tint, accent.strong], [3, L.rEasy, C.successTint, C.successText]] as const).map(([c, label, bg, fg]) => (
                 <Btn key={c} onPress={() => { rateSession(review.target!.id, c); close(); }}
-                  style={{ flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: bg, alignItems: 'center' }}>
-                  <T w={700} s={14} c={fg}>{label}</T>
+                  style={{ flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: bg, alignItems: 'center' }}>
+                  <T w={700} s="label" c={fg}>{label}</T>
                 </Btn>
               ))}
             </View>
           ) : (
             <View style={{ gap: 8 }}>
               <PrimaryBtn title={L.yesDone} icon="check" onPress={() => { if (!tasks.find(t => t.id === review.target!.id)?.done) toggleTask(review.target!.id); close(); }} />
-              <Btn onPress={close} style={{ padding: 14, borderRadius: 14, borderWidth: 1, borderColor: C.line, alignItems: 'center' }}>
-                <T w={700} s={14} c={C.ink2}>{L.notYet}</T>
+              <Btn onPress={close} style={{ padding: 14, borderRadius: 12, borderWidth: 1, borderColor: C.line, alignItems: 'center' }}>
+                <T w={700} s="label" c={C.ink2}>{L.notYet}</T>
               </Btn>
             </View>
           )}
@@ -66,8 +66,8 @@ export default function Focus() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: C.line }}>
           <View style={{ width: 10, height: 10, borderRadius: 5, borderWidth: 3, borderColor: accent.a1 }} />
           <View style={{ flex: 1, minWidth: 0 }}>
-            <T w={800} s={10} ls={0.8} c={C.ink3}>{L.focusOn}</T>
-            <T w={700} s={13.5} numberOfLines={1} style={{ marginTop: 2 }}>{timer.task || L.freeFocus}</T>
+            <T w={800} s="micro" ls={0.8} c={C.ink3}>{L.focusOn}</T>
+            <T w={700} s="label" numberOfLines={1} style={{ marginTop: 2 }}>{timer.task || L.freeFocus}</T>
           </View>
         </View>
 
@@ -82,7 +82,7 @@ export default function Focus() {
             </Svg>
             <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Clock secs={secs} size={56} />
-              <T w={800} s={10.5} ls={1.6} c={accent.fg}>{phase}</T>
+              <T w={800} s="micro" ls={1.6} c={accent.fg}>{phase}</T>
             </View>
           </View>
         </View>
@@ -97,7 +97,7 @@ export default function Focus() {
                 onPress={() => setPreset(m)}
                 style={[{ paddingVertical: 9, paddingHorizontal: 16, borderRadius: 99 }, on ? { backgroundColor: C.inv } : { backgroundColor: C.card, borderWidth: 1, borderColor: C.line }]}
               >
-                <T w={700} s={12} c={on ? C.onInv : C.ink2}>{m + (ar ? ' د' : ' min')}</T>
+                <T w={700} s="caption" c={on ? C.onInv : C.ink2}>{m + (ar ? ' د' : ' min')}</T>
               </Btn>
             );
           })}

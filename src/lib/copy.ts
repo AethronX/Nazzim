@@ -71,16 +71,22 @@ const en = {
   exChapters: 'Chapters or topics', exChaptersPh: 'One per line, e.g.\nChapter 4\nChapter 5', exCreate: 'Build my revision plan',
   exPreview: '{s} sessions over {d} days: study each chapter, review it after 1, 3 and 7 days, then a mock test the day before.',
   exTooSoon: 'Pick a date at least one day away.', exNeedsChapters: 'Add at least one chapter.',
-  exReady: 'READY', exLeft: '{n} left', exDelete: 'Delete exam', exDeleteConfirm: 'Tap again to delete',
+  exReady: 'READY', exLeft: '{c} left', exDelete: 'Delete exam', exDeleteConfirm: 'Tap again to delete',
   exNone: 'No exams yet. Add one and Nazzim plans your revision.', exHow: 'Spaced review: each chapter comes back after 1, 3 and 7 days. Hard adds a review tomorrow; Easy skips one.',
-  exChaptersH: 'CHAPTERS', exChaptersN: '{n} chapters', exPlanH: 'REVISION PLAN', exAll: 'All chapters', exDay: 'Exam day',
+  exChaptersH: 'CHAPTERS', exChaptersN: '{c}', exPlanH: 'REVISION PLAN', exAll: 'All chapters', exDay: 'Exam day',
+  // Counted nouns. English needs two forms; Arabic needs four (see `counted` at the foot of this file).
+  units: {
+    day: ['day', 'days'], session: ['session', 'sessions'], chapter: ['chapter', 'chapters'],
+    task: ['task', 'tasks'], minute: ['minute', 'minutes'], card: ['card', 'cards'],
+    exam: ['exam', 'exams'],
+  },
   // ── Retrieval practice ──
   rcTitle: 'Self-test', rcSub: 'Prove you can recall it', rcOpen: 'Test yourself',
   rcEmpty: 'No cards yet. Write a question you expect on the exam, and the answer in your own words.',
   rcEmptyWhy: 'Writing the card is already studying. Answering it later is what makes readiness mean something.',
   rcAdd: 'Add a card', rcQ: 'Question', rcQPh: 'e.g. What does the central limit theorem state?',
   rcA: 'Answer', rcAPh: 'In your own words — this is the key you grade yourself against.',
-  rcSave: 'Save card', rcChapter: 'Chapter', rcCards: '{n} cards', rcCardsNone: 'No cards',
+  rcSave: 'Save card', rcChapter: 'Chapter', rcCards: '{c}', rcCardsNone: 'No cards',
   rcDue: '{n} due', rcAllCaught: 'Nothing due right now. Next review {d}.',
   rcYourAnswer: 'Write your answer first', rcYourAnswerPh: 'Recall it before you look. Typing is the practice.',
   rcReveal: 'Show the answer', rcGradeQ: 'How close were you?',
@@ -101,7 +107,7 @@ const en = {
   rdDecay: 'Untouched for {n} days — older work counts for a little less.',
   kLearn: 'Study', kReview: 'Review', kMock: 'Mock test', rateQ: 'How well do you know it?', rates: ['Hard', 'OK', 'Easy'],
   reviewsToday: 'REVISION TODAY', onDay: 'SCHEDULE · {d}', nothingDay: 'Nothing planned. A free day.', startS: 'Start', doneS: 'Done',
-  dToday: 'today', dTomorrow: 'tomorrow', dIn: 'in {n} days', toastRated: 'Saved · +20 XP',
+  dToday: 'today', dTomorrow: 'tomorrow', dIn: 'in {c}', toastRated: 'Saved · +20 XP',
   wd: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], wdLong: ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'],
   months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   sampleExam: { subject: 'Mathematics', chapters: ['Limits', 'Derivatives', 'Chain rule', 'Integrals'] },
@@ -138,7 +144,7 @@ const en = {
   examToday: 'Exam today', nowL: 'NOW', dayProgress: '{d} of {t} done · {m} left', dayDone: 'Everything for today is done',
   glanceSemester: 'Readiness', glanceNoExam: 'Tasks done', glanceWeek: 'Planned ahead', glanceExam: 'Next exam', glanceNone: 'None yet', smartPlan: 'Smart plan',
   emptyTodayT: 'Nothing planned today', emptyTodayS: 'Add a task, or plan an exam and Nazzim fills your days.',
-  secAccount: 'ACCOUNT', secStudy: 'STUDY', secApp: 'APP', subjExam: 'Exam {d}', subjTasks: '{n} open tasks', subjTask1: '1 open task', subjClear: 'Nothing due',
+  secAccount: 'ACCOUNT', secStudy: 'STUDY', secApp: 'APP', subjExam: 'Exam {d}', subjTasks: '{c} open', subjClear: 'Nothing due',
   acTitle: 'Account', acSub: 'Sync and back up your semester', acSignIn: 'Sign in', acCreate: 'Create account',
   acBenefits: ['Your semester on every device', 'Backed up if you lose your phone', 'Works offline, syncs when you’re back'],
   acEmail: 'Email', acPassword: 'Password (8+ characters)', acToCreate: 'New here? Create an account', acToSignIn: 'Have an account? Sign in',
@@ -148,10 +154,10 @@ const en = {
   acSyncNow: 'Sync now', acSignOut: 'Sign out', acSignedIn: 'SIGNED IN AS', acJustNow: 'just now', acMinAgo: '{n} min ago',
   obHaveAccount: 'I already have an account', delLocalTitle: 'Erase data on this device?',
   delLocalBody: 'This erases your subjects, exams, plans and progress from this device. This can’t be undone.', toastDelFail: 'Couldn’t delete. Check your connection.',
-  xDaysLeft: '{n} DAYS LEFT', xDayLeft: 'TOMORROW', xToday: 'TODAY', xOver: 'DONE', xReadiness: 'Exam readiness',
+  xDaysLeft: '{c} LEFT', xDayLeft: 'TOMORROW', xToday: 'TODAY', xOver: 'DONE', xReadiness: 'Exam readiness',
   xStatus: { onTrack: 'On track', behind: 'A little behind', atRisk: 'Needs focus now', ready: 'Ready', over: 'Exam finished' },
   xStatusSub: { onTrack: 'Keep following the plan.', behind: '{n} sessions slipped. Today’s session catches you up.', atRisk: 'Few days left. Do the next session and the mock test.', ready: 'Light reviews and rest before the exam.', over: 'How did it go? Your work counts toward the semester.' },
-  xRemaining: 'Left: {s} sessions · {t}', xPerDay: 'About {m} a day', xNextBtn: 'Start next: {t}', xTopics: 'TOPICS', xPlan: 'STUDY PLAN',
+  xRemaining: 'Left: {s} · {t}', xPerDay: 'About {m} a day', xNextBtn: 'Start next: {t}', xTopics: 'TOPICS', xPlan: 'STUDY PLAN',
   xTopicState: { notStarted: 'Not started', learning: 'In progress', solid: 'Solid', weak: 'Needs work' },
   xPhase: { learn: 'Phase 1 of 3 · First pass', review: 'Phase 2 of 3 · Reviews', final: 'Phase 3 of 3 · Final prep' },
   xMock: 'Mock test {d}: the best predictor of how the exam will go.', xAdjust: 'Change date or chapters', xDoneN: '{n} done',
@@ -177,7 +183,7 @@ const en = {
   iHeavier: 'Next week is heavier: {n} planned vs {c} this week. Starting early keeps it calm.', iConsistency: 'You studied on {n} of the last 7 days.',
   iStart: 'Finish one session today and your progress starts here.',
   rescueEyebrow: 'RESCUE PLAN', rescueTitle: 'You’re behind. That’s okay.', rescueSub: 'Nazzim will rebuild the next 7 days around the time you really have.',
-  rOverdueN: 'overdue tasks', rExamsN: 'upcoming exams', rWorkN: 'of work this week', capacityL: 'On a normal day I can study',
+  rOverdueN: '{u} overdue', rExamsN: '{u} ahead', rWorkN: 'of work this week', capacityL: 'On a normal day I can study',
   buildRescue: 'Build Rescue Plan', applyRescue: 'Apply this plan', rescueNote: 'Deadlines stay the same. Only when you do the work changes.',
   rescueOk: 'This fits your time. {n} items move, nothing is lost.', rescueOnTrack: 'You’re on track. Nothing needs to move.',
   rescueTight: 'Some days still run over. Do the flagged items first, or ask for an extension.', rescueDropped: '{n} extra reviews dropped; later reviews cover them.',
@@ -272,16 +278,25 @@ const ar: Copy = {
   exChapters: 'الفصول أو المواضيع', exChaptersPh: 'كل فصل في سطر، مثلاً:\nالفصل 4\nالفصل 5', exCreate: 'ابنِ خطة مراجعتي',
   exPreview: '{s} جلسة خلال {d} أيام: دراسة كل فصل، ثم مراجعته بعد يوم و3 أيام و7 أيام، ثم امتحان تجريبي في اليوم السابق.',
   exTooSoon: 'اختر موعداً بعد يوم واحد على الأقل.', exNeedsChapters: 'أضف فصلاً واحداً على الأقل.',
-  exReady: 'الجاهزية', exLeft: 'متبقٍ {n}', exDelete: 'حذف الامتحان', exDeleteConfirm: 'اضغط مرة أخرى للحذف',
+  exReady: 'الجاهزية', exLeft: '{c} متبقية', exDelete: 'حذف الامتحان', exDeleteConfirm: 'اضغط مرة أخرى للحذف',
   exNone: 'لا توجد امتحانات بعد. أضف امتحاناً ويخطط نظّم مراجعتك.', exHow: 'مراجعة متباعدة: كل فصل يعود بعد يوم و3 أيام و7 أيام. "صعب" يضيف مراجعة غداً، و"سهل" يلغي واحدة.',
-  exChaptersH: 'الفصول', exChaptersN: '{n} فصول', exPlanH: 'خطة المراجعة', exAll: 'كل الفصول', exDay: 'يوم الامتحان',
+  exChaptersH: 'الفصول', exChaptersN: '{c}', exPlanH: 'خطة المراجعة', exAll: 'كل الفصول', exDay: 'يوم الامتحان',
+  // أربع صيغ لكل معدود: مفرد، مثنّى، جمع (3–10)، ثم تمييز منصوب (11+).
+  // المثنى هنا بصيغة النصب/الجر («يومين» لا «يومان») لأنه يرد في الواجهة بعد حرف جر في الغالب الأعم:
+  // «بعد يومين»، «خلال جلستين». وصيغة الرفع تبدو متكلّفة في هذه السياقات.
+  units: {
+    day: ['يوم', 'يومين', 'أيام', 'يوماً'], session: ['جلسة', 'جلستين', 'جلسات', 'جلسة'],
+    chapter: ['فصل', 'فصلين', 'فصول', 'فصلاً'], task: ['مهمة', 'مهمتين', 'مهام', 'مهمة'],
+    minute: ['دقيقة', 'دقيقتين', 'دقائق', 'دقيقة'], card: ['بطاقة', 'بطاقتين', 'بطاقات', 'بطاقة'],
+    exam: ['امتحان', 'امتحانين', 'امتحانات', 'امتحاناً'],
+  },
   // ── اختبار الاسترجاع ──
   rcTitle: 'اختبار ذاتي', rcSub: 'أثبت أنك تستطيع الاسترجاع', rcOpen: 'اختبر نفسك',
   rcEmpty: 'لا توجد بطاقات بعد. اكتب سؤالاً تتوقّعه في الامتحان، والإجابة بكلماتك أنت.',
   rcEmptyWhy: 'كتابة البطاقة مذاكرة في حد ذاتها. والإجابة عليها لاحقاً هي ما يجعل الجاهزية رقماً له معنى.',
   rcAdd: 'أضف بطاقة', rcQ: 'السؤال', rcQPh: 'مثلاً: ماذا تنصّ نظرية الحد المركزي؟',
   rcA: 'الإجابة', rcAPh: 'بكلماتك أنت — هذه هي الإجابة التي ستصحّح لنفسك عليها.',
-  rcSave: 'احفظ البطاقة', rcChapter: 'الفصل', rcCards: '{n} بطاقة', rcCardsNone: 'لا بطاقات',
+  rcSave: 'احفظ البطاقة', rcChapter: 'الفصل', rcCards: '{c}', rcCardsNone: 'لا بطاقات',
   rcDue: '{n} مستحقة', rcAllCaught: 'لا شيء مستحق الآن. المراجعة القادمة {d}.',
   rcYourAnswer: 'اكتب إجابتك أولاً', rcYourAnswerPh: 'استرجعها قبل أن تنظر. الكتابة نفسها هي التمرين.',
   rcReveal: 'أظهر الإجابة', rcGradeQ: 'كم اقتربت؟',
@@ -302,7 +317,7 @@ const ar: Copy = {
   rdDecay: 'لم تلمسه منذ {n} يوماً — العمل الأقدم يُحتسب أقل قليلاً.',
   kLearn: 'دراسة', kReview: 'مراجعة', kMock: 'امتحان تجريبي', rateQ: 'ما مدى فهمك؟', rates: ['صعب', 'متوسط', 'سهل'],
   reviewsToday: 'مراجعة اليوم', onDay: 'الجدول · {d}', nothingDay: 'لا شيء مخطط. يوم فارغ.', startS: 'ابدأ', doneS: 'تم',
-  dToday: 'اليوم', dTomorrow: 'غداً', dIn: 'بعد {n} أيام', toastRated: 'تم الحفظ · +20 XP',
+  dToday: 'اليوم', dTomorrow: 'غداً', dIn: 'بعد {c}', toastRated: 'تم الحفظ · +20 XP',
   wd: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'], wdLong: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
   months: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
   sampleExam: { subject: 'الرياضيات', chapters: ['النهايات', 'المشتقات', 'قاعدة السلسلة', 'التكامل'] },
@@ -338,7 +353,7 @@ const ar: Copy = {
   examToday: 'امتحان اليوم', nowL: 'الآن', dayProgress: 'أُنجز {d} من {t} · متبقٍ {m}', dayDone: 'أنجزت كل شيء لليوم',
   glanceSemester: 'الجاهزية', glanceNoExam: 'المهام المنجزة', glanceWeek: 'المخطط القادم', glanceExam: 'الامتحان القادم', glanceNone: 'لا يوجد', smartPlan: 'خطة ذكية',
   emptyTodayT: 'لا شيء مخطط اليوم', emptyTodayS: 'أضف مهمة، أو خطط لامتحان ودع نظّم يملأ أيامك.',
-  secAccount: 'الحساب', secStudy: 'الدراسة', secApp: 'التطبيق', subjExam: 'امتحان {d}', subjTasks: '{n} مهام مفتوحة', subjTask1: 'مهمة واحدة مفتوحة', subjClear: 'لا شيء مستحق',
+  secAccount: 'الحساب', secStudy: 'الدراسة', secApp: 'التطبيق', subjExam: 'امتحان {d}', subjTasks: '{c} مفتوحة', subjClear: 'لا شيء مستحق',
   acTitle: 'الحساب', acSub: 'زامن فصلك الدراسي واحفظ نسخة منه', acSignIn: 'تسجيل الدخول', acCreate: 'إنشاء حساب',
   acBenefits: ['فصلك الدراسي على كل أجهزتك', 'نسخة محفوظة إذا فقدت هاتفك', 'يعمل دون إنترنت ويزامن عند عودتك'],
   acEmail: 'البريد الإلكتروني', acPassword: 'كلمة المرور (8 أحرف على الأقل)', acToCreate: 'جديد هنا؟ أنشئ حساباً', acToSignIn: 'لديك حساب؟ سجّل الدخول',
@@ -348,10 +363,10 @@ const ar: Copy = {
   acSyncNow: 'زامن الآن', acSignOut: 'تسجيل الخروج', acSignedIn: 'مسجّل باسم', acJustNow: 'الآن', acMinAgo: 'قبل {n} دقيقة',
   obHaveAccount: 'لدي حساب بالفعل', delLocalTitle: 'مسح البيانات من هذا الجهاز؟',
   delLocalBody: 'سيتم مسح موادك وامتحاناتك وخططك وتقدمك من هذا الجهاز. لا يمكن التراجع عن ذلك.', toastDelFail: 'تعذّر الحذف. تحقق من الاتصال.',
-  xDaysLeft: 'متبقٍ {n} أيام', xDayLeft: 'غداً', xToday: 'اليوم', xOver: 'انتهى', xReadiness: 'الجاهزية للامتحان',
+  xDaysLeft: 'متبقٍ {c}', xDayLeft: 'غداً', xToday: 'اليوم', xOver: 'انتهى', xReadiness: 'الجاهزية للامتحان',
   xStatus: { onTrack: 'على المسار', behind: 'متأخر قليلاً', atRisk: 'يحتاج تركيزاً الآن', ready: 'جاهز', over: 'انتهى الامتحان' },
   xStatusSub: { onTrack: 'استمر على الخطة.', behind: 'فاتتك {n} جلسات. جلسة اليوم تعيدك للمسار.', atRisk: 'أيام قليلة متبقية. أنجز الجلسة التالية والاختبار التجريبي.', ready: 'مراجعات خفيفة وراحة قبل الامتحان.', over: 'كيف كان؟ عملك محسوب في تقدم فصلك.' },
-  xRemaining: 'متبقٍ: {s} جلسات · {t}', xPerDay: 'حوالي {m} يومياً', xNextBtn: 'ابدأ التالي: {t}', xTopics: 'المواضيع', xPlan: 'خطة المذاكرة',
+  xRemaining: 'متبقٍ: {s} · {t}', xPerDay: 'حوالي {m} يومياً', xNextBtn: 'ابدأ التالي: {t}', xTopics: 'المواضيع', xPlan: 'خطة المذاكرة',
   xTopicState: { notStarted: 'لم يبدأ', learning: 'قيد التقدم', solid: 'متمكن', weak: 'يحتاج عملاً' },
   xPhase: { learn: 'المرحلة 1 من 3 · القراءة الأولى', review: 'المرحلة 2 من 3 · المراجعات', final: 'المرحلة 3 من 3 · الاستعداد النهائي' },
   xMock: 'الاختبار التجريبي {d}: أفضل مؤشر على أدائك في الامتحان.', xAdjust: 'غيّر الموعد أو الفصول', xDoneN: 'أُنجز {n}',
@@ -377,7 +392,7 @@ const ar: Copy = {
   iHeavier: 'الأسبوع القادم أثقل: {n} مخطط مقابل {c} هذا الأسبوع. البدء مبكراً يبقيه هادئاً.', iConsistency: 'ذاكرت في {n} من آخر 7 أيام.',
   iStart: 'أنهِ جلسة واحدة اليوم وسيبدأ تقدمك من هنا.',
   rescueEyebrow: 'خطة الإنقاذ', rescueTitle: 'متأخر قليلاً؟ لا بأس.', rescueSub: 'سيعيد نظّم بناء الأيام السبعة القادمة حسب وقتك الحقيقي.',
-  rOverdueN: 'مهام متأخرة', rExamsN: 'امتحانات قادمة', rWorkN: 'عمل هذا الأسبوع', capacityL: 'في اليوم العادي أستطيع المذاكرة',
+  rOverdueN: '{u} متأخرة', rExamsN: '{u} قادمة', rWorkN: 'عمل هذا الأسبوع', capacityL: 'في اليوم العادي أستطيع المذاكرة',
   buildRescue: 'ابنِ خطة الإنقاذ', applyRescue: 'طبّق الخطة', rescueNote: 'المواعيد النهائية لا تتغير، يتغير فقط وقت إنجاز العمل.',
   rescueOk: 'الخطة تناسب وقتك. سيتم نقل {n} عناصر دون أن يضيع شيء.', rescueOnTrack: 'أنت على المسار. لا شيء يحتاج إلى نقل.',
   rescueTight: 'بعض الأيام ما زالت مزدحمة. ابدأ بالعناصر المعلّمة، أو اطلب تمديداً.', rescueDropped: 'حُذفت {n} مراجعات إضافية، والمراجعات اللاحقة تغطيها.',
@@ -401,3 +416,33 @@ const ar: Copy = {
 export const COPY: Record<Lang, Copy> = { en, ar };
 
 export const kindLabel = (L: Copy, k: Kind) => ({ class: L.kClass, task: L.kTask, focus: L.kFocus, habit: L.kHabit })[k];
+
+export type Unit = keyof Copy['units'];
+
+/**
+ * A number with its noun, agreeing properly in both languages.
+ *
+ * English takes two forms. Arabic takes four, and getting this wrong is the clearest sign an app was
+ * translated rather than written: "1 أيام" and "11 أيام" are both wrong, and both were everywhere.
+ *   1  → مفرد بلا عدد        يوم
+ *   2  → مثنّى بلا عدد        يومان
+ *   3–10 → العدد + جمع قلّة   ٣ أيام
+ *   11+ → العدد + تمييز مفرد منصوب   ١١ يوماً
+ * The 3–10 and 11+ rules repeat for every hundred, so 103 and 111 behave like 3 and 11.
+ */
+export function counted(n: number, unit: Unit, L: Copy, ar: boolean): string {
+  const noun = unitOf(n, unit, L, ar);
+  // Arabic drops the numeral for one and two: "يوم", "يومين" — writing "1 يوم" marks the app as translated.
+  return ar && Math.abs(n) <= 2 ? noun : `${n} ${noun}`;
+}
+
+/** Just the noun in the form that agrees with `n`, for layouts that print the number separately. */
+export function unitOf(n: number, unit: Unit, L: Copy, ar: boolean): string {
+  const f = L.units[unit];
+  const a = Math.abs(n);
+  if (!ar) return f[a === 1 ? 0 : 1];
+  if (a === 1) return f[0];
+  if (a === 2) return f[1];
+  const within = a % 100;
+  return within >= 3 && within <= 10 ? f[2] : f[3];
+}

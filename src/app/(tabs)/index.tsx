@@ -47,16 +47,16 @@ export default function Today() {
         {/* Greeting */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <T w={700} s={11} ls={ar ? 0 : 0.6} c={C.ink3}>{fmtDateLine(today, L, ar)}</T>
+            <T w={700} s="caption" ls={ar ? 0 : 0.6} c={C.ink3}>{fmtDateLine(today, L, ar)}</T>
             {me.name ? (
               <>
-                <T w={600} s={13} c={C.ink3} numberOfLines={1} style={{ marginTop: 3 }}>{greet}</T>
-                <T f="display" w={700} s={23} ls={ar ? 0 : -0.8} accessibilityRole="header" numberOfLines={1} style={{ marginTop: -1 }}>
+                <T w={600} s="label" c={C.ink3} numberOfLines={1} style={{ marginTop: 3 }}>{greet}</T>
+                <T f="display" w={700} s="title" ls={ar ? 0 : -0.8} accessibilityRole="header" numberOfLines={1} style={{ marginTop: -1 }}>
                   {me.name.split(/\s+/)[0]}
                 </T>
               </>
             ) : (
-              <T f="display" w={700} s={23} ls={ar ? 0 : -0.8} style={{ marginTop: 2 }} accessibilityRole="header" numberOfLines={1}>{greet}</T>
+              <T f="display" w={700} s="title" ls={ar ? 0 : -0.8} style={{ marginTop: 2 }} accessibilityRole="header" numberOfLines={1}>{greet}</T>
             )}
             {/* Where the day stands, in one line */}
             {!!blocks.length && (
@@ -64,7 +64,7 @@ export default function Today() {
                 <View style={{ flexDirection: 'row', gap: 3 }}>
                   {blocks.slice(0, 8).map(b => <View key={b.key} style={{ width: 14, height: 4, borderRadius: 2, backgroundColor: b.done ? accent.fg : C.line }} />)}
                 </View>
-                <T w={600} s={12} c={C.ink3} style={{ flexShrink: 1 }} numberOfLines={1}>
+                <T w={600} s="caption" c={C.ink3} style={{ flexShrink: 1 }} numberOfLines={1}>
                   {doneN === blocks.length ? L.dayDone : L.dayProgress.replace('{d}', String(doneN)).replace('{t}', String(blocks.length)).replace('{m}', hours(leftMin, ar))}
                 </T>
               </View>
@@ -82,36 +82,36 @@ export default function Today() {
 
         {/* YOUR NEXT MOVE */}
         <View style={{ backgroundColor: C.card, borderRadius: 24, borderWidth: 1, borderColor: C.line, padding: 18, gap: 14, boxShadow: C.shadowSoft }}>
-          <T w={800} s={10.5} ls={ar ? 0 : 1.2} c={C.ink3}>{L.nextMove}</T>
+          <T w={800} s="micro" ls={ar ? 0 : 1.2} c={C.ink3}>{L.nextMove}</T>
           {next.kind === 'session' || next.kind === 'task' ? (
             <>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <SubjectTile subject={nextSubject} size={44} />
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  {!!nextSubject && <T w={700} s={12} c={C.ink3}>{nextSubject.name}</T>}
-                  <T f="display" w={700} s={19} lh={1.25} ls={ar ? 0 : -0.4} style={{ marginTop: 1 }}>{next.title}</T>
+                  {!!nextSubject && <T w={700} s="caption" c={C.ink3}>{nextSubject.name}</T>}
+                  <T f="display" w={700} s="heading" lh={1.25} ls={ar ? 0 : -0.4} style={{ marginTop: 1 }}>{next.title}</T>
                 </View>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                   <Icon name="clock" size={15} color={C.ink3} />
-                  <T w={600} s={12.5} c={C.ink2}>{`${next.minutes} ${L.min}`}</T>
+                  <T w={600} s="caption" c={C.ink2}>{`${next.minutes} ${L.min}`}</T>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                   <Icon name={next.reason.code === 'overdue' ? 'alert' : 'calendar'} size={15} color={next.reason.code === 'overdue' ? C.warningText : C.ink3} />
-                  <T w={600} s={12.5} c={next.reason.code === 'overdue' ? C.warningText : C.ink2}>{reasonText(next.reason, L)}</T>
+                  <T w={600} s="caption" c={next.reason.code === 'overdue' ? C.warningText : C.ink2}>{reasonText(next.reason, L)}</T>
                 </View>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <Btn pressedBg={accent.strong}
                   onPress={() => startFocusOn(`${next.title}${nextSubject ? ' · ' + nextSubject.name : ''}`, { kind: next.kind, id: next.id }, next.minutes)}
-                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: accent.a1, boxShadow: accent.glow }}>
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12, backgroundColor: accent.a1, boxShadow: accent.glow }}>
                   <Icon name="play" size={14} color={C.onAccent} />
-                  <T w={700} s={14.5} c={C.onAccent}>{L.startSession}</T>
+                  <T w={700} s="label" c={C.onAccent}>{L.startSession}</T>
                 </Btn>
                 {next.kind === 'task' && (
                   <Btn label={L.markDoneA} onPress={() => toggleTask(next.id)}
-                    style={{ width: 50, borderRadius: 14, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' }}>
+                    style={{ width: 50, borderRadius: 12, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="check" size={18} color={C.ink2} stroke={2.4} />
                   </Btn>
                 )}
@@ -120,12 +120,12 @@ export default function Today() {
           ) : (
             <Btn pressScale={0.99} onPress={() => next.kind === 'addExam' && router.push('/planner')} disabled={next.kind !== 'addExam'}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: next.kind === 'clear' ? C.successTint : accent.tint, alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: next.kind === 'clear' ? C.successTint : accent.tint, alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name={next.kind === 'clear' ? 'check' : 'plus'} size={20} color={next.kind === 'clear' ? C.successText : accent.fg} stroke={2.4} />
               </View>
               <View style={{ flex: 1 }}>
-                <T f="display" w={700} s={17}>{next.kind === 'clear' ? L.nextClear : L.nextAdd}</T>
-                <T w={500} s={12.5} c={C.ink2} style={{ marginTop: 2 }}>{next.kind === 'clear' ? L.nextClearSub : L.nextAddSub}</T>
+                <T f="display" w={700} s="heading">{next.kind === 'clear' ? L.nextClear : L.nextAdd}</T>
+                <T w={500} s="caption" c={C.ink2} style={{ marginTop: 2 }}>{next.kind === 'clear' ? L.nextClearSub : L.nextAddSub}</T>
               </View>
             </Btn>
           )}
@@ -134,18 +134,18 @@ export default function Today() {
         {/* Calm nudge into Rescue Mode when work has piled up */}
         {behind.behind && (
           <Btn pressScale={0.99} onPress={() => router.push('/rescue')} accessibilityLabel={L.rescueMenu}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: C.warningTint }}>
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, backgroundColor: C.warningTint }}>
             <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: C.card, alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="reset" size={17} color={C.warningText} stroke={2.2} />
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <T w={700} s={13.5} c={C.warningText}>{L.behindTitle}</T>
-              <T w={500} s={12} c={C.warningText} style={{ marginTop: 1 }}>
+              <T w={700} s="label" c={C.warningText}>{L.behindTitle}</T>
+              <T w={500} s="caption" c={C.warningText} style={{ marginTop: 1 }}>
                 {behind.overdue ? L.behindOverdue.replace('{n}', String(behind.overdue)) : L.behindLoad}
               </T>
             </View>
             <View style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 99, backgroundColor: C.card }}>
-              <T w={700} s={12} c={C.warningText}>{L.rebuild}</T>
+              <T w={700} s="caption" c={C.warningText}>{L.rebuild}</T>
             </View>
           </Btn>
         )}
@@ -157,23 +157,23 @@ export default function Today() {
         <Card pad={0}>
           <View style={{ flexDirection: 'row' }}>
             <Btn pressScale={0.98} onPress={() => router.push(nextExam ? `/readiness/${nextExam.id}` : '/progress')} label={`${headlineLabel} ${headline}%`} style={{ flex: 1, padding: 14, gap: 6, alignItems: 'flex-start' }}>
-              <T w={600} s={11.5} c={C.ink3} numberOfLines={1}>{headlineLabel}</T>
+              <T w={600} s="caption" c={C.ink3} numberOfLines={1}>{headlineLabel}</T>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <ProgressRing value={headline} size={26} stroke={3.5} label="" />
-                <T f="grotesk" w={700} s={18}>{`${headline}%`}</T>
+                <T f="grotesk" w={700} s="heading">{`${headline}%`}</T>
               </View>
             </Btn>
             <View style={{ width: 1, backgroundColor: C.line2, marginVertical: 12 }} />
             <Btn pressScale={0.98} onPress={() => router.push('/plan')} style={{ flex: 1, padding: 14, gap: 6, alignItems: 'flex-start' }}>
-              <T w={600} s={11.5} c={C.ink3}>{L.glanceWeek}</T>
-              <T f="display" w={700} s={17} c={loadColor}>{L.loadLevels[loadIdx]}</T>
-              <T w={600} s={11} c={C.ink3}>{hours(load.total, ar)}</T>
+              <T w={600} s="caption" c={C.ink3}>{L.glanceWeek}</T>
+              <T f="display" w={700} s="heading" c={loadColor}>{L.loadLevels[loadIdx]}</T>
+              <T w={600} s="caption" c={C.ink3}>{hours(load.total, ar)}</T>
             </Btn>
             <View style={{ width: 1, backgroundColor: C.line2, marginVertical: 12 }} />
             <Btn pressScale={0.98} disabled={!nextExam} onPress={() => nextExam && router.push(`/exam/${nextExam.id}`)} style={{ flex: 1.15, padding: 14, gap: 6, alignItems: 'flex-start' }}>
-              <T w={600} s={11.5} c={C.ink3}>{L.glanceExam}</T>
-              <T w={700} s={14} numberOfLines={1}>{nextExam ? nextExam.subject : L.glanceNone}</T>
-              {!!nextExam && <T w={700} s={11.5} c={nextExam.date <= addDays(today, 3) ? C.warningText : accent.fg}>{relDay(nextExam.date, today, L)}</T>}
+              <T w={600} s="caption" c={C.ink3}>{L.glanceExam}</T>
+              <T w={700} s="label" numberOfLines={1}>{nextExam ? nextExam.subject : L.glanceNone}</T>
+              {!!nextExam && <T w={700} s="caption" c={nextExam.date <= addDays(today, 3) ? C.warningText : accent.fg}>{relDay(nextExam.date, today, L, ar)}</T>}
             </Btn>
           </View>
         </Card>
@@ -183,10 +183,10 @@ export default function Today() {
         {agenda.length ? <Timeline items={agenda} /> : (
           <Card style={{ alignItems: 'center', gap: 8, paddingVertical: 22 }}>
             <Icon name="calendar" size={24} color={accent.fg} />
-            <T w={700} s={15}>{L.emptyTodayT}</T>
-            <T w={500} s={13} c={C.ink3} style={{ textAlign: 'center', maxWidth: 280 }}>{L.emptyTodayS}</T>
+            <T w={700} s="body">{L.emptyTodayT}</T>
+            <T w={500} s="label" c={C.ink3} style={{ textAlign: 'center', maxWidth: 280 }}>{L.emptyTodayS}</T>
             <Btn onPress={() => setQuick(true)} style={{ marginTop: 6, paddingVertical: 9, paddingHorizontal: 16, borderRadius: 99, backgroundColor: accent.tint }}>
-              <T w={700} s={13} c={accent.strong}>{L.qaTitle}</T>
+              <T w={700} s="label" c={accent.strong}>{L.qaTitle}</T>
             </Btn>
           </Card>
         )}

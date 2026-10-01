@@ -65,17 +65,17 @@ export function SubjectPicker({ value, onChange, allowNone }: { value?: string; 
           <Btn key={s.id} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => onChange(s.id)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingStart: 6, paddingEnd: 12, borderRadius: 99, borderWidth: 1.5, borderColor: on ? accent.a1 : C.line, backgroundColor: on ? accent.tint : C.card }}>
             <SubjectTile subject={s} size={24} />
-            <T w={700} s={13} c={on ? accent.strong : C.ink}>{s.name}</T>
+            <T w={700} s="label" c={on ? accent.strong : C.ink}>{s.name}</T>
           </Btn>
         );
       })}
       {allowNone && (
         <Btn accessibilityRole="radio" accessibilityState={{ checked: !value }} onPress={() => onChange(undefined)}
           style={{ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1.5, borderColor: !value ? accent.a1 : C.line, backgroundColor: !value ? accent.tint : C.card }}>
-          <T w={700} s={13} c={!value ? accent.strong : C.ink3}>—</T>
+          <T w={700} s="label" c={!value ? accent.strong : C.ink3}>—</T>
         </Btn>
       )}
-      {!subjects.length && <T w={600} s={12.5} c={C.ink3}>{L.noSubjects}</T>}
+      {!subjects.length && <T w={600} s="caption" c={C.ink3}>{L.noSubjects}</T>}
     </View>
   );
 }
@@ -90,7 +90,7 @@ export function KindBadge({ kind }: { kind: 'session' | 'task' | 'exam' }) {
   }[kind];
   return (
     <View style={{ paddingVertical: 3, paddingHorizontal: 8, borderRadius: 99, backgroundColor: map.bg }}>
-      <T w={700} s={10.5} c={map.fg}>{map.label}</T>
+      <T w={700} s="micro" c={map.fg}>{map.label}</T>
     </View>
   );
 }

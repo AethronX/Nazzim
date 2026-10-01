@@ -34,16 +34,16 @@ export default function ReadinessWhy() {
       <Card pad={20}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 16 }}>
           <View>
-            <T w={600} s={11.5} c={C.ink3}>{L.rdNow}</T>
-            <T f="display" w={800} s={40} c={accent.fg} style={{ marginTop: 2 }}>{d.score}%</T>
+            <T w={600} s="caption" c={C.ink3}>{L.rdNow}</T>
+            <T f="display" w={800} s="mega" c={accent.fg} style={{ marginTop: 2 }}>{d.score}%</T>
           </View>
           <View style={{ flex: 1, paddingBottom: 8 }}>
             <Bar track={C.line2} value={d.score} color={accent.fg} />
             <View style={{ marginTop: 10 }}><Bar track={C.line2} value={d.ceiling} color={C.line2} /></View>
-            <T w={600} s={11} c={C.ink3} style={{ marginTop: 6 }}>{L.rdMax}: {d.ceiling}%</T>
+            <T w={600} s="caption" c={C.ink3} style={{ marginTop: 6 }}>{L.rdMax}: {d.ceiling}%</T>
           </View>
         </View>
-        <T w={500} s={13} lh={1.6} c={C.ink2} style={{ marginTop: 14 }}>{L.rdIntro}</T>
+        <T w={500} s="label" lh={1.6} c={C.ink2} style={{ marginTop: 14 }}>{L.rdIntro}</T>
       </Card>
 
       {/* The three pieces of evidence, summed across the exam */}
@@ -51,22 +51,22 @@ export default function ReadinessWhy() {
         <View style={{ padding: 16, gap: 16 }}>
           <View style={{ gap: 6 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <T w={600} s={13}>{L.rdCoverage}</T>
-              <T w={700} s={13} c={C.ink2}>{d.coverage}%</T>
+              <T w={600} s="label">{L.rdCoverage}</T>
+              <T w={700} s="label" c={C.ink2}>{d.coverage}%</T>
             </View>
             <Bar track={C.line2} value={d.coverage} color={C.ink3} />
           </View>
           <View style={{ gap: 6 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <T w={600} s={13}>{L.rdEffort}</T>
-              <T w={700} s={13} c={C.ink2}>{L.rdEffortVal.replace('{a}', String(d.focusedMin)).replace('{b}', String(d.plannedMin))}</T>
+              <T w={600} s="label">{L.rdEffort}</T>
+              <T w={700} s="label" c={C.ink2}>{L.rdEffortVal.replace('{a}', String(d.focusedMin)).replace('{b}', String(d.plannedMin))}</T>
             </View>
             <Bar track={C.line2} value={d.plannedMin ? (d.focusedMin / d.plannedMin) * 100 : 0} color={C.warningText} />
           </View>
           <View style={{ gap: 6 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <T w={600} s={13}>{L.rdRecall}</T>
-              <T w={700} s={13} c={C.ink2}>
+              <T w={600} s="label">{L.rdRecall}</T>
+              <T w={700} s="label" c={C.ink2}>
                 {stats.score === undefined ? L.rdRecallNone : L.rdRecallVal.replace('{n}', String(Math.round(stats.score * 100)))}
               </T>
             </View>
@@ -76,9 +76,9 @@ export default function ReadinessWhy() {
       </Section>
 
       {/* The rule, stated plainly, so nobody has to guess why tapping does not work */}
-      <View style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 14, backgroundColor: C.line2, alignItems: 'flex-start' }}>
+      <View style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 12, backgroundColor: C.line2, alignItems: 'flex-start' }}>
         <Icon name="shield" size={16} color={C.ink2} stroke={2.2} />
-        <T w={500} s={12.5} lh={1.55} c={C.ink2} style={{ flex: 1 }}>
+        <T w={500} s="caption" lh={1.55} c={C.ink2} style={{ flex: 1 }}>
           {L.rdCeiling.replace('{n}', String(Math.round(WEAK_CEILING * 100))).replace('{e}', String(Math.round(EFFORT_CEILING * 100)))}
         </T>
       </View>
@@ -90,14 +90,14 @@ export default function ReadinessWhy() {
           return (
             <View key={c.chapter} style={{ padding: 14, gap: 8, borderBottomWidth: i === d.chapters.length - 1 ? 0 : 1, borderBottomColor: C.line }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <T w={600} s={13.5} style={{ flex: 1 }} numberOfLines={1}>{exam.chapters[c.chapter]}</T>
-                <T f="display" w={700} s={15} c={c.score >= 0.7 ? C.successText : c.score >= 0.35 ? C.warningText : C.ink3}>{Math.round(c.score * 100)}%</T>
+                <T w={600} s="label" style={{ flex: 1 }} numberOfLines={1}>{exam.chapters[c.chapter]}</T>
+                <T f="display" w={700} s="body" c={c.score >= 0.7 ? C.successText : c.score >= 0.35 ? C.warningText : C.ink3}>{Math.round(c.score * 100)}%</T>
               </View>
               <Bar track={C.line2} value={c.score * 100} color={c.score >= 0.7 ? C.successText : c.score >= 0.35 ? C.warningText : C.ink3} />
-              <T w={600} s={11.5} c={C.ink3}>
+              <T w={600} s="caption" c={C.ink3}>
                 {c.done}/{c.planned} · {c.focusedMin}/{c.plannedMin} {ar ? 'د' : 'min'} · {c.recall === undefined ? L.rdRecallNone : L.rdRecallVal.replace('{n}', String(Math.round(c.recall * 100)))}
               </T>
-              {idle > 0 && <T w={600} s={11} c={C.ink3}>{L.rdDecay.replace('{n}', String(idle))}</T>}
+              {idle > 0 && <T w={600} s="caption" c={C.ink3}>{L.rdDecay.replace('{n}', String(idle))}</T>}
             </View>
           );
         })}
@@ -105,14 +105,14 @@ export default function ReadinessWhy() {
 
       {/* The one next move */}
       <Card pad={16}>
-        <T w={700} s={11} ls={ar ? 0 : 0.6} c={C.ink3}>{L.nextMove}</T>
-        <T w={600} s={14.5} lh={1.5} style={{ marginTop: 6 }}>{gapText}</T>
+        <T w={700} s="caption" ls={ar ? 0 : 0.6} c={C.ink3}>{L.nextMove}</T>
+        <T w={600} s="label" lh={1.5} style={{ marginTop: 6 }}>{gapText}</T>
       </Card>
       {gap.kind === 'recall' && (
         <PrimaryBtn title={L.rcOpen} icon="sparkle" onPress={() => { track({ name: 'readiness_explained' }); router.replace(`/recall/${exam.id}`); }} />
       )}
       <Btn onPress={() => router.back()} pressScale={0.98} style={{ alignItems: 'center', paddingVertical: 14 }}>
-        <T w={700} s={13.5} c={C.ink3}>{L.rcBack}</T>
+        <T w={700} s="label" c={C.ink3}>{L.rcBack}</T>
       </Btn>
     </Page>
   );

@@ -15,7 +15,7 @@ export function QuickAdd() {
   ];
   return (
     <Sheet onClose={() => setQuick(false)} maxHeight="70%" z={60}>
-      <T f="display" w={700} s={20} ls={ar ? 0 : -0.4}>{L.qaTitle}</T>
+      <T f="display" w={700} s="title" ls={ar ? 0 : -0.4}>{L.qaTitle}</T>
       <View style={{ gap: 8 }}>
         {rows.map(r => (
           <Btn key={r.path} onPress={() => go(r.path)} pressScale={0.99}
@@ -24,8 +24,8 @@ export function QuickAdd() {
               <Icon name={r.icon} size={19} color={accent.fg} stroke={2.2} />
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <T w={700} s={14.5}>{r.title}</T>
-              <T w={500} s={12} c={C.ink3} style={{ marginTop: 1 }}>{r.sub}</T>
+              <T w={700} s="label">{r.title}</T>
+              <T w={500} s="caption" c={C.ink3} style={{ marginTop: 1 }}>{r.sub}</T>
             </View>
             <Icon name="chevron" size={15} color={C.ink3} flip={ar} />
           </Btn>

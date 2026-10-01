@@ -1,4 +1,4 @@
-import type { Copy } from './copy';
+import { counted, type Copy } from './copy';
 import { daysBetween, fromKey } from './exams';
 
 // "Wed 1 Oct" / "الأربعاء 1 أكتوبر" from a 'YYYY-MM-DD' key, without relying on Intl data in the JS engine.
@@ -15,9 +15,9 @@ export function fmtDateLine(key: string, L: Copy, ar: boolean) {
 }
 
 // "today" / "tomorrow" / "in 5 days".
-export function relDay(key: string, today: string, L: Copy) {
+export function relDay(key: string, today: string, L: Copy, ar = false) {
   const n = daysBetween(today, key);
   if (n <= 0) return L.dToday;
   if (n === 1) return L.dTomorrow;
-  return L.dIn.replace('{n}', String(n));
+  return L.dIn.replace('{c}', counted(n, 'day', L, ar));
 }
