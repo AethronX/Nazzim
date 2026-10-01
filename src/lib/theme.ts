@@ -203,7 +203,7 @@ export function font(face: Face, weight: Weight, ar: boolean): string {
     return { 400: 'IBMPlexSansArabic_400Regular', 500: 'IBMPlexSansArabic_500Medium', 600: 'IBMPlexSansArabic_600SemiBold', 700: 'IBMPlexSansArabic_700Bold' }[w];
   }
   return {
-    400: 'PlusJakartaSans_400Regular', 500: 'PlusJakartaSans_500Medium', 600: 'PlusJakartaSans_600SemiBold',
-    700: 'PlusJakartaSans_700Bold', 800: 'PlusJakartaSans_800ExtraBold',
+    400: 'Inter_400Regular', 500: 'Inter_500Medium', 600: 'Inter_600SemiBold',
+    700: 'Inter_700Bold', 800: 'Inter_800ExtraBold',
   }[weight];
 }
