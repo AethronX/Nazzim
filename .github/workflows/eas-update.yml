@@ -1,0 +1,43 @@
+# Publishes the app to Expo (EAS Update) on every push to expo-app, so Expo Go always opens the latest
+# version without a computer running. One-time setup: add an EXPO_TOKEN secret to the GitHub repo
+# (expo.dev → Account settings → Access tokens). Without the secret this workflow does nothing.
+name: Publish to Expo
+
+on:
+  push:
+    branches: [expo-app]
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check token
+        id: token
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then echo "EXPO_TOKEN is not set; skipping."; echo "ok=false" >> "$GITHUB_OUTPUT"; else echo "ok=true" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.ok == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.token.outputs.ok == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: expo/expo-github-action@v8
+        if: steps.token.outputs.ok == 'true'
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install
+        if: steps.token.outputs.ok == 'true'
+        run: npm ci
+
+      - name: Publish update
+        if: steps.token.outputs.ok == 'true'
+        run: eas update --branch main --auto --non-interactive
