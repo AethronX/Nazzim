@@ -1,12 +1,13 @@
 import { router } from 'expo-router';
 import { ScrollView, View } from 'react-native';
-import { Bar, SubjectTile } from '../../components/Academic';
-import { AgendaRow } from '../../components/Agenda';
+import { ProgressRing, SubjectTile } from '../../components/Academic';
+import { Timeline } from '../../components/Agenda';
 import { Avatar } from '../../components/Page';
-import { Btn, Icon, T } from '../../components/ui';
+import { Btn, Card, Icon, SectionHeader, T } from '../../components/ui';
 import { ai } from '../../ai';
 import { agendaFor, semesterProgress } from '../../engine/academic';
 import { hours, reasonText, useAcademic } from '../../lib/academic';
+import { addDays } from '../../lib/exams';
 import { fmtDateLine, relDay } from '../../lib/format';
 import { useChrome } from '../../lib/layout';
 import { useNazzim } from '../../lib/store';
@@ -26,16 +27,14 @@ export default function Today() {
   const hour = new Date().getHours();
   const greet = L.greetings[hour < 12 ? 0 : hour < 18 ? 1 : 2];
 
-  // Nearest open deadline: an exam or a task.
-  const deadlines = [
-    ...ctx.exams.filter(e => e.date >= today).map(e => ({ key: 'e' + e.id, title: `${L.kExam} · ${e.subject}`, date: e.date, subjectId: e.subjectId })),
-    ...ctx.tasks.filter(t => !t.done && t.due >= today).map(t => ({ key: 't' + t.id, title: t.title, date: t.due, subjectId: t.subjectId })),
-  ].sort((a, b) => a.date.localeCompare(b.date));
-  const deadline = deadlines[0];
   const loadColor = { light: C.successText, moderate: C.warningText, heavy: C.danger }[load.level];
   const loadIdx = { light: 0, moderate: 1, heavy: 2 }[load.level];
 
   const nextSubject = 'subjectId' in next && next.subjectId ? subjectById.get(next.subjectId) : undefined;
+  const blocks = agenda.filter(a => a.kind !== 'exam');
+  const doneN = blocks.filter(b => b.done).length;
+  const leftMin = blocks.filter(b => !b.done).reduce((a, b) => a + b.minutes, 0);
+  const nextExam = ctx.exams.filter(e => e.date >= today).sort((a, b) => a.date.localeCompare(b.date))[0];
 
   return (
     <View style={{ flex: 1, direction: ar ? 'rtl' : 'ltr' }}>
@@ -47,6 +46,17 @@ export default function Today() {
             <T f="display" w={700} s={23} ls={ar ? 0 : -0.8} style={{ marginTop: 2 }} accessibilityRole="header" numberOfLines={2}>
               {me.name ? `${greet}${ar ? '، ' : ', '}${me.name.split(/\s+/)[0]}` : greet}
             </T>
+            {/* Where the day stands, in one line */}
+            {!!blocks.length && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                <View style={{ flexDirection: 'row', gap: 3 }}>
+                  {blocks.slice(0, 8).map(b => <View key={b.key} style={{ width: 14, height: 4, borderRadius: 2, backgroundColor: b.done ? accent.fg : C.line }} />)}
+                </View>
+                <T w={600} s={12} c={C.ink3} style={{ flexShrink: 1 }} numberOfLines={1}>
+                  {doneN === blocks.length ? L.dayDone : L.dayProgress.replace('{d}', String(doneN)).replace('{t}', String(blocks.length)).replace('{m}', hours(leftMin, ar))}
+                </T>
+              </View>
+            )}
           </View>
           <Btn label={L.qaTitle} onPress={() => setQuick(true)} pressScale={0.94}
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
@@ -127,39 +137,43 @@ export default function Today() {
           </Btn>
         )}
 
-        {/* Semester progress */}
-        <View style={{ backgroundColor: C.card, borderRadius: 18, borderWidth: 1, borderColor: C.line, padding: 14, gap: 10 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
-            <T w={700} s={13}>{L.overall}</T>
-            <T f="grotesk" w={700} s={15} c={accent.fg}>{`${progress}%`}</T>
+        {/* At a glance: three numbers, one card, each opens its detail */}
+        <Card pad={0}>
+          <View style={{ flexDirection: 'row' }}>
+            <Btn pressScale={0.98} onPress={() => router.push('/progress')} label={`${L.glanceSemester} ${progress}%`} style={{ flex: 1, padding: 14, gap: 6, alignItems: 'flex-start' }}>
+              <T w={600} s={11.5} c={C.ink3}>{L.glanceSemester}</T>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <ProgressRing value={progress} size={26} stroke={3.5} label="" />
+                <T f="grotesk" w={700} s={18}>{`${progress}%`}</T>
+              </View>
+            </Btn>
+            <View style={{ width: 1, backgroundColor: C.line2, marginVertical: 12 }} />
+            <Btn pressScale={0.98} onPress={() => router.push('/plan')} style={{ flex: 1, padding: 14, gap: 6, alignItems: 'flex-start' }}>
+              <T w={600} s={11.5} c={C.ink3}>{L.glanceWeek}</T>
+              <T f="display" w={700} s={17} c={loadColor}>{L.loadLevels[loadIdx]}</T>
+              <T w={600} s={11} c={C.ink3}>{hours(load.total, ar)}</T>
+            </Btn>
+            <View style={{ width: 1, backgroundColor: C.line2, marginVertical: 12 }} />
+            <Btn pressScale={0.98} disabled={!nextExam} onPress={() => nextExam && router.push(`/exam/${nextExam.id}`)} style={{ flex: 1.15, padding: 14, gap: 6, alignItems: 'flex-start' }}>
+              <T w={600} s={11.5} c={C.ink3}>{L.glanceExam}</T>
+              <T w={700} s={14} numberOfLines={1}>{nextExam ? nextExam.subject : L.glanceNone}</T>
+              {!!nextExam && <T w={700} s={11.5} c={nextExam.date <= addDays(today, 3) ? C.warningText : accent.fg}>{relDay(nextExam.date, today, L)}</T>}
+            </Btn>
           </View>
-          <Bar value={progress} />
-        </View>
+        </Card>
 
-        {/* Load + next deadline */}
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={{ flex: 1, backgroundColor: C.card, borderRadius: 18, borderWidth: 1, borderColor: C.line, padding: 14, gap: 4 }}>
-            <T w={700} s={11} c={C.ink3}>{L.load}</T>
-            <T f="display" w={700} s={17} c={loadColor}>{L.loadLevels[loadIdx]}</T>
-            <T w={600} s={11} c={C.ink3}>{L.loadSub.replace('{h}', hours(load.total, ar))}</T>
-          </View>
-          <Btn pressScale={0.99} disabled={!deadline} onPress={() => deadline?.key.startsWith('e') && router.push(`/exam/${deadline.key.slice(1)}`)}
-            style={{ flex: 1, backgroundColor: C.card, borderRadius: 18, borderWidth: 1, borderColor: C.line, padding: 14, gap: 4 }}>
-            <T w={700} s={11} c={C.ink3}>{L.nextDeadline}</T>
-            <T w={700} s={14} numberOfLines={2}>{deadline ? deadline.title : L.allClear}</T>
-            {!!deadline && <T w={700} s={11.5} c={accent.fg}>{relDay(deadline.date, today, L)}</T>}
-          </Btn>
-        </View>
-
-        {/* Today's schedule */}
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 4 }}>
-          <T f="display" w={700} s={18} ls={ar ? 0 : -0.4}>{L.todaySchedule}</T>
-          {!!agenda.length && <T f="grotesk" w={700} s={12} c={C.ink3}>{`${agenda.filter(a => a.done).length} / ${agenda.filter(a => a.kind !== 'exam').length}`}</T>}
-        </View>
-        <View style={{ backgroundColor: C.card, borderRadius: 20, borderWidth: 1, borderColor: C.line, overflow: 'hidden' }}>
-          {agenda.map((a, i) => <AgendaRow key={a.key} item={a} last={i === agenda.length - 1} />)}
-          {!agenda.length && <T w={600} s={13} c={C.ink3} style={{ padding: 16 }}>{L.emptyToday}</T>}
-        </View>
+        {/* Today's schedule as a timeline */}
+        <SectionHeader title={L.todaySchedule} action={{ label: L.plan, onPress: () => router.push('/plan') }} />
+        {agenda.length ? <Timeline items={agenda} /> : (
+          <Card style={{ alignItems: 'center', gap: 8, paddingVertical: 22 }}>
+            <Icon name="calendar" size={24} color={accent.fg} />
+            <T w={700} s={15}>{L.emptyTodayT}</T>
+            <T w={500} s={13} c={C.ink3} style={{ textAlign: 'center', maxWidth: 280 }}>{L.emptyTodayS}</T>
+            <Btn onPress={() => setQuick(true)} style={{ marginTop: 6, paddingVertical: 9, paddingHorizontal: 16, borderRadius: 99, backgroundColor: accent.tint }}>
+              <T w={700} s={13} c={accent.strong}>{L.qaTitle}</T>
+            </Btn>
+          </Card>
+        )}
       </ScrollView>
     </View>
   );

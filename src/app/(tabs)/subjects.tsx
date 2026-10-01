@@ -7,10 +7,12 @@ import { useAcademic } from '../../lib/academic';
 import { useChrome } from '../../lib/layout';
 import { useNazzim } from '../../lib/store';
 import { swatch } from '../../lib/theme';
+import { addDays } from '../../lib/exams';
+import { relDay } from '../../lib/format';
 
 // SUBJECTS: every course with its target grade and how far along the planned work is.
 export default function Subjects() {
-  const { C, L, ar, accent, subjects, scheme } = useNazzim();
+  const { C, L, ar, accent, subjects, scheme, today } = useNazzim();
   const { headerTop, scrollBottom } = useChrome();
   const { ctx } = useAcademic();
 
@@ -28,17 +30,25 @@ export default function Subjects() {
         {subjects.map(s => {
           const sum = summarizeSubject(ctx, s);
           const sw = swatch(s.color, scheme);
+          const soon = !!sum.nextExam && sum.nextExam.date <= addDays(today, 3);
+          const fact = sum.nextExam ? L.subjExam.replace('{d}', relDay(sum.nextExam.date, today, L))
+            : sum.pendingTasks ? (sum.pendingTasks === 1 ? L.subjTask1 : L.subjTasks.replace('{n}', String(sum.pendingTasks))) : L.subjClear;
           return (
             <Btn key={s.id} pressScale={0.99} onPress={() => router.push(`/subject/${s.id}`)}
               accessibilityLabel={`${s.name}, ${L.target.replace('{g}', s.targetGrade)}, ${sum.progress}%`}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, boxShadow: C.shadowSoft }}>
               <SubjectTile subject={s} size={48} />
-              <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+              <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
                 <T f="display" w={700} s={17} numberOfLines={1}>{s.name}</T>
-                <T w={600} s={12} c={C.ink3}>{L.target.replace('{g}', s.targetGrade)}</T>
-                <T f="grotesk" w={700} s={15} c={C.ink} style={{ marginTop: 4 }}>{`${sum.progress}%`}</T>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <View style={{ paddingVertical: 2, paddingHorizontal: 7, borderRadius: 6, backgroundColor: sw.tint }}>
+                    <T f="grotesk" w={700} s={11} c={sw.fg}>{s.targetGrade}</T>
+                  </View>
+                  {/* The single most useful fact: the next exam, else what's open */}
+                  <T w={600} s={12} c={soon ? C.warningText : C.ink3} numberOfLines={1} style={{ flexShrink: 1 }}>{fact}</T>
+                </View>
               </View>
-              <ProgressRing value={sum.progress} size={44} stroke={4} color={sw.fg} label="" />
+              <ProgressRing value={sum.progress} size={50} stroke={4.5} color={sw.fg} />
             </Btn>
           );
         })}

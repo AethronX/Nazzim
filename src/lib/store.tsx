@@ -56,7 +56,10 @@ const INITIAL: Persisted = { schema: SCHEMA, lang: deviceLang(), ticks: {}, xp: 
 
 // What the focus timer is working on, so a finished session can update that item's progress.
 export type FocusTarget = { kind: 'session' | 'task'; id: string } | null;
-type Timer = { secs: number; total: number; running: boolean; endAt: number; task: string | null; target: FocusTarget };
+// The focus timer stores only when it ends (running) or what was left (paused): it never changes every second,
+// so the store does not re-render the app while a session runs. Screens read the live countdown with
+// useTimerSecs() (src/lib/timer.ts), which re-renders just the clock.
+export type Timer = { secs: number; total: number; running: boolean; endAt: number; task: string | null; target: FocusTarget };
 // A focus block that just ended, waiting for the student to say how it went.
 export type FocusReview = { target: FocusTarget; title: string; minutes: number } | null;
 
@@ -267,22 +270,16 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
   // Wall-clock based so the countdown stays accurate when the app is backgrounded.
   const LRef = useRef(L);
   useEffect(() => { LRef.current = L; }, [L]);
+  // One timeout at the end of the session instead of a tick every second.
   useEffect(() => {
     if (!timer.running) return;
-    const iv = setInterval(() => {
-      setTimer(t => {
-        if (!t.running) return t;
-        const left = Math.max(0, Math.ceil((t.endAt - Date.now()) / 1000));
-        if (left <= 0) {
-          const done = { target: t.target, title: t.task ?? '', minutes: Math.round(t.total / 60) };
-          setTimeout(() => completeSession(LRef.current.toastFocus, done), 0);
-          return { ...t, running: false, secs: t.total };
-        }
-        return left === t.secs ? t : { ...t, secs: left };
-      });
-    }, 500);
-    return () => clearInterval(iv);
-  }, [timer.running, completeSession]);
+    const done = { target: timer.target, title: timer.task ?? '', minutes: Math.round(timer.total / 60) };
+    const t = setTimeout(() => {
+      setTimer(x => ({ ...x, running: false, secs: x.total }));
+      completeSession(LRef.current.toastFocus, done);
+    }, Math.max(0, timer.endAt - Date.now()));
+    return () => clearTimeout(t);
+  }, [timer.running, timer.endAt, timer.total, timer.task, timer.target, completeSession]);
 
   useEffect(() => () => { clearTimeout(toastT.current); }, []);
 
@@ -437,10 +434,13 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
       track({ name: 'study_session_started', props: { kind: target?.kind ?? 'free' } });
       router.navigate('/focus');
     },
-    toggleTimer: () => setTimer(t => (t.running ? { ...t, running: false } : { ...t, running: true, endAt: Date.now() + t.secs * 1000 })),
+    toggleTimer: () => setTimer(t => (t.running
+      ? { ...t, running: false, secs: Math.max(1, Math.ceil((t.endAt - Date.now()) / 1000)) }
+      : { ...t, running: true, endAt: Date.now() + t.secs * 1000 })),
     resetTimer: () => setTimer(t => ({ ...t, running: false, secs: t.total })),
     finishNow: () => {
-      const minutes = Math.max(1, Math.round((timer.total - timer.secs) / 60));
+      const left = timer.running ? Math.max(0, Math.ceil((timer.endAt - Date.now()) / 1000)) : timer.secs;
+      const minutes = Math.max(1, Math.round((timer.total - left) / 60));
       setTimer(t => ({ ...t, running: false, secs: t.total }));
       completeSession(L.toastFocus, { target: timer.target, title: timer.task ?? '', minutes });
     },

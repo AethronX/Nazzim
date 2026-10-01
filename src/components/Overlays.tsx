@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AccessibilityInfo, Animated, Easing, Pressable, View } from 'react-native';
 import { useChrome } from '../lib/layout';
 import { useNazzim } from '../lib/store';
+import { useTimerSecs } from '../lib/timer';
 import { LogoMark } from './Logo';
 import { Btn, FadeIn, T } from './ui';
 
@@ -133,6 +134,7 @@ export function clockText(secs: number) {
 // Floating mini-timer shown above the tab bar while a session runs on another tab.
 export function MiniTimer({ onPress }: { onPress: () => void }) {
   const { C, timer, L, ar } = useNazzim();
+  const secs = useTimerSecs();
   const { tabH } = useChrome();
   return (
     <FadeIn duration={250} style={{ position: 'absolute', left: 14, right: 14, bottom: tabH + 13, zIndex: 41 }}>
@@ -142,7 +144,7 @@ export function MiniTimer({ onPress }: { onPress: () => void }) {
       >
         <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.onHeroAccent, boxShadow: `0 0 8px ${C.onHeroAccent}` }} />
         <T w={600} s={12.5} c={C.onHero} numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{timer.task || L.freeFocus}</T>
-        <T f="grotesk" w={700} s={14} c={C.onHero} style={{ fontVariant: ['tabular-nums'] }}>{clockText(timer.secs)}</T>
+        <T f="grotesk" w={700} s={14} c={C.onHero} style={{ fontVariant: ['tabular-nums'] }}>{clockText(secs)}</T>
       </Btn>
     </FadeIn>
   );

@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { Btn, Icon, PrimaryBtn, T } from '../components/ui';
 import { Page } from '../components/Page';
 import { useNazzim } from '../lib/store';
+import { useTimerSecs } from '../lib/timer';
 import type { Palette } from '../lib/theme';
 
 const R = 112;
@@ -17,6 +18,7 @@ export default function Focus() {
     review, clearReview, rateSession, toggleTask, tasks,
   } = useNazzim();
   const linked = !!timer.target;
+  const secs = useTimerSecs();
 
   // Just finished a linked block: close the loop (rating → exam readiness, task → done) before anything else.
   if (review) {
@@ -54,7 +56,7 @@ export default function Focus() {
       </Page>
     );
   }
-  const { secs, total, running } = timer;
+  const { total, running } = timer;
   const phase = running ? L.inFocus : secs < total ? L.paused : L.ready;
 
   return (

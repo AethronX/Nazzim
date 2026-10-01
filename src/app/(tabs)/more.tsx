@@ -29,18 +29,22 @@ export default function More() {
 
         {!!upcoming.length && (
           <View style={{ gap: 8, marginTop: 8 }}>
-            <View style={{ paddingHorizontal: 4 }}><Eyebrow>{L.upcomingExams}</Eyebrow></View>
+            <View style={{ paddingHorizontal: 4 }}><Eyebrow>{L.upcomingExams.toUpperCase()}</Eyebrow></View>
             {upcoming.map(e => <ExamCard key={e.id} exam={e} />)}
           </View>
         )}
 
-        <View style={{ height: 8 }} />
-        <Section>
+        {/* Grouped like iOS Settings: who you are, how you study, the app itself */}
+        <Section label={L.secAccount}>
           <Row icon="user" title={L.acTitle} sub={account ? (syncState === 'error' ? L.acSyncError : account.email) : L.acSub} onPress={() => router.push('/account')} />
+          <Row icon="crown" title={L.plans} sub={L.tiers[tier].name} onPress={() => router.push('/subscription')} last />
+        </Section>
+        <Section label={L.secStudy}>
           <Row icon="chart" title={L.progressMenu} onPress={() => router.push('/progress')} />
-          <Row icon="reset" title={L.rescueMenu} onPress={() => router.push('/rescue')} />
+          <Row icon="reset" title={L.rescueMenu} onPress={() => router.push('/rescue')} last />
+        </Section>
+        <Section label={L.secApp}>
           <Row icon="gear" title={L.settings} onPress={() => router.push('/settings')} />
-          <Row icon="crown" title={L.plans} onPress={() => router.push('/subscription')} />
           <Row icon="help" title={L.support} onPress={() => router.push('/settings')} last />
         </Section>
       </ScrollView>

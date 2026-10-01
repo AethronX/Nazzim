@@ -191,11 +191,6 @@ export function Header({ top, children, pb = 13 }: { top: number; children: Reac
   );
 }
 
-export function Card({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
-  const { C } = useNazzim();
-  return <View style={[{ backgroundColor: C.card, borderWidth: 1, borderColor: C.line, borderRadius: 20, overflow: 'hidden' }, style]}>{children}</View>;
-}
-
 export function Eyebrow({ children, color }: { children: ReactNode; color?: string }) {
   const { C } = useNazzim();
   return <T w={800} s={10.5} ls={0.8} c={color ?? C.ink3}>{children}</T>;
@@ -210,5 +205,28 @@ export function PrimaryBtn({ title, onPress, disabled, icon }: { title: string; 
       {!!icon && <Icon name={icon} size={15} color={disabled ? C.ink3 : C.onAccent} stroke={2.4} />}
       <T w={800} s={15} c={disabled ? C.ink3 : C.onAccent}>{title}</T>
     </Btn>
+  );
+}
+
+// Card: the one surface used for grouped content (radius 20, hairline border). Tappable when onPress is given.
+export function Card({ children, onPress, style, pad = 16, label }: { children: ReactNode; onPress?: () => void; style?: StyleProp<ViewStyle>; pad?: number; label?: string }) {
+  const { C } = useNazzim();
+  const base: StyleProp<ViewStyle> = [{ backgroundColor: C.card, borderRadius: 20, borderWidth: 1, borderColor: C.line, padding: pad, overflow: 'hidden' }, style];
+  return onPress ? <Btn pressScale={0.99} onPress={onPress} label={label} style={base}>{children}</Btn> : <View style={base}>{children}</View>;
+}
+
+// Section title with an optional quiet action on the trailing side ("Plan", "Add", "See all").
+export function SectionHeader({ title, meta, action }: { title: string; meta?: string; action?: { label: string; onPress: () => void } }) {
+  const { C, ar, accent } = useNazzim();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, paddingHorizontal: 2 }}>
+      <T f="display" w={700} s={18} ls={ar ? 0 : -0.4} style={{ flex: 1 }} accessibilityRole="header">{title}</T>
+      {!!meta && <T f="grotesk" w={700} s={12} c={C.ink3}>{meta}</T>}
+      {!!action && (
+        <Btn onPress={action.onPress} style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 99 }}>
+          <T w={700} s={13} c={accent.fg}>{action.label}</T>
+        </Btn>
+      )}
+    </View>
   );
 }

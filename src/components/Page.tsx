@@ -97,7 +97,10 @@ export function Avatar({ name, size = 40 }: { name: string; size?: number }) {
   return (
     <View style={{ width: size, height: size }}>
       <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: C.hero, alignItems: 'center', justifyContent: 'center' }}>
-        <T f="display" w={700} s={size * 0.4} c={C.onHero} style={{ textAlign: 'center' }}>{initials}</T>
+        {/* No name yet: a person glyph, never a stray dot */}
+        {name.trim()
+          ? <T f="display" w={700} s={size * 0.4} c={C.onHero} style={{ textAlign: 'center' }}>{initials}</T>
+          : <Icon name="user" size={size * 0.46} color={C.onHero} />}
       </View>
       <View style={{ position: 'absolute', top: 0, end: 0, width: dot, height: dot, borderRadius: dot, backgroundColor: C.onHeroAccent, borderWidth: Math.max(2, size * 0.04), borderColor: C.bg }} />
     </View>
