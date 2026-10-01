@@ -23,8 +23,8 @@ Items marked **[VERIFY]** must be re-checked against the stores' current policie
 - ✅ No tracking, no IDFA → **no ATT prompt required**
 - ✅ `ITSAppUsesNonExemptEncryption: false` (standard HTTPS only)
 - ⬜ Privacy Nutrition Label filled from `PRIVACY_DATA_MAP.md` §8
-- ⬜ Privacy Policy URL live at `nazzim.app/privacy`
-- ⬜ Terms URL live at `nazzim.app/terms`
+- ⬜ Privacy Policy URL live at `nazzim.app/privacy` — page written (`legal/privacy.html` + `privacy-ar.html`), needs hosting
+- ⬜ Terms URL live at `nazzim.app/terms` — page written (`legal/terms.html` + `terms-ar.html`), needs hosting
 
 ### Accounts
 - ✅ Create account, sign in, sign out
@@ -70,7 +70,7 @@ Items marked **[VERIFY]** must be re-checked against the stores' current policie
 - ⬜ Data Safety form from `PRIVACY_DATA_MAP.md` §8
 - ⬜ Content rating questionnaire (expected *Everyone*)
 - ⬜ Privacy Policy URL in the listing
-- ✅ Account deletion in-app — ⬜ **plus the web-accessible deletion page Play requires**
+- ✅ Account deletion in-app — ⬜ web page written (`legal/delete-account.html`, EN + AR), needs hosting at `nazzim.app/delete-account`
 - ⬜ Play Billing if subscriptions ship (same decision as iOS)
 - ✅ No deceptive UI, no fake system dialogs, no hidden functionality
 

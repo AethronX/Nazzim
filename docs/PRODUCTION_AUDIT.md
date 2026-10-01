@@ -18,7 +18,7 @@ where a Remaining Manual Step is named.
 |---|---|---|
 | C1 | No iOS `bundleIdentifier` and no Android `package` — the build cannot be uploaded to either store | **Fixed.** `com.nazzim.app` on both. Change it before first submit if you own a different domain; after the first upload it is permanent |
 | C2 | Subscriptions are recorded by a local flag only (`subscribe()` writes `tier` to AsyncStorage). Anyone can unlock Plus/Pro by editing device storage, and Apple rejects paid features not sold through In-App Purchase | **Open — see M1.** The screen already shows a "demo, no charge" toast, so nothing misleading ships, but **the paid tiers must not be advertised as purchasable until IAP is wired** |
-| C3 | Privacy Policy, Terms and Support rows were dead buttons (`onPress={() => {}}`). An app with accounts cannot pass review without a reachable policy | **Fixed in app.** Rows now open `expo.extra.*Url`. **The pages themselves still have to be published — see M2** |
+| C3 | Privacy Policy, Terms and Support rows were dead buttons (`onPress={() => {}}`). An app with accounts cannot pass review without a reachable policy | **Fixed in app.** Rows now open `expo.extra.*Url`, and the pages are written in `legal/` (EN + AR). **Only hosting is left — see M2** |
 | C4 | `delete-account` must erase server data, not just sign out | **Fixed and verified.** Edge Function `delete-account` (JWT-verified) deletes the auth user; every table cascades from `auth.users` |
 | C5 | A production build could silently point at a dev backend | **Fixed.** `src/config/env.ts` + `scripts/test-release.js` fail the build on a localhost URL, a service-role key, or a non-`EXPO_PUBLIC_` variable in `.env` |
 
@@ -101,7 +101,7 @@ Full detail in `PRIVACY_DATA_MAP.md`. Summary:
 | Permission timing | ✅ Requested after the first finished session, never at launch |
 | Onboarding | ✅ 3 steps, skippable, plus "Explore with a sample semester" |
 | Account create / login / logout / delete | ✅ All four present (5.1.1(v) delete is real) |
-| Privacy Policy URL | ⚠️ Wired in-app; **page must be published (M2)** |
+| Privacy Policy URL | ⚠️ Wired in-app; page written (`legal/privacy.html`, `legal/privacy-ar.html`); **must be hosted (M2)** |
 | Terms | ⚠️ Same |
 | Sign in with Apple | N/A today (no third-party login). **Required if Google/Facebook login is ever added** |
 | In-App Purchase | ❌ **Not implemented. Do not submit with purchasable tiers until M1 is done** |
@@ -118,7 +118,7 @@ Full detail in `PRIVACY_DATA_MAP.md`. Summary:
 | Target SDK | ✅ Managed by Expo SDK 57 **[VERIFY against Play's current target-API deadline at submission time]** |
 | Permissions | ✅ `VIBRATE` only; sensitive ones explicitly blocked |
 | Data Safety form | ⚠️ Prepare from `PRIVACY_DATA_MAP.md` |
-| Account deletion (in-app + web) | ⚠️ In-app ✅. **Play also requires a web-accessible deletion request path — see M2** |
+| Account deletion (in-app + web) | ⚠️ In-app ✅. Web page written (`legal/delete-account.html`, bilingual); **must be hosted (M2)** |
 | Play Billing | ❌ Same as M1 |
 | Content rating | ⚠️ Questionnaire to complete; expected "Everyone" — no UGC, ads, or sensitive content |
 | AAB build | ✅ `eas build -p android --profile production` produces an AAB by default |
@@ -130,7 +130,7 @@ These need an account, a domain, or a human decision. They are **not** code prob
 | # | Step | Why it cannot be done from here |
 |---|---|---|
 | **M1** | Wire In-App Purchase (RevenueCat or raw StoreKit 2 + Play Billing) and server-side entitlement | Needs an Apple Developer account, App Store Connect products, and a RevenueCat/Play account. Architecture is specified in `SUBSCRIPTION_ARCHITECTURE.md` |
-| **M2** | Publish `nazzim.app/privacy`, `/terms`, `/support`, plus a web account-deletion request page (Play requirement) | Needs the domain and hosting. Content is drafted in `PRIVACY_DATA_MAP.md` |
+| **M2** | Host `legal/` at `nazzim.app` so `/privacy`, `/terms`, `/support` and `/delete-account` resolve | Pages are written and verified (7 files, EN + AR, no third-party requests). `legal/vercel.json` gives the clean URLs. Only the domain + deploy is left. Have a lawyer review before commercial launch |
 | **M3** | Supabase → Authentication → URL Configuration: set Site URL to the real app/web URL, and add a custom SMTP sender | Needs dashboard access; the built-in mailer is rate-limited and for testing only |
 | **M4** | Add crash reporting (Sentry via `@sentry/react-native`, or EAS Insights) | Needs a project DSN. Wire `src/services/crash.ts` as the single entry point when the DSN exists |
 | **M5** | Password reset UI + redirect URL | Depends on M3's Site URL |
