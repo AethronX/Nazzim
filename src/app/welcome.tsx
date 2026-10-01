@@ -6,6 +6,7 @@ import { GRADES } from '../components/Academic';
 import { LogoMark } from '../components/Logo';
 import { Choice } from '../components/Page';
 import { Btn, Icon, PrimaryBtn, T } from '../components/ui';
+import type { StudyTime } from '../engine/habits';
 import { useNazzim, type Onboarding } from '../lib/store';
 import { font } from '../lib/theme';
 
@@ -23,6 +24,7 @@ export default function Welcome() {
   const [examSubject, setExamSubject] = useState<number | null>(0);
   const [inDays, setInDays] = useState(7);
   const [chapters, setChapters] = useState(4);
+  const [studyTime, setStudyTime] = useState<StudyTime>('afternoon');
   const input = { fontFamily: font('body', 600, ar), fontSize: 15.5, color: C.ink, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, textAlign: ar ? 'right' : 'left' } as const;
 
   const addSubject = () => {
@@ -32,7 +34,7 @@ export default function Welcome() {
     setDraft('');
   };
   const finish = () => {
-    onboard({ profile, subjects, exam: examSubject !== null && subjects.length ? { subject: examSubject, inDays, chapters } : undefined });
+    onboard({ profile, subjects, studyTime, exam: examSubject !== null && subjects.length ? { subject: examSubject, inDays, chapters } : undefined });
     router.replace('/');
   };
 
@@ -79,6 +81,20 @@ export default function Welcome() {
                   <TextInput key={k} value={profile[k]} onChangeText={v => setProfile(p => ({ ...p, [k]: v }))} placeholder={L[{ name: 'fName', uni: 'fUni', major: 'fMajor' }[k] as 'fName']}
                     placeholderTextColor={C.ink3} autoCapitalize="words" style={input} accessibilityLabel={L[{ name: 'fName', uni: 'fUni', major: 'fMajor' }[k] as 'fName']} />
                 ))}
+                {/* Implementation intention: deciding *when* doubles follow-through */}
+                <T w={700} s={13} c={C.ink2} style={{ marginTop: 8 }}>{L.studyTimeQ}</T>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="radiogroup">
+                  {(['morning', 'afternoon', 'evening', 'night'] as const).map((k, i) => {
+                    const on = studyTime === k;
+                    return (
+                      <Btn key={k} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setStudyTime(k)}
+                        style={{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: 99, borderWidth: 1.5, borderColor: on ? accent.a1 : C.line, backgroundColor: on ? accent.tint : C.card }}>
+                        <T w={700} s={13} c={on ? accent.strong : C.ink2}>{L.studyTimes[i]}</T>
+                      </Btn>
+                    );
+                  })}
+                </View>
+                <T w={500} s={12} c={C.ink3}>{L.studyTimeSub}</T>
               </View>
             )}
 

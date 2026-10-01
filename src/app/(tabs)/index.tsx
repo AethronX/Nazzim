@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 import { ProgressRing, SubjectTile } from '../../components/Academic';
 import { Timeline } from '../../components/Agenda';
+import { ActivationChecklist, StreakChip, WeeklyRecapCard } from '../../components/Habits';
 import { Avatar } from '../../components/Page';
 import { Btn, Card, Icon, SectionHeader, T } from '../../components/ui';
 import { ai } from '../../ai';
@@ -17,11 +18,11 @@ import { useNazzim } from '../../lib/store';
 export default function Today() {
   const { C, L, ar, accent, me, today, startFocusOn, toggleTask, setQuick } = useNazzim();
   const { headerTop, scrollBottom } = useChrome();
-  const { ctx, chapterTitle, subjectById } = useAcademic();
+  const { ctx, chapterTitle, subjectById, studyStart } = useAcademic();
 
   const next = ai.recommendNextAction(ctx, chapterTitle);
   const behind = ai.assessBehind(ctx);
-  const agenda = agendaFor(ctx, today, { exam: L.kExam, task: L.kTaskB, kind: k => ({ learn: L.kLearn, review: L.kReview, mock: L.kMock })[k] }, chapterTitle);
+  const agenda = agendaFor(ctx, today, { exam: L.kExam, task: L.kTaskB, kind: k => ({ learn: L.kLearn, review: L.kReview, mock: L.kMock })[k] }, chapterTitle, studyStart);
   const load = ai.analyzeAcademicLoad(ctx, today, 7);
   const progress = semesterProgress(ctx);
   const hour = new Date().getHours();
@@ -58,6 +59,7 @@ export default function Today() {
               </View>
             )}
           </View>
+          <StreakChip />
           <Btn label={L.qaTitle} onPress={() => setQuick(true)} pressScale={0.94}
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="plus" size={18} color={accent.strong} stroke={2.6} />
@@ -136,6 +138,9 @@ export default function Today() {
             </View>
           </Btn>
         )}
+
+        <WeeklyRecapCard />
+        <ActivationChecklist />
 
         {/* At a glance: three numbers, one card, each opens its detail */}
         <Card pad={0}>

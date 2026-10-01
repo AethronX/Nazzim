@@ -14,12 +14,12 @@ import { useNazzim } from '../../lib/store';
 export default function Plan() {
   const { C, L, ar, accent, day, setDay, today, exams, study, tasks } = useNazzim();
   const { headerTop, scrollBottom } = useChrome();
-  const { ctx, chapterTitle } = useAcademic();
+  const { ctx, chapterTitle, studyStart } = useAcademic();
   // The calendar week (Sun–Sat) that contains today.
   const start = addDays(today, -fromKey(today).getDay());
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const upcoming = exams.filter(e => e.date > today);
-  const agenda = agendaFor(ctx, day, { exam: L.kExam, task: L.kTaskB, kind: k => ({ learn: L.kLearn, review: L.kReview, mock: L.kMock })[k] }, chapterTitle);
+  const agenda = agendaFor(ctx, day, { exam: L.kExam, task: L.kTaskB, kind: k => ({ learn: L.kLearn, review: L.kReview, mock: L.kMock })[k] }, chapterTitle, studyStart);
   const blocks = agenda.filter(a => a.kind !== 'exam');
 
   return (

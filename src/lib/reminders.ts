@@ -11,6 +11,8 @@ export const HABIT_HOURS = [8, 20, 22];
 const EXAM_EVE_HOUR = 19;
 
 const HABITS_ID = 'nz-habits';
+const STREAK_ID = 'nz-streak';
+const STREAK_HOUR = 20;
 const EXAM_PREFIX = 'nz-exam-';
 const FOCUS_ID = 'nz-focus';
 const CHANNEL = 'reminders';
@@ -53,18 +55,31 @@ async function cancelMatching(match: (id: string) => boolean) {
   await Promise.all(all.filter(n => match(n.identifier)).map(n => Notifications.cancelScheduledNotificationAsync(n.identifier)));
 }
 
-// Rebuild the habit and exam reminders from the current settings, language and plan.
-export async function syncReminders(s: ReminderSettings, L: Copy, exams: Exam[]) {
+// What the daily reminders say and when: the student's own next move, 15 min before their study time.
+export type DailyContext = { hour: number; minute: number; next: string | null; streakDays: number; studiedToday: boolean };
+
+// Rebuild the reminders from the current settings, language and plan. At most two a day (the plan reminder and,
+// only when a streak is alive and nothing is done yet, one evening nudge), never in quiet hours.
+export async function syncReminders(s: ReminderSettings, L: Copy, exams: Exam[], daily?: DailyContext) {
   if (!remindersSupported) return;
-  await cancelMatching(id => id === HABITS_ID || id.startsWith(EXAM_PREFIX));
+  await cancelMatching(id => id === HABITS_ID || id === STREAK_ID || id.startsWith(EXAM_PREFIX));
   if (!s.on || (await getPermission()) !== 'granted') return;
 
   if (s.habits) {
     await Notifications.scheduleNotificationAsync({
       identifier: HABITS_ID,
-      content: { title: L.nHabitTitle, body: L.nHabitBody, data: { url: '/' } },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: s.habitHour, minute: 0, channelId: CHANNEL },
+      content: { title: L.nHabitTitle, body: daily?.next ? L.nDailyBody.replace('{t}', daily.next) : L.nHabitBody, data: { url: '/' } },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: daily?.hour ?? s.habitHour, minute: daily?.minute ?? 0, channelId: CHANNEL },
     });
+    // Loss aversion, gently: only for a living streak (2+ days), only if today has no study yet, once, at 20:00.
+    const at = new Date(); at.setHours(STREAK_HOUR, 0, 0, 0);
+    if (daily && daily.streakDays >= 2 && !daily.studiedToday && at.getTime() > Date.now()) {
+      await Notifications.scheduleNotificationAsync({
+        identifier: STREAK_ID,
+        content: { title: L.nStreakTitle.replace('{n}', String(daily.streakDays)), body: L.nStreakBody, data: { url: '/' } },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
+      });
+    }
   }
   if (s.exams) {
     for (const e of exams) {

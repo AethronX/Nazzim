@@ -1,7 +1,9 @@
 import { View } from 'react-native';
 import { Choice, Page, Row, Section } from '../components/Page';
 import { Btn, T, Toggle } from '../components/ui';
-import { HABIT_HOURS, remindersSupported } from '../lib/reminders';
+import { hhmm } from '../components/Habits';
+import { reminderTime } from '../engine/habits';
+import { remindersSupported } from '../lib/reminders';
 import { useNazzim, type Appearance } from '../lib/store';
 import { ACCENT_KEYS, ACCENTS } from '../lib/theme';
 
@@ -10,7 +12,7 @@ const FOCUS_LENGTHS = [25, 50, 90];
 
 export default function Settings() {
   const {
-    C, L, ar, set, appearance, accentKey, reminders, setReminders, remDenied, preset, setPreset, haptics, rewards, aiTips, setDel,
+    C, L, ar, set, appearance, accentKey, reminders, setReminders, remDenied, preset, setPreset, haptics, rewards, aiTips, setDel, studyTime,
   } = useNazzim();
 
   return (
@@ -45,12 +47,8 @@ export default function Settings() {
         )}
         {reminders.on && (
           <>
-            <Row title={L.remHabits} style={{ paddingStart: 46 }}
-              right={<Toggle on={reminders.habits} onPress={() => setReminders({ habits: !reminders.habits })} label={L.remHabits} />}>
-              <View style={{ paddingStart: 0, opacity: reminders.habits ? 1 : 0.45 }} pointerEvents={reminders.habits ? 'auto' : 'none'}>
-                <Choice options={HABIT_HOURS} value={reminders.habitHour} onChange={h => setReminders({ habitHour: h })} labels={HABIT_HOURS.map(h => String(h).padStart(2, '0') + ':00')} mono />
-              </View>
-            </Row>
+            <Row title={L.remHabits} sub={L.remDailyAt.replace('{t}', hhmm(reminderTime(studyTime)))} style={{ paddingStart: 46 }}
+              right={<Toggle on={reminders.habits} onPress={() => setReminders({ habits: !reminders.habits })} label={L.remHabits} />} />
             <Row title={L.remExams} sub={L.remExamsSub} style={{ paddingStart: 46 }}
               right={<Toggle on={reminders.exams} onPress={() => setReminders({ exams: !reminders.exams })} label={L.remExams} />} />
             <Row title={L.remFocus} sub={L.remFocusSub} style={{ paddingStart: 46 }} last
@@ -60,6 +58,9 @@ export default function Settings() {
       </Section>
 
       <Section label={L.sControls}>
+        <Row icon="clock" title={L.studyTimeQ} sub={L.studyTimeSub}>
+          <Choice options={['morning', 'afternoon', 'evening', 'night'] as const} value={studyTime} onChange={v => set({ studyTime: v })} labels={L.studyTimes} />
+        </Row>
         <Row icon="target" title={L.cFocusLen}
           right={<Choice options={FOCUS_LENGTHS} value={preset} onChange={setPreset} labels={FOCUS_LENGTHS.map(m => m + (ar ? ' د' : ' min'))} mono />} />
         <Row icon="flame" title={L.cRewards} sub={L.cRewardsSub}

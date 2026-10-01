@@ -3,16 +3,18 @@
 import { useMemo } from 'react';
 import type { AcademicContext } from '../domain/types';
 import type { NextReason } from '../engine/academic';
+import { STUDY_START } from '../engine/habits';
 import type { Copy } from './copy';
 import type { ExamItem, StudySession } from './exams';
 import { useNazzim } from './store';
 
 export function useAcademic() {
-  const { today, subjects, tasks, exams, study, dailyMinutes, L } = useNazzim();
+  const { today, subjects, tasks, exams, study, dailyMinutes, studyTime, L } = useNazzim();
   const ctx: AcademicContext = useMemo(() => ({ today, subjects, tasks, exams, sessions: study, dailyMinutes }), [today, subjects, tasks, exams, study, dailyMinutes]);
   const chapterTitle = useMemo(() => (s: StudySession, e?: ExamItem) => (s.chapter < 0 ? L.exAll : e?.chapters[s.chapter] ?? ''), [L]);
   const subjectById = useMemo(() => new Map(subjects.map(s => [s.id, s])), [subjects]);
-  return { ctx, chapterTitle, subjectById };
+  // The day's blocks start at the student's chosen study time (implementation intention).
+  return { ctx, chapterTitle, subjectById, studyStart: STUDY_START[studyTime] };
 }
 
 export function reasonText(r: NextReason, L: Copy) {

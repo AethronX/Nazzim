@@ -13,7 +13,11 @@ export type AnalyticsEvent =
   | { name: 'focus_completed'; props: { minutes: number } }
   | { name: 'rescue_plan_created'; props: { moves: number; dropped: number; tight: number } }
   | { name: 'subscription_started'; props: { tier: string; period: string } }
-  | { name: 'subscription_cancelled' };
+  | { name: 'subscription_cancelled' }
+  // Retention loops (measure each mechanism's effect on D7 / D30)
+  | { name: 'reminders_enabled' }
+  | { name: 'study_time_set'; props: { time: string } }
+  | { name: 'weekly_recap_opened' };
 
 export type Sink = (e: AnalyticsEvent & { at: number }) => void;
 

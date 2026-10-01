@@ -6,6 +6,7 @@ import { Btn, Icon, PrimaryBtn, T } from '../components/ui';
 import { Page } from '../components/Page';
 import { useNazzim } from '../lib/store';
 import { useTimerSecs } from '../lib/timer';
+import { ReminderAsk } from '../components/Habits';
 import type { Palette } from '../lib/theme';
 
 const R = 112;
@@ -53,6 +54,7 @@ export default function Focus() {
             </View>
           )}
         </View>
+        <ReminderAsk />
       </Page>
     );
   }

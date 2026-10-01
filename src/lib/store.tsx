@@ -5,11 +5,13 @@ import { AppState, useColorScheme } from 'react-native';
 import type { Exam, Subject, Task } from '../domain/types';
 import type { PlanProposal } from '../ai/planner';
 import { canAddExam } from '../config/plans';
+import { recommendNextAction } from '../engine/academic';
+import { reminderTime, studyStreak, type StudyTime } from '../engine/habits';
 import { DEFAULT_DAILY_MIN, type RescuePlan } from '../engine/rescue';
 import { track } from '../services/analytics';
 import * as Sync from '../services/sync';
 import { COPY, type Copy, type Lang } from './copy';
-import { addDays, daysBetween, newId, planExam, rate, rollForward, todayKey, type Confidence, type StudySession } from './exams';
+import { addDays, daysBetween, newId, planExam, rate, readiness, rollForward, todayKey, type Confidence, type StudySession } from './exams';
 import { askForReview, REVIEW_AFTER_SESSIONS, sessionDone, setHaptics, tapDone } from './feedback';
 import { cancelFocusEnd, DEFAULT_REMINDERS, requestPermission, scheduleFocusEnd, syncReminders, type ReminderSettings } from './reminders';
 import { makeAccent, normalizeAccent, paletteFor, type Accent, type AccentKey, type Palette, type Scheme } from './theme';
@@ -32,6 +34,9 @@ type Persisted = {
   dailyMinutes: number; // usual study capacity per day; Rescue Mode plans within it
   focusLog: Record<string, number>; // focused minutes per day, for consistency and weekly study time
   onboarded: boolean;
+  studyTime: StudyTime; // implementation intention: when the student studies (schedule + reminders follow)
+  recapSeen: string | null; // week key of the last dismissed weekly recap
+  checklistHidden: boolean;
 };
 
 export type Tier = 'free' | 'plus' | 'pro';
@@ -41,6 +46,7 @@ export type Onboarding = {
   profile: Partial<Profile>;
   subjects: { name: string; targetGrade: string }[];
   exam?: { subject: number; inDays: number; chapters: number }; // index into subjects
+  studyTime?: StudyTime;
 };
 
 export type Appearance = 'system' | 'light' | 'dark';
@@ -52,7 +58,7 @@ const deviceLang = (): Lang => {
 
 const INITIAL: Persisted = { schema: SCHEMA, lang: deviceLang(), ticks: {}, xp: 0, preset: 25, plan: 'year', sessions: 0, reviewAsked: false, appearance: 'system', reminders: DEFAULT_REMINDERS,
   profile: { name: '', uni: '', major: '', year: '' }, tier: 'free', haptics: true, rewards: true, aiTips: true, accentKey: 'indigo',
-  subjects: [], tasks: [], exams: [], study: [], examsSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false };
+  subjects: [], tasks: [], exams: [], study: [], examsSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false, studyTime: 'afternoon', recapSeen: null, checklistHidden: false };
 
 // What the focus timer is working on, so a finished session can update that item's progress.
 export type FocusTarget = { kind: 'session' | 'task'; id: string } | null;
@@ -296,12 +302,23 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
     return () => sub.remove();
   }, []);
 
-  // Keep scheduled reminders in step with the settings, the language and the exams in the plan.
+  // Keep scheduled reminders in step with the settings, the plan, the next move and the streak (debounced).
   useEffect(() => {
     if (!ready) return;
-    const list = p.exams.map(e => ({ id: e.id, name: e.subject, days: daysBetween(today, e.date) })).filter(e => e.days > 0);
-    syncReminders(p.reminders, COPY[p.lang], list).catch(() => {});
-  }, [ready, p.reminders, p.lang, p.exams, today]);
+    const t = setTimeout(() => {
+      const Lx = COPY[p.lang];
+      const ctx = { today, subjects: p.subjects, tasks: p.tasks, exams: p.exams, sessions: p.study };
+      const next = recommendNextAction(ctx, (s, e) => (s.chapter < 0 ? Lx.exAll : e?.chapters[s.chapter] ?? ''));
+      const streak = studyStreak(ctx, p.focusLog);
+      const list = p.exams.map(e => ({ id: e.id, name: e.subject, days: daysBetween(today, e.date) })).filter(e => e.days > 0);
+      syncReminders(p.reminders, Lx, list, {
+        ...reminderTime(p.studyTime),
+        next: next.kind === 'session' || next.kind === 'task' ? `${next.title} · ${next.minutes} ${Lx.min}` : null,
+        streakDays: streak.days, studiedToday: streak.studiedToday,
+      }).catch(() => {});
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [ready, p.reminders, p.lang, p.exams, p.study, p.tasks, p.subjects, p.focusLog, p.studyTime, today]);
 
   // Focus-session end notification follows the timer: scheduled while running, cancelled on pause or reset.
   useEffect(() => {
@@ -314,6 +331,7 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
       const ok = await requestPermission().catch(() => false);
       setRemDenied(!ok);
       if (!ok) return;
+      track({ name: 'reminders_enabled' });
     }
     setP(s => ({ ...s, reminders: { ...s.reminders, ...patch } }));
   }, []);
@@ -361,7 +379,8 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
         track({ name: 'plan_generated', props: { sessions: study.length, source: 'local' } });
       }
       subjects.forEach(() => track({ name: 'subject_created' }));
-      setP(s => ({ ...s, profile: { ...s.profile, ...o.profile }, subjects, exams, study, tasks: [], onboarded: true, examsSeeded: true }));
+      setP(s => ({ ...s, profile: { ...s.profile, ...o.profile }, subjects, exams, study, tasks: [], onboarded: true, examsSeeded: true, studyTime: o.studyTime ?? s.studyTime }));
+      if (o.studyTime) track({ name: 'study_time_set', props: { time: o.studyTime } });
       track({ name: 'onboarding_completed' });
       tapDone();
     },
@@ -415,12 +434,16 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
     deleteTask: id => setP(s => ({ ...s, tasks: s.tasks.filter(x => x.id !== id) })),
     deleteExam: id => setP(s => ({ ...s, exams: s.exams.filter(e => e.id !== id), study: s.study.filter(x => x.examId !== id) })),
     rateSession: (id, c) => {
+      // Peak-end: close the session on visible progress ("Statistics readiness 34% → 41%").
+      const ses = p.study.find(x => x.id === id), ex = p.exams.find(e => e.id === ses?.examId);
+      const before = ex ? readiness(ex, p.study) : 0;
+      const after = ex ? readiness(ex, rate(p.study, id, c, ex, today)) : 0;
       setP(s => {
-        const ses = s.study.find(x => x.id === id), exam = s.exams.find(e => e.id === ses?.examId);
+        const ses2 = s.study.find(x => x.id === id), exam = s.exams.find(e => e.id === ses2?.examId);
         return exam ? { ...s, study: rate(s.study, id, c, exam, today) } : s;
       });
       tapDone();
-      award(20, L.toastRated);
+      award(20, ex && after > before ? L.toastReady.replace('{exam}', ex.subject).replace('{a}', String(before)).replace('{b}', String(after)) : L.toastRated);
       track({ name: 'study_session_completed', props: { confidence: c } });
     },
     setPreset: m => { set({ preset: m }); setTimer(t => ({ ...t, total: m * 60, secs: m * 60, running: false })); },
