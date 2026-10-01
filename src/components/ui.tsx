@@ -245,7 +245,7 @@ export function SectionHeader({ title, meta, action }: { title: string; meta?: s
 }
 
 // A percentage that reserves its slot (0–100 + %) so it never jumps a pixel as the number updates.
-export function Pct({ value, size = 20, color, weight = 700 }: { value: number; size?: number; color?: string; weight?: Weight }) {
+export function Pct({ value, size = 20, color, weight = 800 }: { value: number; size?: number; color?: string; weight?: Weight }) {
   const n = Math.max(0, Math.min(100, Math.round(value)));
   return (
     <View style={{ minWidth: size * 2.2, alignItems: 'flex-end' }} accessibilityLabel={`${n}%`}>
@@ -255,7 +255,7 @@ export function Pct({ value, size = 20, color, weight = 700 }: { value: number; 
 }
 
 // A MM:SS clock whose colon never nudges the digits. Each digit pair is tabular; the colon has its own slot.
-export function Clock({ secs, size = 56, color, weight = 700 }: { secs: number; size?: number; color?: string; weight?: Weight }) {
+export function Clock({ secs, size = 56, color, weight = 800 }: { secs: number; size?: number; color?: string; weight?: Weight }) {
   const safe = Math.max(0, Math.floor(secs));
   const mm = String(Math.floor(safe / 60)).padStart(2, '0');
   const ss = String(safe % 60).padStart(2, '0');

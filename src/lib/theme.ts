@@ -193,15 +193,16 @@ export type Face = 'body' | 'display' | 'grotesk';
 // 'body'    = 'Plus Jakarta Sans','IBM Plex Sans Arabic'
 // 'display' = 'Space Grotesk','IBM Plex Sans Arabic'
 // 'grotesk' = 'Space Grotesk' only (numbers, clocks, Latin labels)
+// Numbers (grotesk face) use Inter everywhere, with tabular-nums applied in the T component. This matches
+// the calm, humanist look of Apple Fitness / Linear / Notion, not the geometric "ticker" look of Space Grotesk.
+// Display headlines use Inter too, so the whole app reads as one coherent family.
 export function font(face: Face, weight: Weight, ar: boolean): string {
-  if (face === 'grotesk' || (face === 'display' && !ar)) {
-    const w = Math.min(Math.max(weight, 500), 700);
-    return { 500: 'SpaceGrotesk_500Medium', 600: 'SpaceGrotesk_600SemiBold', 700: 'SpaceGrotesk_700Bold' }[w as 500 | 600 | 700];
-  }
-  if (ar) {
+  // Arabic script: IBM Plex Sans Arabic (numbers in an Arabic string still use Inter: see 'grotesk' below).
+  if (ar && face !== 'grotesk') {
     const w = Math.min(weight, 700) as 400 | 500 | 600 | 700;
     return { 400: 'IBMPlexSansArabic_400Regular', 500: 'IBMPlexSansArabic_500Medium', 600: 'IBMPlexSansArabic_600SemiBold', 700: 'IBMPlexSansArabic_700Bold' }[w];
   }
+  // Latin or numbers: Inter.
   return {
     400: 'Inter_400Regular', 500: 'Inter_500Medium', 600: 'Inter_600SemiBold',
     700: 'Inter_700Bold', 800: 'Inter_800ExtraBold',
