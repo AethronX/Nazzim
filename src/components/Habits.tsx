@@ -20,7 +20,7 @@ export function StreakChip() {
       style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 40, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1.5,
         borderColor: s.atRisk ? C.warning : C.line, backgroundColor: C.card }}>
       <Icon name="flame" size={16} color={s.atRisk ? C.warningText : accent.fg} />
-      <T f="grotesk" w={700} s="body">{String(s.days)}</T>
+      <T num="data" w={700} s="body">{String(s.days)}</T>
     </Btn>
   );
 }

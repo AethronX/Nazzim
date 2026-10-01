@@ -46,7 +46,7 @@ export default function NewTask() {
       </Section>
       <Section label={L.estimate}>
         <View style={{ padding: 14 }}>
-          <Choice options={ESTIMATES} value={estimate} onChange={setEstimate} labels={ESTIMATES.map(m => `${m} ${L.min}`)} mono />
+          <Choice options={ESTIMATES} value={estimate} onChange={setEstimate} labels={ESTIMATES.map(m => `${m} ${L.min}`)} />
         </View>
       </Section>
       <Btn onPress={create} disabled={!ok} pressedBg={accent.strong}

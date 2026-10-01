@@ -49,6 +49,10 @@ Three scales live in `src/lib/theme.ts` and are enforced by `scripts/test-design
 - **Radius** — `RADIUS` (xs 6, sm 12, md 16, lg 20, xl 24, full 99). Circles (radius = half the box) are the
   only exception.
 - **Space** — a 4pt grid, `SPACE`.
+- **Numerals** — the role picks the face: `num="data"` for a figure that is compared or ticks (Inter, LTR,
+  tabular), `ltr` for a Latin token that is not a figure (a grade, a ± stepper), and nothing at all for a
+  figure inside a sentence, which keeps the surrounding face. Never put `num`/`ltr` on a string containing
+  Arabic — Inter has no Arabic and React Native has no fallback chains.
 - **Colour** — every colour is generated in OKLCH at shared tiers; see `docs/COLOR_SYSTEM.md`. Never paste a
   stock palette value in. `scripts/test-palette.js` fails the build if the tiers drift (status colours must
   share a lightness band, subject hues stay ≥25° apart, the brand ramp stays monotonic, #285CE7 and #112357

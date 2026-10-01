@@ -6,33 +6,38 @@ import {
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import type { Kind } from '../lib/copy';
 import { useNazzim } from '../lib/store';
-import { font, TEXT, type Face, type TextRole, type Weight } from '../lib/theme';
+import { font, TEXT, type Face, type Numerals, type TextRole, type Weight } from '../lib/theme';
 
 type TProps = TextProps & {
   f?: Face; w?: Weight; c?: string; ls?: number; lh?: number; style?: StyleProp<TextStyle>;
   /** A role from the type scale ('body', 'label', …) or, where a one-off is genuinely needed, a number. */
   s?: TextRole | number;
+  /** 'data' marks a figure that is compared or watched change: Inter, LTR, tabular. See Numerals in theme.ts. */
+  num?: Numerals;
+  /** A Latin token that is not a figure — a grade, a ± stepper. Inter and LTR, but proportional. */
+  ltr?: boolean;
 };
 
 // Text with the design's font stacks resolved for the current language.
-export function T({ f = 'body', w = 500, s = 'label', c, ls, lh, style, ...rest }: TProps) {
+export function T({ f = 'body', w = 500, s = 'label', c, ls, lh, num, ltr, style, ...rest }: TProps) {
   const { ar, C } = useNazzim();
   const size = typeof s === 'number' ? s : TEXT[s];
+  const latin = num === 'data' || !!ltr;
   return (
     <Text
       maxFontSizeMultiplier={1.3}
       {...rest}
       style={[
         {
-          fontFamily: font(f, w, ar),
+          fontFamily: font(f, w, ar, latin),
           fontSize: size,
           color: c ?? C.ink,
           letterSpacing: ls,
           lineHeight: lh ? size * lh : undefined,
-          writingDirection: ar && f !== 'grotesk' ? 'rtl' : 'ltr',
+          writingDirection: ar && !latin ? 'rtl' : 'ltr',
           textAlign: ar ? 'right' : undefined,
-          // Numbers (grotesk) are tabular everywhere: timer, percentages, days-left stop drifting.
-          fontVariant: f === 'grotesk' ? ['tabular-nums'] : undefined,
+          // Only data figures are tabular. In a sentence, tabular widths leave a gap around the 1.
+          fontVariant: num === 'data' ? ['tabular-nums'] : undefined,
           // Android: remove the extra vertical padding so Arabic/Latin align like iOS.
           includeFontPadding: false,
           textAlignVertical: 'center',
@@ -237,7 +242,7 @@ export function SectionHeader({ title, meta, action }: { title: string; meta?: s
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, paddingHorizontal: 2 }}>
       <T f="display" w={700} s="heading" ls={ar ? 0 : -0.4} style={{ flex: 1 }} accessibilityRole="header">{title}</T>
-      {!!meta && <T f="grotesk" w={700} s="caption" c={C.ink3}>{meta}</T>}
+      {!!meta && <T num="data" w={700} s="caption" c={C.ink3}>{meta}</T>}
       {!!action && (
         <Btn onPress={action.onPress} style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 99 }}>
           <T w={700} s="label" c={accent.fg}>{action.label}</T>
@@ -252,7 +257,7 @@ export function Pct({ value, size = 20, color, weight = 800 }: { value: number; 
   const n = Math.max(0, Math.min(100, Math.round(value)));
   return (
     <View style={{ minWidth: size * 2.2, alignItems: 'flex-end' }} accessibilityLabel={`${n}%`}>
-      <T f="grotesk" w={weight} s={size} c={color} ls={size >= 20 ? -0.6 : 0} lh={1}>{`${n}%`}</T>
+      <T num="data" w={weight} s={size} c={color} ls={size >= 20 ? -0.6 : 0} lh={1}>{`${n}%`}</T>
     </View>
   );
 }
@@ -262,7 +267,7 @@ export function Clock({ secs, size = 56, color, weight = 800 }: { secs: number; 
   const safe = Math.max(0, Math.floor(secs));
   const mm = String(Math.floor(safe / 60)).padStart(2, '0');
   const ss = String(safe % 60).padStart(2, '0');
-  const digit = { fontFamily: font('grotesk', weight, false), fontSize: size, lineHeight: size, color, fontVariant: ['tabular-nums' as const], letterSpacing: size >= 40 ? -2 : -0.4 };
+  const digit = { fontFamily: font('body', weight, false, true), fontSize: size, lineHeight: size, color, fontVariant: ['tabular-nums' as const], letterSpacing: size >= 40 ? -2 : -0.4 };
   const label = `${mm}:${ss}`;
   return (
     // direction is pinned LTR: the three parts are separate children, so on an RTL screen the row would

@@ -42,6 +42,28 @@ radius, so the migration changed no layout while removing the drift.
    Arabic screen an inherited RTL row renders them seconds-first and a 25-minute timer reads **00:25**. That
    was a real bug, found by reading the Arabic focus screen rather than the code.
 
+## Numerals have roles
+
+The face a figure is set in follows what the figure is *for*, not which component happens to render it.
+
+| Role | Prop | Face | Widths | Where |
+| --- | --- | --- | --- | --- |
+| **Data** | `num="data"` | Inter, LTR | **tabular** | a percentage in a list, a clock, a chart tick, `4/11` |
+| **Prose** | *(none)* | the surrounding face | proportional | a figure inside a sentence: "متبقٍ 11 جلسة" |
+| **Latin token** | `ltr` | Inter, LTR | proportional | a target grade (A−), a ± stepper — not a figure |
+
+Why it matters, measured: Inter's `1` is 44 units wide against `0` at 69, so a running timer without `tnum`
+shifts visibly every second. In the other direction, tabular widths leave a gap around the 1 in running text.
+The same font has to do both, and only the role knows which.
+
+The third rule exists because React Native has no font fallback chains. The app previously carried one
+`f="grotesk"` face that forced Inter onto everything "numeric", including strings that mix digits with Arabic
+words — `7 س 55 د`, `25 د`, `40 دقيقة`. Inter has no Arabic, so those words were rendered by whatever font
+the system picked. They are prose now and stay in IBM Plex Sans Arabic.
+
+The design guard fails the build on `f="grotesk"` (retired), and on any element that carries `num`/`ltr`
+while its line contains Arabic.
+
 ## Arabic is not a translation
 
 `counted()` and `unitOf()` in `src/lib/copy.ts` give counted nouns their proper agreement. English needs two

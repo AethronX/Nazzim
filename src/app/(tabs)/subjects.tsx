@@ -43,7 +43,7 @@ export default function Subjects() {
                 <T f="display" w={700} s="heading" numberOfLines={1}>{s.name}</T>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                   <View style={{ paddingVertical: 2, paddingHorizontal: 7, borderRadius: 6, backgroundColor: sw.tint }}>
-                    <T f="grotesk" w={700} s="caption" c={sw.fg}>{s.targetGrade}</T>
+                    <T ltr w={700} s="caption" c={sw.fg}>{s.targetGrade}</T>
                   </View>
                   {/* The single most useful fact: the next exam, else what's open */}
                   <T w={600} s="caption" c={soon ? C.warningText : C.ink3} numberOfLines={1} style={{ flexShrink: 1 }}>{fact}</T>

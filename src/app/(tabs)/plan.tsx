@@ -50,7 +50,7 @@ export default function Plan() {
                   on ? { backgroundColor: accent.a1 } : { backgroundColor: C.card, borderWidth: 1, borderColor: isToday ? accent.a1 : C.line },
                 ]}>
                 <T w={700} s="micro" c={on ? C.onHero2 : isToday ? accent.fg : C.ink3}>{L.dow[i]}</T>
-                <T f="grotesk" w={700} s="body" c={on ? C.onAccent : C.ink}>{String(fromKey(k).getDate())}</T>
+                <T num="data" w={700} s="body" c={on ? C.onAccent : C.ink}>{String(fromKey(k).getDate())}</T>
                 {/* Square = exam day, dot = something planned */}
                 <View style={{ width: 5, height: 5, borderRadius: exam ? 1 : 3, backgroundColor: exam ? (on ? C.onAccent : C.warning) : has ? (on ? C.onAccent : accent.a1) : 'transparent' }} />
               </Btn>

@@ -40,7 +40,7 @@ export default function Progress() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: C.card2 }}>
           <Icon name="target" size={16} color={accent.fg} />
           <T w={600} s="caption" c={C.ink2} style={{ flex: 1 }}>{L.prWeek}</T>
-          <T f="grotesk" w={700} s="body">{hours(p.weekMinutes, ar)}</T>
+          <T w={700} s="body">{hours(p.weekMinutes, ar)}</T>
         </View>
         {gamification && (
           <T w={600} s="caption" c={C.ink3} style={{ textAlign: 'center' }}>
@@ -74,7 +74,7 @@ export default function Progress() {
             return (
               <View key={d.date} style={{ flex: 1, alignItems: 'center', gap: 5 }} accessible accessibilityLabel={`${L.dow[i]} ${d.minutes} ${L.min}`}>
                 {/* Values as text so bars don't carry meaning alone (WCAG 1.4.11). */}
-                <T f="grotesk" w={700} s="micro" c={d.isToday ? accent.fg : C.ink3}>{d.future ? '–' : String(d.minutes)}</T>
+                <T num="data" w={700} s="micro" c={d.isToday ? accent.fg : C.ink3}>{d.future ? '–' : String(d.minutes)}</T>
                 <View style={{ width: '100%', height: h, borderRadius: 6, backgroundColor: d.isToday ? accent.fg : d.future || !d.minutes ? C.line2 : accent.tint2 }} />
                 <T w={d.isToday ? 800 : 700} s="micro" c={d.isToday ? accent.fg : C.ink3}>{L.dow[i]}</T>
               </View>
@@ -94,7 +94,7 @@ export default function Progress() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <SubjectTile subject={subj} size={28} />
                 <T w={700} s="label" style={{ flex: 1 }} numberOfLines={1}>{subj.name}</T>
-                <T f="grotesk" w={700} s="label" c={sw.fg}>{`${s.readiness ?? s.progress}%`}</T>
+                <T num="data" w={700} s="label" c={sw.fg}>{`${s.readiness ?? s.progress}%`}</T>
               </View>
               <Bar value={s.readiness ?? s.progress} color={sw.fg} height={5} />
               <T w={600} s="caption" c={C.ink3}>
@@ -115,7 +115,7 @@ function Stat({ icon, value, label, sub }: { icon: IconName; value: string; labe
     <View style={{ flex: 1, minWidth: 0, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: C.line, gap: 3 }}>
       <Icon name={icon} size={15} color={accent.fg} />
       <T w={600} s="caption" c={C.ink3} style={{ marginTop: 4 }}>{label}</T>
-      <T f="grotesk" w={700} s="title">{value}</T>
+      <T num="data" w={700} s="title">{value}</T>
       <T w={600} s="caption" c={C.ink3}>{sub}</T>
     </View>
   );

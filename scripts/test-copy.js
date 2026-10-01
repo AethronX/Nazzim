@@ -48,3 +48,18 @@ assert.equal(unitOf(3, 'task', en, false), 'tasks');
 assert.equal(counted(1, 'task', ar, true), 'مهمة');
 assert.equal(counted(1, 'task', en, false), '1 task');
 console.log('all unit checks passed');
+
+// ── Numeral roles ───────────────────────────────────────────────────────────────────────────
+// The face follows the role, not the other way round. A figure that is compared or watched change takes
+// Inter; a figure inside a sentence takes the sentence's face, so a mixed string stays in one font.
+const { font } = require('../src/lib/theme.ts');
+
+assert.ok(font('body', 700, true).startsWith('IBMPlexSansArabic'), 'Arabic prose takes the Arabic face');
+assert.ok(font('body', 700, true, true).startsWith('Inter'), 'a data figure takes Inter even on an Arabic screen');
+assert.ok(font('body', 700, false).startsWith('Inter'), 'English prose takes Inter');
+assert.ok(font('display', 800, true).startsWith('IBMPlexSansArabic'), 'Arabic display text stays Arabic');
+// The Arabic face stops at 700; asking for 800 must not fall off the end of the table.
+assert.ok(font('body', 800, true).startsWith('IBMPlexSansArabic'), 'weight 800 clamps to the heaviest Arabic cut');
+assert.equal(font('body', 800, false), 'Inter_800ExtraBold');
+
+console.log('all numeral-role checks passed');

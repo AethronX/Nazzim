@@ -49,14 +49,14 @@ export default function NewExam() {
         <View style={{ padding: 16, gap: 14 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Btn label="−1" onPress={() => setInDays(n => Math.max(1, n - 1))} style={stepper(C.line)}>
-              <T f="grotesk" w={700} s="title" c={C.ink2}>−</T>
+              <T ltr w={700} s="title" c={C.ink2}>−</T>
             </Btn>
             <View style={{ flex: 1, alignItems: 'center' }}>
               <T f="display" w={700} s="title" ls={ar ? 0 : -0.4}>{fmtDate(date, L)}</T>
               <T w={600} s="caption" c={accent.fg} style={{ marginTop: 2 }}>{relDay(date, today, L, ar)}</T>
             </View>
             <Btn label="+1" onPress={() => setInDays(n => Math.min(120, n + 1))} style={stepper(C.line)}>
-              <T f="grotesk" w={700} s="title" c={C.ink2}>+</T>
+              <T ltr w={700} s="title" c={C.ink2}>+</T>
             </Btn>
           </View>
           <View style={{ flexDirection: 'row', gap: 6, justifyContent: 'center' }} accessibilityRole="radiogroup">

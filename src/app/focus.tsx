@@ -32,7 +32,7 @@ export default function Focus() {
           </View>
           <T f="display" w={700} s="display" ls={ar ? 0 : -0.5}>{L.sessionComplete}</T>
           <T w={600} s="label" c={C.ink2} style={{ textAlign: 'center' }}>{review.title}</T>
-          <T f="grotesk" w={700} s="label" c={accent.fg}>{L.focusMin.replace('{n}', String(review.minutes))}</T>
+          <T w={700} s="label" c={accent.fg}>{L.focusMin.replace('{n}', String(review.minutes))}</T>
         </View>
         <View style={{ backgroundColor: C.card, borderRadius: 20, borderWidth: 1, borderColor: C.line, padding: 16, gap: 14 }}>
           <T w={600} s="label" style={{ textAlign: 'center' }}>{review.target?.kind === 'task' ? L.taskDoneQ : L.howWent}</T>

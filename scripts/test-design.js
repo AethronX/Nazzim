@@ -47,10 +47,23 @@ for (const f of files) {
       const circle = new RegExp(`(?:width|height): ${v * 2}\\b`).test(line) || /(?:width|height): size\b/.test(line);
       if (!circle) problems.push(`${at}  borderRadius ${v} is off the scale — use ${Object.entries(RADIUS).map(([k, n]) => `${k}=${n}`).join(', ')}`);
     }
+    // 3. A string that mixes digits with Arabic words must not be forced onto the Latin face: React Native
+    //    has no fallback chains, so the Arabic would render in whatever the system picks. `num`/`ltr` mean
+    //    "this content is Latin", and Arabic copy inside such an element contradicts that.
+    if (/\bnum="data"|\bltr\b/.test(line) && /[\u0600-\u06FF]/.test(line)) {
+      problems.push(`${at}  Latin numerals on a string containing Arabic — drop num/ltr so the whole string keeps the Arabic face`);
+    }
   });
 }
 
-// 3. The clock must stay left-to-right. Its minutes, colon and seconds are separate children, so on an
+// The numeral face is chosen by role now; the old catch-all face is gone for good.
+for (const f of files) {
+  if (/f=\{?["']grotesk/.test(fs.readFileSync(f, 'utf8'))) {
+    problems.push(`${rel(f)}  f="grotesk" is retired — use num="data" for figures, ltr for Latin tokens, neither for prose`);
+  }
+}
+
+// 4. The clock must stay left-to-right. Its minutes, colon and seconds are separate children, so on an
 //    Arabic screen an inherited RTL row renders them seconds-first: a 25-minute timer reads "00:25".
 const ui = fs.readFileSync(path.join(SRC, 'components', 'ui.tsx'), 'utf8');
 const clock = ui.slice(ui.indexOf('export function Clock'));
@@ -62,4 +75,4 @@ if (problems.length) {
   console.error(`design guard: ${problems.length} problem(s)\n` + problems.map(p => '  ' + p).join('\n'));
   process.exit(1);
 }
-console.log(`design guard passed — ${files.length} components on ${TEXT_ROLES.size} type steps and ${RADII.size} radii`);
+console.log(`design guard passed — ${files.length} components on ${TEXT_ROLES.size} type steps, ${RADII.size} radii and 2 numeral roles`);

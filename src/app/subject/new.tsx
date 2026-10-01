@@ -44,7 +44,7 @@ export default function NewSubject() {
             return (
               <Btn key={g} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setGrade(g)}
                 style={{ minWidth: 48, paddingVertical: 9, paddingHorizontal: 12, borderRadius: 12, alignItems: 'center', borderWidth: 1.5, borderColor: on ? accent.a1 : C.line, backgroundColor: on ? accent.tint : C.card }}>
-                <T f="grotesk" w={700} s="label" c={on ? accent.strong : C.ink2}>{g}</T>
+                <T ltr w={700} s="label" c={on ? accent.strong : C.ink2}>{g}</T>
               </Btn>
             );
           })}

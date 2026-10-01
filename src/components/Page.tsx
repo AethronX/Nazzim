@@ -4,6 +4,7 @@ import { ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChrome } from '../lib/layout';
 import { useNazzim } from '../lib/store';
+import type { Numerals } from '../lib/theme';
 import { Btn, Eyebrow, Icon, T, type IconName } from './ui';
 
 // A pushed screen (Profile, Settings, Plans): back button, large title, scrolling body.
@@ -70,8 +71,12 @@ export function Row({ icon, title, sub, right, onPress, danger, last, chevron, s
 }
 
 // Pill options (appearance, focus length, habit time…). Selected = blue wash with Blue 600 text.
-export function Choice<V extends string | number>({ options, value, onChange, labels, mono }: {
-  options: readonly V[]; value: V; onChange: (v: V) => void; labels: readonly string[]; mono?: boolean;
+// `num`/`ltr` are passed through to the label, because a choice's options are not all one kind: "2 · 3 · 4"
+// are figures, "A · A−" are Latin tokens, and "25 د" is a figure with an Arabic word that must stay in the
+// Arabic face. A single `mono` flag used to force Inter onto all three, so the Arabic fell back.
+export function Choice<V extends string | number>({ options, value, onChange, labels, num, ltr }: {
+  options: readonly V[]; value: V; onChange: (v: V) => void; labels: readonly string[];
+  num?: Numerals; ltr?: boolean;
 }) {
   const { C, accent } = useNazzim();
   return (
@@ -81,7 +86,7 @@ export function Choice<V extends string | number>({ options, value, onChange, la
         return (
           <Btn key={String(o)} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => onChange(o)}
             style={{ paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: on ? accent.tint : 'transparent' }}>
-            <T f={mono ? 'grotesk' : 'body'} w={700} s="caption" c={on ? accent.strong : C.ink3}>{labels[i]}</T>
+            <T num={num} ltr={ltr} w={700} s="caption" c={on ? accent.strong : C.ink3}>{labels[i]}</T>
           </Btn>
         );
       })}

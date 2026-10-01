@@ -37,7 +37,7 @@ export function ProgressRing({ value, size = 44, stroke = 4, color, label }: { v
       </Svg>
       {label !== '' && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
-          {label === undefined ? <Pct value={v} size={Math.round(size * 0.26)} /> : <T f="grotesk" w={700} s={size * 0.26} c={C.ink}>{label}</T>}
+          {label === undefined ? <Pct value={v} size={Math.round(size * 0.26)} /> : <T num="data" w={700} s={size * 0.26} c={C.ink}>{label}</T>}
         </View>
       )}
     </View>

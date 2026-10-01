@@ -32,7 +32,7 @@ export default function SubjectDetail() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <SubjectTile subject={subject} size={40} />
           <T w={700} s="label" style={{ flex: 1 }}>{L.progressL}</T>
-          <T f="grotesk" w={700} s="title" c={sw.fg}>{`${sum.progress}%`}</T>
+          <T num="data" w={700} s="title" c={sw.fg}>{`${sum.progress}%`}</T>
         </View>
         <Bar value={sum.progress} color={sw.fg} />
       </View>

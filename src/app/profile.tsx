@@ -81,7 +81,7 @@ export default function Profile() {
             [hours(stats.weekMinutes, ar), L.prWeek, C.ink],
           ].filter(Boolean) as [string, string, string][]).map(([v, label, color]) => (
             <View key={label} style={{ flex: 1, minWidth: 0, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 10, alignItems: 'center' }}>
-              <T f="grotesk" w={700} s="title" ls={-0.6} c={color}>{v}</T>
+              <T w={700} s="title" ls={-0.6} c={color}>{v}</T>
               <T w={700} s="micro" c={C.ink3} numberOfLines={1} style={{ marginTop: 3, textAlign: 'center' }}>{label}</T>
             </View>
           ))}

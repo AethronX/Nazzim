@@ -107,7 +107,7 @@ export default function ExamDetail() {
                 {`${L.xTopicState[t.state]}${t.nextDate && t.state !== 'solid' ? ' · ' + relDay(t.nextDate, today, L, ar) : ''}`}
               </T>
             </View>
-            <T f="grotesk" w={700} s="caption" c={C.ink3}>{`${t.done}/${t.total}`}</T>
+            <T num="data" w={700} s="caption" c={C.ink3}>{`${t.done}/${t.total}`}</T>
           </View>
         ))}
       </Section>

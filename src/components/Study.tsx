@@ -27,7 +27,7 @@ export function SessionRow({ s, exam, last, showExam = true }: { s: StudySession
         <View style={{ flex: 1, minWidth: 0 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <T w={800} s="micro" ls={ar ? 0 : 0.6} c={s.kind === 'mock' ? C.ink2 : accent.fg} style={{ textTransform: 'uppercase' }}>{kind}</T>
-            <T f="grotesk" w={700} s="micro" c={C.ink3}>{`${s.minutes} ${L.min}`}</T>
+            <T w={700} s="micro" c={C.ink3}>{`${s.minutes} ${L.min}`}</T>
           </View>
           <T w={700} s="label" c={s.done ? C.ink3 : C.ink} style={[{ marginTop: 2 }, s.done && { textDecorationLine: 'line-through' }]} numberOfLines={1}>{title}</T>
           {showExam && !!exam && <T w={600} s="caption" c={C.ink3} style={{ marginTop: 1 }}>{exam.subject}</T>}
@@ -83,7 +83,7 @@ export function ExamCard({ exam, hero }: { exam: ExamItem; hero?: boolean }) {
           <T w={600} s="caption" c={ink2} style={{ marginTop: 2 }}>{`${fmtDate(exam.date, L)} · ${relDay(exam.date, today, L, ar)}`}</T>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <T f="grotesk" w={700} s="hero" ls={-1.2} lh={1} c={hero ? C.onHeroAccent : accent.fg}>{`${ready}%`}</T>
+          <T num="data" w={700} s="hero" ls={-1.2} lh={1} c={hero ? C.onHeroAccent : accent.fg}>{`${ready}%`}</T>
           <T w={800} s="micro" ls={ar ? 0 : 0.8} c={ink2} style={{ marginTop: 3 }}>{L.exReady}</T>
         </View>
       </View>

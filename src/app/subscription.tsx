@@ -77,7 +77,7 @@ export default function Subscription() {
             <T w={600} s="label" c={ink2} style={{ marginTop: -8 }}>{t.tag}</T>
 
             <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-              <T f="grotesk" w={700} s="hero" ls={-1.4} c={ink}>{priceOf(k)}</T>
+              <T num="data" w={700} s="hero" ls={-1.4} c={ink}>{priceOf(k)}</T>
               <T w={600} s="label" c={ink3}>{k === 'free' ? t.per : yearly ? L.perYear : L.perMonth}</T>
             </View>
             {yearly && k !== 'free' && (

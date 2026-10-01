@@ -247,24 +247,35 @@ export const SPACE = { '0.5': 2, 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 7: 28, 
 // clips at display sizes and over-breathes at number sizes. Encode once; use everywhere.
 export const LH = { display: 1.15, heading: 1.25, body: 1.5, micro: 1.4, number: 1 } as const;
 export type LhRole = keyof typeof LH;
-export type Face = 'body' | 'display' | 'grotesk';
+export type Face = 'body' | 'display';
 
-// React Native has no font fallback chains, so pick the face per language:
-// 'body'    = 'Plus Jakarta Sans','IBM Plex Sans Arabic'
-// 'display' = 'Space Grotesk','IBM Plex Sans Arabic'
-// 'grotesk' = 'Space Grotesk' only (numbers, clocks, Latin labels)
-// Numbers (grotesk face) use Inter everywhere, with tabular-nums applied in the T component. This matches
-// the calm, humanist look of Apple Fitness / Linear / Notion, not the geometric "ticker" look of Space Grotesk.
-// Display headlines use Inter too, so the whole app reads as one coherent family.
-export function font(face: Face, weight: Weight, ar: boolean): string {
-  // Arabic script: IBM Plex Sans Arabic (numbers in an Arabic string still use Inter: see 'grotesk' below).
-  if (ar && face !== 'grotesk') {
-    const w = Math.min(weight, 700) as 400 | 500 | 600 | 700;
-    return { 400: 'IBMPlexSansArabic_400Regular', 500: 'IBMPlexSansArabic_500Medium', 600: 'IBMPlexSansArabic_600SemiBold', 700: 'IBMPlexSansArabic_700Bold' }[w];
-  }
-  // Latin or numbers: Inter.
-  return {
-    400: 'Inter_400Regular', 500: 'Inter_500Medium', 600: 'Inter_600SemiBold',
-    700: 'Inter_700Bold', 800: 'Inter_800ExtraBold',
-  }[weight];
+/**
+ * Numerals have roles, and the role decides the face — not the other way round.
+ *
+ *  · 'data'  — a figure the reader compares or watches change: a percentage in a list, a clock, a chart
+ *              tick. Inter, laid out left to right, with TABULAR figures so a column lines up and a running
+ *              timer does not jump when a digit changes. (Inter's `1` is 44 units wide against `0` at 69, so
+ *              without `tnum` a ticking clock visibly shifts every second.)
+ *  · prose   — a figure inside a sentence: "متبقٍ 11 جلسة". It takes the surrounding face and proportional
+ *              widths, because tabular figures leave gaps around the 1 in running text, and because a string
+ *              that mixes digits with Arabic words must stay in one font or the Arabic falls back.
+ *
+ * `latin` is the third case: a Latin token that is not a figure — a target grade (A−), a ± stepper. Inter and
+ * left-to-right, but proportional, since there is nothing to align.
+ */
+export type Numerals = 'data';
+
+const INTER: Record<Weight, string> = {
+  400: 'Inter_400Regular', 500: 'Inter_500Medium', 600: 'Inter_600SemiBold',
+  700: 'Inter_700Bold', 800: 'Inter_800ExtraBold',
+};
+const PLEX_AR = {
+  400: 'IBMPlexSansArabic_400Regular', 500: 'IBMPlexSansArabic_500Medium',
+  600: 'IBMPlexSansArabic_600SemiBold', 700: 'IBMPlexSansArabic_700Bold',
+} as const;
+
+/** React Native has no fallback chains, so the face is resolved here, once, from the role. */
+export function font(face: Face, weight: Weight, ar: boolean, latin = false): string {
+  if (ar && !latin) return PLEX_AR[Math.min(weight, 700) as 400 | 500 | 600 | 700];
+  return INTER[weight];
 }

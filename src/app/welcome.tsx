@@ -117,7 +117,7 @@ export default function Welcome() {
                         <Icon name="trash" size={16} color={C.ink3} />
                       </Btn>
                     </View>
-                    <Choice options={GRADES.slice(0, 5)} value={s.targetGrade} onChange={g => setSubjects(x => x.map((y, j) => (j === i ? { ...y, targetGrade: g } : y)))} labels={GRADES.slice(0, 5)} mono />
+                    <Choice options={GRADES.slice(0, 5)} value={s.targetGrade} onChange={g => setSubjects(x => x.map((y, j) => (j === i ? { ...y, targetGrade: g } : y)))} labels={GRADES.slice(0, 5)} ltr />
                   </View>
                 ))}
               </View>
@@ -144,7 +144,7 @@ export default function Welcome() {
                     <T w={700} s="caption" c={C.ink3}>{L.obWhen}</T>
                     <Choice options={IN_DAYS} value={inDays} onChange={setInDays} labels={IN_DAYS.map(n => L.dIn.replace('{n}', String(n)))} />
                     <T w={700} s="caption" c={C.ink3}>{L.obChapters}</T>
-                    <Choice options={[2, 3, 4, 5, 6, 8]} value={chapters} onChange={setChapters} labels={['2', '3', '4', '5', '6', '8']} mono />
+                    <Choice options={[2, 3, 4, 5, 6, 8]} value={chapters} onChange={setChapters} labels={['2', '3', '4', '5', '6', '8']} num="data" />
                   </>
                 )}
               </View>

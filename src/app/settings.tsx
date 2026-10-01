@@ -72,7 +72,7 @@ export default function Settings() {
           <Choice options={['morning', 'afternoon', 'evening', 'night'] as const} value={studyTime} onChange={v => set({ studyTime: v })} labels={L.studyTimes} />
         </Row>
         <Row icon="target" title={L.cFocusLen}
-          right={<Choice options={FOCUS_LENGTHS} value={preset} onChange={setPreset} labels={FOCUS_LENGTHS.map(m => m + (ar ? ' د' : ' min'))} mono />} />
+          right={<Choice options={FOCUS_LENGTHS} value={preset} onChange={setPreset} labels={FOCUS_LENGTHS.map(m => m + (ar ? ' د' : ' min'))} />} />
         <Row icon="flame" title={L.cRewards} sub={L.cRewardsSub}
           right={<Toggle on={rewards} onPress={() => set({ rewards: !rewards })} label={L.cRewards} />} />
         <Row icon="sparkle" title={L.cAi} sub={L.cAiSub}

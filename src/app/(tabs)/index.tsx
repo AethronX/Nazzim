@@ -160,7 +160,7 @@ export default function Today() {
               <T w={600} s="caption" c={C.ink3} numberOfLines={1}>{headlineLabel}</T>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <ProgressRing value={headline} size={26} stroke={3.5} label="" />
-                <T f="grotesk" w={700} s="heading">{`${headline}%`}</T>
+                <T num="data" w={700} s="heading">{`${headline}%`}</T>
               </View>
             </Btn>
             <View style={{ width: 1, backgroundColor: C.line2, marginVertical: 12 }} />

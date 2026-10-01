@@ -44,7 +44,7 @@ function TimelineRow({ item, first, last, now }: { item: AgendaItem; first: bool
     <View style={{ flexDirection: 'row', gap: 10 }}>
       {/* Time column */}
       <View style={{ width: 46, alignItems: 'flex-end', paddingTop: 13 }}>
-        <T f="grotesk" w={700} s="label" c={item.done ? C.ink3 : C.ink}>{item.start ?? ''}</T>
+        <T num="data" w={700} s="label" c={item.done ? C.ink3 : C.ink}>{item.start ?? ''}</T>
         <T w={600} s="micro" c={C.ink3}>{`${item.minutes}${ar ? ' د' : 'm'}`}</T>
       </View>
       {/* Rail + node (the node is the checkbox) */}

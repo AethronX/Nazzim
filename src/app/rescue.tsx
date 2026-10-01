@@ -51,7 +51,7 @@ export default function Rescue() {
           { n: hours(plan.neededMin, ar), l: L.rWorkN, bg: accent.tint, fg: accent.strong },
         ].map(x => (
           <View key={x.l} style={{ flex: 1, minWidth: 0, padding: 12, borderRadius: 16, backgroundColor: x.bg, gap: 2 }}>
-            <T f="grotesk" w={700} s="title" c={x.fg} numberOfLines={1}>{x.n}</T>
+            <T w={700} s="title" c={x.fg} numberOfLines={1}>{x.n}</T>
             <T w={600} s="caption" c={x.fg}>{x.l}</T>
           </View>
         ))}
@@ -59,7 +59,7 @@ export default function Rescue() {
 
       <Section label={L.capacityL}>
         <View style={{ padding: 12 }}>
-          <Choice options={CAPACITY} value={dailyMinutes} onChange={m => set({ dailyMinutes: m })} labels={CAPACITY.map(m => hours(m, ar))} mono />
+          <Choice options={CAPACITY} value={dailyMinutes} onChange={m => set({ dailyMinutes: m })} labels={CAPACITY.map(m => hours(m, ar))} />
         </View>
       </Section>
 

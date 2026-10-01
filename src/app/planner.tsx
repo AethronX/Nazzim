@@ -84,7 +84,7 @@ export default function Planner() {
               <View key={d.date} style={{ flexDirection: 'row', gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderBottomWidth: i === prop.days.length - 1 ? 0 : 1, borderBottomColor: C.line2 }}>
                 <View style={{ width: 78 }}>
                   <T w={700} s="caption">{cap(relDay(d.date, today, L, ar))}</T>
-                  <T f="grotesk" w={600} s="caption" c={C.ink3}>{hours(d.minutes, ar)}</T>
+                  <T w={600} s="caption" c={C.ink3}>{hours(d.minutes, ar)}</T>
                 </View>
                 <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
                   {d.sessions.map(s => (
@@ -139,9 +139,9 @@ function Stepper({ label, value, onMinus, onPlus }: { label: string; value: stri
     <View style={{ flex: 1, minWidth: 0, borderRadius: 12, backgroundColor: C.card2, padding: 10, gap: 6 }}>
       <T w={700} s="micro" c={C.ink3}>{label}</T>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <Btn label="−" onPress={onMinus} style={btn}><T f="grotesk" w={700} s="heading" c={C.ink2}>−</T></Btn>
+        <Btn label="−" onPress={onMinus} style={btn}><T ltr w={700} s="heading" c={C.ink2}>−</T></Btn>
         <T w={700} s="label" numberOfLines={1} style={{ flex: 1, textAlign: 'center' }}>{value}</T>
-        <Btn label="+" onPress={onPlus} style={btn}><T f="grotesk" w={700} s="heading" c={C.ink2}>+</T></Btn>
+        <Btn label="+" onPress={onPlus} style={btn}><T ltr w={700} s="heading" c={C.ink2}>+</T></Btn>
       </View>
     </View>
   );
