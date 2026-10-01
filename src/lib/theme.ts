@@ -1,4 +1,4 @@
-// NAZZIM design tokens — "Calm Intelligence".
+// NAZZIM design tokens — "Calm Intelligence" in the brand blue.
 // White and slate surfaces, one Indigo accent used for actions and progress (never as a dominant background),
 // and semantic colours only where they carry meaning: success = done, warning = needs attention soon,
 // danger = overdue or destructive. Subjects get their own soft colour so the semester is easy to scan.
@@ -11,9 +11,10 @@
 
 export type Scheme = 'light' | 'dark';
 
-export const INDIGO = {
-  50: '#EEF2FF', 100: '#E0E7FF', 200: '#C7D2FE', 300: '#A5B4FC', 400: '#818CF8',
-  500: '#4F46E5', 600: '#4338CA', 700: '#3730A3', 800: '#312E81', 900: '#262466', ai: '#6366F1',
+// Brand blue (from the original Nazzim design): #285CE7 for actions, deep navy #112357 for the hero surface.
+export const BRAND = {
+  50: '#EEF3FF', 100: '#DCE6FE', 200: '#BFD1FD', 300: '#93B2FB', 400: '#5E8BF2',
+  500: '#285CE7', 600: '#1F4AC4', 700: '#1B3D9E', 800: '#112357', 900: '#0C1A44', ai: '#3F6FF0',
 } as const;
 
 const LIGHT = {
@@ -41,13 +42,13 @@ const LIGHT = {
   onSuccess: '#FFFFFF', // check mark on the success fill
   onWarning: '#111827', // text on the amber fill (white would be 2.1:1)
   // Brand surface for the few moments that deserve it (launch screen, Pro)
-  hero: INDIGO[800] as string,
+  hero: BRAND[800] as string,
   onHero: '#FFFFFF',
   onHero2: 'rgba(255,255,255,.76)',
   onHero3: 'rgba(255,255,255,.6)',
   onHeroLine: 'rgba(255,255,255,.16)',
   onHeroTrack: 'rgba(255,255,255,.16)',
-  onHeroAccent: INDIGO[300] as string,
+  onHeroAccent: BRAND[300] as string,
   // Selected / urgent chips
   inv: '#111827',
   onInv: '#FFFFFF',
@@ -83,13 +84,13 @@ const DARK: Palette = {
   danger: '#F87171', dangerFill: '#F87171', dangerTint: 'rgba(248,113,113,.14)',
   onSuccess: '#0B1220', // white on light green would be 1.7:1
   onWarning: '#0B1220',
-  hero: '#23205E',
+  hero: '#112357',
   onHero: '#FFFFFF',
   onHero2: 'rgba(255,255,255,.76)',
   onHero3: 'rgba(255,255,255,.6)',
   onHeroLine: 'rgba(255,255,255,.16)',
   onHeroTrack: 'rgba(255,255,255,.16)',
-  onHeroAccent: INDIGO[300] as string,
+  onHeroAccent: BRAND[300] as string,
   inv: '#F1F5F9',
   onInv: '#0B1220',
   onInv3: 'rgba(11,18,32,.6)',
@@ -110,9 +111,10 @@ type Family = {
   lightFg: string; darkHero: string; darkTint: string; darkTint2: string;
 };
 export const ACCENTS: Record<AccentKey, Family> = {
+  // Key stays 'indigo' (saved settings and sync use it); the colour is the brand blue, shown as "Blue".
   indigo: {
-    50: INDIGO[50], 100: INDIGO[100], 300: INDIGO[300], 500: INDIGO[500], 600: INDIGO[600], 700: INDIGO[700], 900: INDIGO[800],
-    lightFg: INDIGO[500], darkHero: '#23205E', darkTint: '#191C47', darkTint2: '#22265E',
+    50: BRAND[50], 100: BRAND[100], 300: BRAND[300], 500: BRAND[500], 600: BRAND[600], 700: BRAND[700], 900: BRAND[800],
+    lightFg: BRAND[500], darkHero: '#112357', darkTint: '#13213F', darkTint2: '#1A2C55',
   },
   rose: {
     50: '#FCEFF3', 100: '#F8DEE7', 300: '#F59BBC', 500: '#D6336C', 600: '#B42759', 700: '#8E1F47', 900: '#4A0F2C',
@@ -163,7 +165,7 @@ export function paletteFor(scheme: Scheme, key: AccentKey): Palette {
 // Subject colours: icon/fill on a soft tint. Icon-on-tint contrast ≥ 3:1 in light (graphics, WCAG 1.4.11).
 export type SubjectSwatch = { fg: string; tint: string; darkFg: string; darkTint: string };
 export const SUBJECT_COLORS: Record<'indigo' | 'green' | 'amber' | 'sky' | 'rose' | 'teal' | 'violet', SubjectSwatch> = {
-  indigo: { fg: '#4F46E5', tint: '#EEF2FF', darkFg: '#A5B4FC', darkTint: 'rgba(99,102,241,.18)' },
+  indigo: { fg: '#1F4AC4', tint: '#EEF3FF', darkFg: '#93B2FB', darkTint: 'rgba(63,111,240,.18)' },
   green: { fg: '#15803D', tint: '#DCFCE7', darkFg: '#4ADE80', darkTint: 'rgba(74,222,128,.14)' },
   amber: { fg: '#B45309', tint: '#FEF3C7', darkFg: '#FBBF24', darkTint: 'rgba(251,191,36,.14)' },
   sky: { fg: '#0369A1', tint: '#E0F2FE', darkFg: '#7DD3FC', darkTint: 'rgba(125,211,252,.14)' },
