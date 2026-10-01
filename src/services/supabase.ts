@@ -3,12 +3,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
+import { supabaseKey, supabaseUrl } from '../config/env';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-export const supabase: SupabaseClient | null = url && key
-  ? createClient(url, key, { auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } })
+export const supabase: SupabaseClient | null = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey, { auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } })
   : null;
 
 // Refresh tokens only while the app is in the foreground (recommended for React Native).

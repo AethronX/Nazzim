@@ -1,4 +1,5 @@
-import { View } from 'react-native';
+import Constants from 'expo-constants';
+import { Linking, View } from 'react-native';
 import { Choice, Page, Row, Section } from '../components/Page';
 import { Btn, T, Toggle } from '../components/ui';
 import { hhmm } from '../components/Habits';
@@ -6,6 +7,15 @@ import { reminderTime } from '../engine/habits';
 import { remindersSupported } from '../lib/reminders';
 import { useNazzim, type Appearance } from '../lib/store';
 import { ACCENT_KEYS, ACCENTS } from '../lib/theme';
+
+// Legal/support URLs come from app.json (expo.extra), so they can change without a new build.
+const extra = (Constants.expoConfig?.extra ?? {}) as { privacyPolicyUrl?: string; termsUrl?: string; supportUrl?: string };
+const URLS = {
+  privacy: extra.privacyPolicyUrl ?? 'https://nazzim.app/privacy',
+  terms: extra.termsUrl ?? 'https://nazzim.app/terms',
+  support: extra.supportUrl ?? 'https://nazzim.app/support',
+};
+const open = (url: string) => { Linking.openURL(url).catch(() => {}); };
 
 const APPEARANCES: Appearance[] = ['system', 'light', 'dark'];
 const FOCUS_LENGTHS = [25, 50, 90];
@@ -72,10 +82,9 @@ export default function Settings() {
       </Section>
 
       <Section label={L.sAccount}>
-        {/* TODO: point at the published privacy / terms / support pages before App Store submission. */}
-        <Row icon="shield" title={L.privacyL} onPress={() => {}} />
-        <Row icon="doc" title={L.terms} onPress={() => {}} />
-        <Row icon="help" title={L.support} onPress={() => {}} />
+        <Row icon="shield" title={L.privacyL} onPress={() => open(URLS.privacy)} />
+        <Row icon="doc" title={L.terms} onPress={() => open(URLS.terms)} />
+        <Row icon="help" title={L.support} onPress={() => open(URLS.support)} />
         <Row icon="trash" title={L.deleteAcc} danger last onPress={() => setDel(true)} chevron={false} />
       </Section>
 

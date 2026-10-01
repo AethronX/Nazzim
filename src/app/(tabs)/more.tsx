@@ -1,10 +1,14 @@
+import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import { ScrollView, View } from 'react-native';
+import { Linking, ScrollView, View } from 'react-native';
 import { Avatar, Row, Section } from '../../components/Page';
 import { ExamCard } from '../../components/Study';
 import { Btn, Eyebrow, Icon, T } from '../../components/ui';
 import { useChrome } from '../../lib/layout';
 import { useNazzim } from '../../lib/store';
+
+const extra = (Constants.expoConfig?.extra ?? {}) as { supportUrl?: string };
+const URLS = { support: extra.supportUrl ?? 'https://nazzim.app/support' };
 
 // MORE: who you are, what's coming up, and everything that isn't a daily action.
 export default function More() {
@@ -45,7 +49,7 @@ export default function More() {
         </Section>
         <Section label={L.secApp}>
           <Row icon="gear" title={L.settings} onPress={() => router.push('/settings')} />
-          <Row icon="help" title={L.support} onPress={() => router.push('/settings')} last />
+          <Row icon="help" title={L.support} onPress={() => Linking.openURL(URLS.support).catch(() => {})} last />
         </Section>
       </ScrollView>
     </View>

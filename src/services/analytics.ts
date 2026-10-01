@@ -1,3 +1,4 @@
+import { isDev } from '../config/env';
 // Product analytics: one typed event catalogue, one track() call, pluggable sinks.
 // Events carry ids and counts only, never titles, notes or other free text the student typed.
 export type AnalyticsEvent =
@@ -36,5 +37,6 @@ export function track(event: AnalyticsEvent) {
   for (const s of sinks) { try { s(e); } catch {} }
 }
 
-// Development sink: readable log in the Metro console.
-if (__DEV__) addSink(e => console.log('[analytics]', e.name, 'props' in e ? e.props : ''));
+// Development sink: readable log in the Metro console. Never attached in preview or production builds, so no
+// product event is written to the device log on a shipped app.
+if (isDev) addSink(e => console.log('[analytics]', e.name, 'props' in e ? e.props : ''));
