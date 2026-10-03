@@ -12,7 +12,7 @@ const URLS = { support: extra.supportUrl ?? 'https://nazzim.app/support' };
 
 // MORE: who you are, what's coming up, and everything that isn't a daily action.
 export default function More() {
-  const { C, L, ar, me, tier, exams, tasks, today, account, syncState } = useNazzim();
+  const { C, L, ar, me, exams, tasks, today, account, syncState } = useNazzim();
   const openTasks = tasks.filter(x => !x.done).length;
   const { headerTop, scrollBottom } = useChrome();
   const upcoming = exams.filter(e => e.date > today).slice(0, 3);
@@ -27,7 +27,7 @@ export default function More() {
           <Avatar name={me.name} size={48} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <T f="display" w={700} s="heading" numberOfLines={1}>{me.name || L.noName}</T>
-            <T w={600} s="caption" c={C.ink3} numberOfLines={1}>{[me.major, L.tiers[tier].name].filter(Boolean).join(' · ')}</T>
+            <T w={600} s="caption" c={C.ink3} numberOfLines={1}>{[me.major, me.year].filter(Boolean).join(' · ')}</T>
           </View>
           <Icon name="chevron" size={15} color={C.ink3} stroke={2.3} flip={ar} />
         </Btn>
@@ -41,8 +41,7 @@ export default function More() {
 
         {/* Grouped like iOS Settings: who you are, how you study, the app itself */}
         <Section label={L.secAccount}>
-          <Row icon="user" title={L.acTitle} sub={account ? (syncState === 'error' ? L.acSyncError : account.email) : L.acSub} onPress={() => router.push('/account')} />
-          <Row icon="crown" title={L.plans} sub={L.tiers[tier].name} onPress={() => router.push('/subscription')} last />
+          <Row icon="user" title={L.acTitle} sub={account ? (syncState === 'error' ? L.acSyncError : account.email) : L.acSub} onPress={() => router.push('/account')} last />
         </Section>
         <Section label={L.secStudy}>
           <Row icon="check" title={L.tasksTitle} sub={openTasks ? L.tkOpenN.replace('{n}', String(openTasks)) : undefined} onPress={() => router.push('/tasks')} />

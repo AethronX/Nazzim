@@ -13,12 +13,11 @@ const FIELDS: { key: keyof ProfileData; label: 'fName' | 'fUni' | 'fMajor' | 'fY
 ];
 
 export default function Profile() {
-  const { C, L, ar, accent, me, profile, saveProfile, level, tier, gamification, focusLog } = useNazzim();
+  const { C, L, ar, accent, me, profile, saveProfile, level, gamification, focusLog } = useNazzim();
   const { ctx } = useAcademic();
   const stats = summarizeProgress(ctx, focusLog);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<ProfileData>(profile);
-  const t = L.tiers[tier];
 
   const startEdit = () => { setDraft({ name: me.name, uni: me.uni, major: me.major, year: me.year }); setEditing(true); };
   const save = () => { saveProfile(draft); setEditing(false); };
@@ -84,28 +83,9 @@ export default function Profile() {
         </View>
       )}
 
-      {/* Plan */}
-      {!editing && (
-        <Btn pressScale={0.99} onPress={() => router.push('/subscription')}
-          style={{ backgroundColor: C.hero, borderRadius: 20, padding: 18, gap: 12, boxShadow: C.shadowHero }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Icon name="crown" size={18} color={C.onHeroAccent} stroke={2} />
-            <T w={800} s="micro" ls={ar ? 0 : 1} c={C.onHero2} style={{ flex: 1 }}>{L.yourPlan}</T>
-            <View style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, backgroundColor: tier === 'pro' ? C.onHeroTrack : accent.a1 }}>
-              <T w={700} s="caption" c={C.onHero}>{tier === 'pro' ? L.manage : L.csBadge}</T>
-            </View>
-          </View>
-          <View>
-            <T f="display" w={700} s="display" ls={ar ? 0 : -0.8} c={C.onHero}>{L.appName + ' ' + t.name}</T>
-            <T w={600} s="caption" c={C.onHero2} style={{ marginTop: 2 }}>{t.tag}</T>
-          </View>
-        </Btn>
-      )}
-
       {!editing && (
         <Section>
           <Row icon="gear" title={L.settings} onPress={() => router.push('/settings')} />
-          <Row icon="crown" title={L.plans} sub={t.name} onPress={() => router.push('/subscription')} />
           <Row icon="chart" title={L.progressMenu} onPress={() => router.push('/progress')} last />
         </Section>
       )}
