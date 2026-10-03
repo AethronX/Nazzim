@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import type { ReactNode } from 'react';
-import { ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChrome } from '../lib/layout';
 import { useNazzim } from '../lib/store';
@@ -24,9 +24,14 @@ export function Page({ title, sub, children }: { title: string; sub?: string; ch
           {!!sub && <T w={600} s="caption" c={C.ink3} style={{ marginTop: 3 }}>{sub}</T>}
         </View>
       </View>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 18, paddingBottom: Math.max(insets.bottom, 16) + 28, gap: 12 }}>
-        {children}
-      </ScrollView>
+      {/* iOS: lift the content above the keyboard so a focused field and its submit button stay visible.
+          keyboardShouldPersistTaps keeps a first tap on a button working while an input is focused. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive"
+          contentContainerStyle={{ padding: 18, paddingBottom: Math.max(insets.bottom, 16) + 28, gap: 12 }}>
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
