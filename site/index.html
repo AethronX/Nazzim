@@ -1,0 +1,640 @@
+<title>Nazzim</title>
+<meta name="description" content="Nazzim — the academic operating system that answers one question: am I actually ready for this exam?">
+<style>
+  /* Layout: a calm, single-column marketing page with hash-routed legal views; brand blue on a soft ground. */
+  :root{
+    --bg:#F4F7FC; --surface:#FFFFFF; --surface-2:#EDF1F8;
+    --ink:#101728; --ink-2:#48516330; --ink-soft:#4B5468; --ink-faint:#737B8C;
+    --line:#E0E5EF; --line-soft:#EEF1F7;
+    --accent:#285CE7; --accent-strong:#1A47C3; --accent-wash:#E7EEFE;
+    --hero:#101F4A; --hero-2:#1C2F63; --on-hero:#FFFFFF; --on-hero-soft:#AFBEE6;
+    --ok:#03692E; --ok-wash:#E9F6EE; --warn:#8A5A04; --warn-wash:#FBF2E4;
+    --shadow:0 1px 2px rgba(16,31,74,.04), 0 14px 40px -22px rgba(16,31,74,.30);
+    --shadow-lift:0 20px 48px -24px rgba(16,31,74,.45);
+    --maxw:1080px; --radius:20px;
+    --display:"Plus Jakarta Sans","IBM Plex Sans Arabic",system-ui,sans-serif;
+    --body:"Inter","IBM Plex Sans Arabic",system-ui,sans-serif;
+    --arab:"IBM Plex Sans Arabic","Inter",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#0A0E17; --surface:#141A26; --surface-2:#1E2532;
+    --ink:#EEF2F8; --ink-2:#2E3545; --ink-soft:#C3CAD7; --ink-faint:#8C94A3;
+    --line:#2A313F; --line-soft:#1C222E;
+    --accent:#6D97FF; --accent-strong:#8FB0FF; --accent-wash:#18233C;
+    --hero:#0D1730; --hero-2:#16254C; --on-hero:#FFFFFF; --on-hero-soft:#9DB0DF;
+    --ok:#6FC884; --ok-wash:#132418; --warn:#E4A249; --warn-wash:#2A2112;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 40px -22px rgba(0,0,0,.7);
+    --shadow-lift:0 20px 48px -24px rgba(0,0,0,.8);
+    color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0A0E17; --surface:#141A26; --surface-2:#1E2532;
+    --ink:#EEF2F8; --ink-2:#2E3545; --ink-soft:#C3CAD7; --ink-faint:#8C94A3;
+    --line:#2A313F; --line-soft:#1C222E;
+    --accent:#6D97FF; --accent-strong:#8FB0FF; --accent-wash:#18233C;
+    --hero:#0D1730; --hero-2:#16254C; --on-hero:#FFFFFF; --on-hero-soft:#9DB0DF;
+    --ok:#6FC884; --ok-wash:#132418; --warn:#E4A249; --warn-wash:#2A2112;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 40px -22px rgba(0,0,0,.7);
+    --shadow-lift:0 20px 48px -24px rgba(0,0,0,.8);
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.6;-webkit-font-smoothing:antialiased}
+  [dir="rtl"]{font-family:var(--arab)}
+  [dir="rtl"] h1,[dir="rtl"] h2,[dir="rtl"] h3,[dir="rtl"] .brand-word{font-family:var(--arab)}
+  h1,h2,h3{font-family:var(--display);line-height:1.12;text-wrap:balance;margin:0;letter-spacing:-.02em}
+  p{margin:0}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding-inline:20px}
+  .muted{color:var(--ink-soft)}
+  .eyebrow{font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  [dir="rtl"] .eyebrow{letter-spacing:.04em}
+
+  /* Header */
+  header{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;gap:18px;height:62px}
+  .brand{display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:0;padding:0;color:inherit}
+  .glyph{width:34px;height:34px;flex:none}
+  .brand-word{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.01em}
+  nav.links{display:flex;gap:4px;margin-inline-start:auto;align-items:center;flex-wrap:wrap}
+  nav.links button{font-family:inherit;font-size:14px;font-weight:600;color:var(--ink-soft);background:none;border:0;padding:8px 11px;border-radius:10px;cursor:pointer}
+  nav.links button:hover{color:var(--ink);background:var(--surface-2)}
+  .lang{border:1px solid var(--line)!important;border-radius:999px!important;font-weight:700!important;color:var(--ink)!important}
+  .menu-btn{display:none;margin-inline-start:auto;background:none;border:1px solid var(--line);border-radius:10px;width:40px;height:40px;cursor:pointer;color:var(--ink);font-size:18px}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--body);font-weight:700;font-size:15px;padding:13px 22px;border-radius:14px;border:1px solid transparent;cursor:pointer;min-height:48px;transition:transform .12s ease}
+  [dir="rtl"] .btn{font-family:var(--arab)}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 8px 20px -8px color-mix(in srgb,var(--accent) 60%,transparent)}
+  .btn-primary:hover{background:var(--accent-strong)}
+  .btn-ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover{border-color:var(--ink-faint)}
+
+  /* Hero */
+  .hero{padding-block:72px 40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:22px}
+  .hero h1{font-size:clamp(34px,6vw,60px);font-weight:800;max-width:14ch}
+  .hero .q{color:var(--accent)}
+  .hero .sub{font-size:clamp(16px,2.4vw,20px);color:var(--ink-soft);max-width:48ch;line-height:1.55}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .trust{font-size:13px;color:var(--ink-faint);display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+  .trust span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:7px;height:7px;border-radius:9px;background:var(--ok)}
+
+  /* Device mock */
+  .device{margin-top:14px;width:min(320px,82vw);background:var(--surface);border:1px solid var(--line);border-radius:30px;box-shadow:var(--shadow-lift);padding:14px;text-align:start}
+  .d-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .d-tile{width:40px;height:40px;border-radius:12px;background:var(--accent-wash);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:800;flex:none}
+  .ring-wrap{display:flex;align-items:center;gap:14px;margin:6px 0 14px}
+  .num{font-family:var(--body);font-variant-numeric:tabular-nums;font-weight:800;font-size:40px;color:var(--accent);letter-spacing:-.03em;line-height:1}
+  .d-label{font-size:12px;color:var(--ink-faint);font-weight:600}
+  .d-div{height:1px;background:var(--line-soft);margin:12px 0}
+  .d-next{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  [dir="rtl"] .d-next{letter-spacing:.02em}
+  .d-head{font-family:var(--display);font-weight:700;font-size:18px;margin-top:4px}
+  [dir="rtl"] .d-head{font-family:var(--arab)}
+  .d-cta{margin-top:12px;background:var(--accent);color:#fff;text-align:center;padding:12px;border-radius:12px;font-weight:700;font-size:14px}
+
+  /* Sections */
+  section{padding-block:56px}
+  .sec-head{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;margin-bottom:38px}
+  .sec-head h2{font-size:clamp(26px,4vw,38px);font-weight:800;max-width:20ch}
+  .sec-head p{color:var(--ink-soft);max-width:52ch}
+
+  /* Loop steps */
+  .loop{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;counter-reset:step}
+  .step{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;position:relative}
+  .step .n{counter-increment:step;font-family:var(--body);font-variant-numeric:tabular-nums;font-weight:800;font-size:13px;color:#fff;background:var(--accent);width:26px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center}
+  .step .n::before{content:counter(step)}
+  .step h3{font-size:16px;font-weight:700;margin-top:14px}
+  .step p{font-size:13.5px;color:var(--ink-soft);margin-top:6px;line-height:1.5}
+
+  /* Features */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:16px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+  .card .ic{width:44px;height:44px;border-radius:12px;background:var(--accent-wash);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+  .card h3{font-size:18px;font-weight:700}
+  .card p{font-size:14.5px;color:var(--ink-soft);margin-top:7px;line-height:1.55}
+
+  /* Pricing */
+  .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;max-width:720px;margin:0 auto}
+  .plan{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px;display:flex;flex-direction:column;gap:16px}
+  .plan.pro{border-color:var(--accent);box-shadow:var(--shadow);position:relative}
+  .plan .tag{position:absolute;top:-11px;inset-inline-start:24px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;letter-spacing:.06em;padding:4px 12px;border-radius:999px;text-transform:uppercase}
+  .plan h3{font-size:20px;font-weight:800}
+  .price{display:flex;align-items:baseline;gap:6px}
+  .price .amt{font-family:var(--body);font-variant-numeric:tabular-nums;font-size:34px;font-weight:800;letter-spacing:-.02em}
+  .price .per{font-size:14px;color:var(--ink-faint)}
+  .feat{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px}
+  .feat li{display:flex;gap:10px;font-size:14px;color:var(--ink-soft);align-items:flex-start}
+  .feat svg{flex:none;margin-top:3px;color:var(--accent)}
+  .plan .foot{font-size:12.5px;color:var(--ink-faint);margin-top:auto}
+
+  /* Waitlist */
+  .band{background:linear-gradient(160deg,var(--hero),var(--hero-2));color:var(--on-hero);border-radius:28px;padding:44px 28px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px}
+  .band h2{font-size:clamp(24px,3.6vw,34px);font-weight:800;color:#fff;max-width:18ch}
+  .band p{color:var(--on-hero-soft);max-width:46ch}
+  .wl{display:flex;gap:10px;width:min(440px,100%);flex-wrap:wrap}
+  .wl input{flex:1;min-width:0;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:13px 16px;color:#fff;font-family:inherit;font-size:15px;min-height:48px}
+  .wl input::placeholder{color:var(--on-hero-soft)}
+  .wl input:focus{outline:2px solid var(--on-hero-soft);outline-offset:1px}
+  .wl .btn-primary{background:#fff;color:var(--hero)}
+  .wl .btn-primary:hover{background:#eef2ff}
+  .wl-note{font-size:13px;color:var(--on-hero-soft);min-height:1.2em}
+  .mono-mail{font-family:var(--body);background:rgba(255,255,255,.12);border-radius:10px;padding:4px 10px;font-weight:600;user-select:all}
+
+  /* Legal views */
+  .legal{max-width:760px;margin:0 auto;padding-block:48px}
+  .legal h1{font-size:clamp(28px,4vw,40px);font-weight:800;margin-bottom:8px}
+  .legal .updated{color:var(--ink-faint);font-size:13.5px;margin-bottom:30px}
+  .legal h2{font-size:21px;font-weight:700;margin-top:34px;margin-bottom:10px}
+  .legal p,.legal li{color:var(--ink-soft);font-size:15.5px;line-height:1.7}
+  .legal ul{padding-inline-start:22px;display:flex;flex-direction:column;gap:8px;margin:12px 0}
+  .legal .lead{color:var(--ink);font-size:17px;background:var(--surface-2);border-radius:14px;padding:16px 18px}
+  .legal .support-mail{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px}
+  .legal .support-mail code{font-family:var(--body);font-weight:700;color:var(--ink);font-size:15px;user-select:all}
+  .back{display:inline-flex;align-items:center;gap:7px;color:var(--accent);font-weight:700;font-size:14px;background:none;border:0;cursor:pointer;padding:0;margin-bottom:26px}
+
+  /* Footer */
+  footer{border-top:1px solid var(--line);padding-block:34px;margin-top:40px}
+  .foot-grid{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+  .foot-links{display:flex;gap:6px;flex-wrap:wrap}
+  .foot-links button{background:none;border:0;color:var(--ink-soft);font-family:inherit;font-size:13.5px;cursor:pointer;padding:6px 8px;border-radius:8px}
+  .foot-links button:hover{color:var(--ink)}
+  .copy{font-size:13px;color:var(--ink-faint)}
+
+  [hidden]{display:none!important}
+  @media (max-width:640px){
+    nav.links{display:none}
+    nav.links.open{display:flex;position:absolute;top:62px;inset-inline:0;background:var(--surface);border-bottom:1px solid var(--line);flex-direction:column;padding:10px 20px 16px;align-items:stretch}
+    nav.links.open button{text-align:start;padding:11px 10px}
+    .menu-btn{display:block}
+    .lang{align-self:flex-start}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="app">
+  <header>
+    <div class="wrap bar">
+      <button class="brand" data-go="home" aria-label="Nazzim home">
+        <svg class="glyph" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <rect width="48" height="48" rx="13" fill="#101F4A"/>
+          <path d="M14 33V15l20 18V15" stroke="#5688FC" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="34" cy="15" r="4.2" fill="#5688FC"/>
+        </svg>
+        <span class="brand-word" data-t="brand"></span>
+      </button>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">☰</button>
+      <nav class="links" id="nav">
+        <button data-scroll="how" data-t="navHow"></button>
+        <button data-scroll="features" data-t="navFeatures"></button>
+        <button data-scroll="pricing" data-t="navPricing"></button>
+        <button data-go="support" data-t="navSupport"></button>
+        <button class="lang" id="langBtn"></button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HOME -->
+  <main id="view-home">
+    <div class="wrap hero">
+      <span class="eyebrow" data-t="heroEyebrow"></span>
+      <h1><span class="q" data-t="heroQ"></span><br data-t-br><span data-t="heroQ2"></span></h1>
+      <p class="sub" data-t="heroSub"></p>
+      <div class="cta-row">
+        <button class="btn btn-primary" data-scroll="waitlist" data-t="heroCta"></button>
+        <button class="btn btn-ghost" data-scroll="how" data-t="heroCta2"></button>
+      </div>
+      <div class="trust">
+        <span><i class="dot"></i><span data-t="trust1"></span></span>
+        <span><i class="dot"></i><span data-t="trust2"></span></span>
+        <span><i class="dot"></i><span data-t="trust3"></span></span>
+      </div>
+
+      <div class="device" aria-hidden="true">
+        <div class="d-top">
+          <div class="d-tile">إ</div>
+          <div>
+            <div style="font-weight:700;font-size:15px" data-t="mockSubject"></div>
+            <div class="d-label" data-t="mockExam"></div>
+          </div>
+        </div>
+        <div class="ring-wrap">
+          <span class="num">74<span style="font-size:22px">%</span></span>
+          <div>
+            <div class="d-label" data-t="mockEvidence"></div>
+            <div style="font-size:12.5px;color:var(--ink-soft);margin-top:2px" data-t="mockBand"></div>
+          </div>
+        </div>
+        <div class="d-div"></div>
+        <div class="d-next" data-t="mockNext"></div>
+        <div class="d-head" data-t="mockTask"></div>
+        <div class="d-cta" data-t="mockStart"></div>
+      </div>
+    </div>
+
+    <!-- HOW -->
+    <section id="how">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow" data-t="howEyebrow"></span>
+          <h2 data-t="howTitle"></h2>
+          <p data-t="howSub"></p>
+        </div>
+        <div class="loop" id="loop"></div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow" data-t="featEyebrow"></span>
+          <h2 data-t="featTitle"></h2>
+          <p data-t="featSub"></p>
+        </div>
+        <div class="grid" id="features-grid"></div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="eyebrow" data-t="priceEyebrow"></span>
+          <h2 data-t="priceTitle"></h2>
+          <p data-t="priceSub"></p>
+        </div>
+        <div class="plans">
+          <div class="plan">
+            <h3 data-t="freeName"></h3>
+            <div class="price"><span class="amt" data-t="freeAmt"></span></div>
+            <ul class="feat" id="free-feat"></ul>
+            <div class="foot" data-t="freeFoot"></div>
+          </div>
+          <div class="plan pro">
+            <span class="tag" data-t="proTag"></span>
+            <h3 data-t="proName"></h3>
+            <div class="price"><span class="amt" data-t="proAmt"></span><span class="per" data-t="proPer"></span></div>
+            <ul class="feat" id="pro-feat"></ul>
+            <div class="foot" data-t="proFoot"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WAITLIST -->
+    <section id="waitlist">
+      <div class="wrap">
+        <div class="band">
+          <span class="eyebrow" style="color:var(--on-hero-soft)" data-t="wlEyebrow"></span>
+          <h2 data-t="wlTitle"></h2>
+          <p data-t="wlSub"></p>
+          <form class="wl" id="wlForm" novalidate>
+            <input type="email" id="wlEmail" autocomplete="email" required data-t-ph="wlPlaceholder" aria-label="email">
+            <button class="btn btn-primary" type="submit" data-t="wlBtn"></button>
+          </form>
+          <p class="wl-note" id="wlNote" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- LEGAL -->
+  <main id="view-legal" hidden>
+    <div class="wrap legal" id="legal-body"></div>
+  </main>
+
+  <footer>
+    <div class="wrap foot-grid">
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg class="glyph" style="width:26px;height:26px" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <rect width="48" height="48" rx="13" fill="#101F4A"/>
+          <path d="M14 33V15l20 18V15" stroke="#5688FC" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="34" cy="15" r="4.2" fill="#5688FC"/>
+        </svg>
+        <span class="copy" id="copyLine"></span>
+      </div>
+      <div class="foot-links">
+        <button data-go="privacy" data-t="navPrivacy"></button>
+        <button data-go="terms" data-t="navTerms"></button>
+        <button data-go="support" data-t="navSupport"></button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+const SUPPORT_EMAIL = "support@nazzim.app";
+const YEAR = new Date().getFullYear();
+const UPDATED = "2026-10-03";
+
+const T = {
+  ar:{
+    dir:"rtl", brand:"نظِّم",
+    navHow:"كيف يعمل", navFeatures:"المميزات", navPricing:"الأسعار", navSupport:"الدعم", navPrivacy:"الخصوصية", navTerms:"الشروط",
+    langLabel:"EN",
+    heroEyebrow:"نظامك الأكاديمي",
+    heroQ:"هل أنت جاهز", heroQ2:"لامتحانك فعلاً؟",
+    heroSub:"معظم التطبيقات ترتّب مواعيدك. نظِّم يقيس استعدادك الحقيقي، ويقول لك الخطوة التالية — من الفوضى إلى خطة واضحة.",
+    heroCta:"انضم لقائمة الانتظار", heroCta2:"شاهد كيف يعمل",
+    trust1:"عربي أولاً", trust2:"يبدأ من الامتحان", trust3:"بياناتك على جهازك",
+    mockSubject:"الإحصاء", mockExam:"الامتحان القادم · بعد 6 أيام",
+    mockEvidence:"اكتمال الدليل", mockBand:"أدلة قوية — حافظ عليها حتى الامتحان",
+    mockNext:"الخطوة التالية", mockTask:"راجع الفصل الرابع", mockStart:"ابدأ الآن",
+    howEyebrow:"الحلقة الأساسية", howTitle:"ست خطوات تحوّل القلق إلى تقدّم",
+    howSub:"كل شيء يبدأ من امتحان له موعد، وينتهي بدليل محدَّث على أنك تعلّمت فعلاً.",
+    howSteps:[
+      ["الامتحان","أضف امتحانك وفصوله وموعده. هذا هو الهدف الذي يُبنى عليه كل شيء."],
+      ["الدليل","نقيس اكتمال دليلك على أنك ذاكرت فعلاً — لا مجرد علامة صح."],
+      ["الخطوة التالية","نحسب أهم شيء الآن، ونعرضه كخطوة واحدة واضحة."],
+      ["التركيز","جلسة تركيز مرتبطة بالمهمة، تُحتسب فقط حين تذاكر فعلاً."],
+      ["الاسترجاع","اختبار ذاتي ببطاقات: اكتب ثم تحقق. الاسترجاع هو ما يثبت التعلّم."],
+      ["دليل محدَّث","ترتفع نسبة استعدادك بالأدلة لا بالوعود. وتعود الحلقة."]
+    ],
+    featEyebrow:"لماذا نظِّم", featTitle:"ليس منظّم مهام آخر",
+    featSub:"صُمّم ليجيب عن سؤال واحد لا يجيب عنه غيره: هل أنا جاهز؟",
+    features:[
+      ["اكتمال الدليل","رقم واحد صادق يقيس استعدادك للامتحان — مبني على مذاكرة واسترجاع حقيقيين، لا على قوائم منجزة."],
+      ["الخطوة التالية","لا شاشة فارغة ولا قرارات. نظِّم يختار أهم شيء الآن ويعرضه كخطوة واحدة."],
+      ["ترتيب اليوم","حين يتراكم كل شيء، يعطيك ثلاث مهام فقط تستحق وقتك الآن، بدل أن تغرق."],
+      ["الاختبار الذاتي","بطاقات تُجبرك على الاسترجاع قبل الكشف — الطريقة التي يثبت بها العلم أن المذاكرة تنفع."],
+      ["عربي أولاً","ليس ترجمة. صياغة طبيعية ودعم كامل لليمين-إلى-اليسار من أول سطر."],
+      ["خصوصية أولاً","يعمل بالكامل على جهازك. الحساب اختياري، وبياناتك لك وحدك."]
+    ],
+    priceEyebrow:"الأسعار", priceTitle:"ابدأ مجاناً. ترقَّ حين تحتاج.",
+    priceSub:"الحلقة الأساسية مجانية للأبد. برو يضيف القوة لمن يريد أكثر.",
+    freeName:"المجاني", freeAmt:"٠",
+    freeFeatures:["الامتحانات والمواد والمهام","اكتمال الدليل والخطوة التالية","جلسات التركيز والاختبار الذاتي","ترتيب اليوم عند التأخر"],
+    freeFoot:"مجاني للأبد — بلا إعلانات.",
+    proTag:"قريباً", proName:"برو", proAmt:"١٩٫٩٩", proPer:"/ سنة · تجربة ٧ أيام",
+    proFeatures:["كل مزايا المجاني","ربط التقويم وجدول المحاضرات","مهام متكررة وروتين يومي","إحصائيات متقدمة وأفضل أوقاتك","نسخ احتياطي ومزامنة بين أجهزتك"],
+    proFoot:"شهري ٣٫٩٩$ · سنوي ١٩٫٩٩$ · مدى الحياة ٤٩٫٩٩$. الأسعار النهائية بعملتك في المتجر.",
+    wlEyebrow:"كن أول من يعرف", wlTitle:"نظِّم قادم قريباً",
+    wlSub:"اترك بريدك لتكون من الأعضاء المؤسسين — وتحصل على شهر برو مجاناً عند الإطلاق.",
+    wlPlaceholder:"بريدك الإلكتروني", wlBtn:"انضم",
+    wlOk:"شكراً لك. هذه نسخة معاينة؛ في الموقع المنشور سيُحفظ بريدك. للتواصل الآن: "+SUPPORT_EMAIL,
+    wlBad:"رجاءً أدخل بريداً إلكترونياً صحيحاً.",
+    copy:"© "+YEAR+" نظِّم. جميع الحقوق محفوظة.",
+    backHome:"العودة للرئيسية"
+  },
+  en:{
+    dir:"ltr", brand:"Nazzim",
+    navHow:"How it works", navFeatures:"Features", navPricing:"Pricing", navSupport:"Support", navPrivacy:"Privacy", navTerms:"Terms",
+    langLabel:"عربي",
+    heroEyebrow:"Your academic operating system",
+    heroQ:"Am I actually ready", heroQ2:"for this exam?",
+    heroSub:"Most apps organize your schedule. Nazzim measures whether you're truly prepared, and tells you the single next step — from academic chaos to a clear plan.",
+    heroCta:"Join the waitlist", heroCta2:"See how it works",
+    trust1:"Arabic-first", trust2:"Starts from the exam", trust3:"Your data stays on your device",
+    mockSubject:"Statistics", mockExam:"Next exam · in 6 days",
+    mockEvidence:"Evidence completeness", mockBand:"Strong evidence — keep it fresh before the exam",
+    mockNext:"Next step", mockTask:"Review chapter 4", mockStart:"Start now",
+    howEyebrow:"The core loop", howTitle:"Six steps that turn worry into progress",
+    howSub:"Everything begins with an exam that has a date, and ends with real evidence that you've actually learned it.",
+    howSteps:[
+      ["Exam","Add your exam, its chapters and its date. This is the goal everything is built around."],
+      ["Evidence","We measure how complete your evidence is that you've studied — not just a checkmark."],
+      ["Next step","We compute what matters most right now and show it as one clear move."],
+      ["Focus","A focus session tied to the task, counted only when you actually study."],
+      ["Recall","Self-test with cards: write, then check. Retrieval is what proves learning."],
+      ["Updated evidence","Your readiness rises on evidence, not promises. Then the loop repeats."]
+    ],
+    featEyebrow:"Why Nazzim", featTitle:"Not another to-do app",
+    featSub:"Built to answer the one question no other app answers: am I ready?",
+    features:[
+      ["Evidence completeness","One honest number that measures your exam readiness — built on real studying and recall, not a list of ticked boxes."],
+      ["The next step","No blank page, no decisions. Nazzim picks what matters most right now and shows it as a single move."],
+      ["Triage your day","When everything piles up, it gives you just three tasks worth your time now, instead of drowning you."],
+      ["Self-testing","Cards that force recall before the reveal — the method science proves actually makes studying stick."],
+      ["Arabic-first","Not a translation. Natural wording and full right-to-left support from the first line."],
+      ["Privacy-first","Works entirely on your device. An account is optional, and your data is yours alone."]
+    ],
+    priceEyebrow:"Pricing", priceTitle:"Start free. Upgrade when you need it.",
+    priceSub:"The core loop is free forever. Pro adds power for those who want more.",
+    freeName:"Free", freeAmt:"$0",
+    freeFeatures:["Exams, subjects and tasks","Evidence completeness and the next step","Focus sessions and self-testing","Triage your day when you fall behind"],
+    freeFoot:"Free forever — no ads.",
+    proTag:"Coming soon", proName:"Pro", proAmt:"$19.99", proPer:"/ year · 7-day trial",
+    proFeatures:["Everything in Free","Calendar and class-schedule sync","Recurring tasks and daily routines","Advanced stats and your best hours","Backup and sync across your devices"],
+    proFoot:"Monthly $3.99 · Yearly $19.99 · Lifetime $49.99. Final prices shown in your currency on the store.",
+    wlEyebrow:"Be the first to know", wlTitle:"Nazzim is coming soon",
+    wlSub:"Leave your email to become a founding member — and get one month of Pro free at launch.",
+    wlPlaceholder:"Your email address", wlBtn:"Join",
+    wlOk:"Thanks! This is a preview; the live site will save your email. To reach us now: "+SUPPORT_EMAIL,
+    wlBad:"Please enter a valid email address.",
+    copy:"© "+YEAR+" Nazzim. All rights reserved.",
+    backHome:"Back to home"
+  }
+};
+
+/* Legal content, built per language */
+function legalContent(lang, page){
+  const ar = lang==="ar";
+  const title = {
+    privacy: ar?"سياسة الخصوصية":"Privacy Policy",
+    terms: ar?"شروط الاستخدام":"Terms of Service",
+    support: ar?"الدعم والمساعدة":"Support"
+  }[page];
+  const updated = ar?("آخر تحديث · "+UPDATED):("Last updated · "+UPDATED);
+  let html = `<button class="back" data-go="home">${ar?"→":"←"} ${T[lang].backHome}</button><h1>${title}</h1><div class="updated">${updated}</div>`;
+
+  if(page==="privacy"){
+    html += ar ? `
+      <p class="lead">باختصار: نظِّم يعمل على جهازك أولاً. لا نبيع بياناتك، ولا نعرض إعلانات، ولا نجمع ما يكتبه الطالب من عناوين أو ملاحظات في تحليلاتنا.</p>
+      <h2>ما يبقى على جهازك</h2>
+      <p>دون إنشاء حساب، تبقى كل بياناتك الأكاديمية — الموادّ والامتحانات والمهام والبطاقات والملاحظات — مخزّنة على جهازك فقط، ولا تصل خوادمنا.</p>
+      <h2>عند إنشاء حساب (اختياري)</h2>
+      <p>إذا اخترت إنشاء حساب للمزامنة بين أجهزتك، نخزّن محتواك الأكاديمي على خوادم سحابية آمنة (Supabase) لغرض واحد: مزامنة بياناتك أنت عبر أجهزتك. لا يستطيع أي مستخدم آخر الوصول إلى بياناتك.</p>
+      <ul>
+        <li>نحفظ بريدك الإلكتروني لتسجيل الدخول فقط.</li>
+        <li>لا نخزّن كلمات المرور كنص صريح أبداً؛ يتولّى ذلك مزوّد المصادقة بطرق آمنة.</li>
+        <li>يمكنك حذف حسابك وكل بياناته من داخل التطبيق في أي وقت.</li>
+      </ul>
+      <h2>التحليلات</h2>
+      <p>نجمع أحداث استخدام مجهّلة تحتوي على معرّفات وأعداد فقط — مثل «بدأت جلسة» أو «قُيّمت بطاقة». هذه الأحداث <strong>لا تحمل أبداً</strong> عناوين موادّك أو مهامك أو نص بطاقاتك أو ملاحظاتك أو معدّلك أو اسم جامعتك. نستخدمها لتحسين التطبيق فقط.</p>
+      <h2>ما لا نفعله</h2>
+      <ul><li>لا نبيع بياناتك ولا نشاركها مع معلنين.</li><li>لا نعرض إعلانات داخل التطبيق.</li><li>لا نجمع بيانات لمجرد أنه ممكن تقنياً.</li></ul>
+      <h2>حقوقك</h2>
+      <p>لك أن تطّلع على بياناتك أو تصدّرها أو تحذفها. حذف الحساب يزيل محتواك من خوادمنا.</p>
+      <h2>التغييرات والتواصل</h2>
+      <p>قد نحدّث هذه السياسة، وسننشر أي تغيير هنا مع تحديث التاريخ. لأي سؤال عن الخصوصية تواصل معنا.</p>
+      <div class="support-mail"><span>${ar?"البريد:":"Email:"}</span><code>${SUPPORT_EMAIL}</code></div>
+    ` : `
+      <p class="lead">In short: Nazzim is device-first. We don't sell your data, we don't show ads, and our analytics never collect the titles or notes you type.</p>
+      <h2>What stays on your device</h2>
+      <p>Without an account, all your academic data — subjects, exams, tasks, flashcards and notes — stays on your device only and never reaches our servers.</p>
+      <h2>When you create an account (optional)</h2>
+      <p>If you choose to create an account to sync across devices, we store your academic content on secure cloud servers (Supabase) for one purpose: syncing your own data across your devices. No other user can access your data.</p>
+      <ul>
+        <li>We keep your email address only to sign you in.</li>
+        <li>We never store passwords in plain text; the authentication provider handles that securely.</li>
+        <li>You can delete your account and all of its data from inside the app at any time.</li>
+      </ul>
+      <h2>Analytics</h2>
+      <p>We collect anonymous usage events that contain only identifiers and counts — such as "a session started" or "a card was graded." These events <strong>never</strong> carry your subject or task titles, card text, notes, GPA, or university name. We use them only to improve the app.</p>
+      <h2>What we don't do</h2>
+      <ul><li>We don't sell your data or share it with advertisers.</li><li>We don't show ads in the app.</li><li>We don't collect data simply because it's technically possible.</li></ul>
+      <h2>Your rights</h2>
+      <p>You may access, export or delete your data. Deleting your account removes your content from our servers.</p>
+      <h2>Changes and contact</h2>
+      <p>We may update this policy and will post any change here with a new date. For any privacy question, contact us.</p>
+      <div class="support-mail"><span>Email:</span><code>${SUPPORT_EMAIL}</code></div>
+    `;
+  }
+
+  if(page==="terms"){
+    html += ar ? `
+      <p class="lead">باستخدامك نظِّم فأنت توافق على هذه الشروط. اقرأها، فهي تحدّد ما تتوقّعه منّا وما نتوقّعه منك.</p>
+      <h2>الخدمة</h2>
+      <p>نظِّم أداة تساعد الطلاب على تنظيم مذاكرتهم وقياس استعدادهم للامتحانات. هي أداة مساعِدة، ولا تضمن درجة أو نتيجة معيّنة.</p>
+      <h2>حسابك</h2>
+      <p>أنت مسؤول عن الحفاظ على بيانات دخولك. إنشاء الحساب اختياري، ويمكنك حذفه في أي وقت.</p>
+      <h2>الاستخدام المقبول</h2>
+      <ul><li>لا تُسئ استخدام الخدمة أو تحاول اختراقها أو الوصول لبيانات غيرك.</li><li>لا تستخدم التطبيق لأي غرض غير قانوني.</li></ul>
+      <h2>الاشتراكات (عند توفّرها)</h2>
+      <p>عند إطلاق «برو»، تتم المدفوعات عبر App Store أو Google Play وتخضع لشروطهما. تتجدد الاشتراكات تلقائياً ما لم تُلغَ قبل نهاية المدة، وتدار من إعدادات المتجر.</p>
+      <h2>الملكية الفكرية</h2>
+      <p>التطبيق واسمه وتصميمه ملك لنا. محتواك الأكاديمي الذي تدخله يبقى ملكك أنت.</p>
+      <h2>إخلاء المسؤولية</h2>
+      <p>تُقدَّم الخدمة «كما هي». نبذل جهدنا لجعلها دقيقة ومفيدة، لكننا لا نتحمّل مسؤولية نتائج دراسية أو قرارات بُنيت عليها.</p>
+      <h2>التغييرات والإنهاء</h2>
+      <p>قد نحدّث هذه الشروط أو الخدمة. يمكنك التوقف عن الاستخدام في أي وقت بحذف التطبيق أو حسابك.</p>
+      <div class="support-mail"><span>للأسئلة:</span><code>${SUPPORT_EMAIL}</code></div>
+    ` : `
+      <p class="lead">By using Nazzim you agree to these terms. Please read them — they set out what you can expect from us and what we expect from you.</p>
+      <h2>The service</h2>
+      <p>Nazzim is a tool that helps students organize their studying and measure their exam readiness. It is a study aid and does not guarantee any grade or outcome.</p>
+      <h2>Your account</h2>
+      <p>You are responsible for keeping your sign-in details safe. Creating an account is optional, and you may delete it at any time.</p>
+      <h2>Acceptable use</h2>
+      <ul><li>Don't misuse the service, attempt to break it, or access anyone else's data.</li><li>Don't use the app for any unlawful purpose.</li></ul>
+      <h2>Subscriptions (when available)</h2>
+      <p>When Pro launches, payments are processed by the App Store or Google Play and are subject to their terms. Subscriptions renew automatically unless cancelled before the period ends, and are managed from your store settings.</p>
+      <h2>Intellectual property</h2>
+      <p>The app, its name and its design belong to us. The academic content you enter remains yours.</p>
+      <h2>Disclaimer</h2>
+      <p>The service is provided "as is." We work to keep it accurate and useful, but we are not liable for academic results or decisions based on it.</p>
+      <h2>Changes and termination</h2>
+      <p>We may update these terms or the service. You can stop using it at any time by deleting the app or your account.</p>
+      <div class="support-mail"><span>Questions:</span><code>${SUPPORT_EMAIL}</code></div>
+    `;
+  }
+
+  if(page==="support"){
+    html += ar ? `
+      <p class="lead">نحن هنا للمساعدة. أغلب الأسئلة نردّ عليها خلال يوم عمل واحد.</p>
+      <h2>تواصل معنا</h2>
+      <p>راسلنا على البريد التالي بأي سؤال أو مشكلة أو اقتراح — وكلما وصفت المشكلة بدقّة، أسرعنا في حلّها.</p>
+      <div class="support-mail"><span>البريد:</span><code>${SUPPORT_EMAIL}</code></div>
+      <h2>أسئلة شائعة</h2>
+      <p><strong>هل أحتاج حساباً لاستخدام التطبيق؟</strong><br>لا. يعمل التطبيق بالكامل على جهازك. الحساب اختياري وللمزامنة بين الأجهزة فقط.</p>
+      <p><strong>كيف أحذف بياناتي؟</strong><br>من داخل التطبيق: الإعدادات ← الحساب ← حذف الحساب. هذا يزيل محتواك من خوادمنا.</p>
+      <p><strong>هل بياناتي آمنة؟</strong><br>نعم. بياناتك لك وحدك، ولا يصل إليها مستخدم آخر. راجع سياسة الخصوصية للتفاصيل.</p>
+    ` : `
+      <p class="lead">We're here to help. We answer most questions within one business day.</p>
+      <h2>Contact us</h2>
+      <p>Email us with any question, problem or suggestion — the more precisely you describe the issue, the faster we can solve it.</p>
+      <div class="support-mail"><span>Email:</span><code>${SUPPORT_EMAIL}</code></div>
+      <h2>Frequently asked</h2>
+      <p><strong>Do I need an account to use the app?</strong><br>No. The app works entirely on your device. An account is optional and only for syncing across devices.</p>
+      <p><strong>How do I delete my data?</strong><br>Inside the app: Settings → Account → Delete account. This removes your content from our servers.</p>
+      <p><strong>Is my data safe?</strong><br>Yes. Your data is yours alone and no other user can access it. See the Privacy Policy for details.</p>
+    `;
+  }
+  return html;
+}
+
+let lang = "ar";
+try{ const s = localStorage.getItem("nz_lang"); if(s==="ar"||s==="en") lang=s; }catch(e){}
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+function svgCheck(){return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';}
+function svgFeat(i){
+  const paths=[
+    '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    '<path d="M5 19V11M12 19V5M19 19v-6"/>',
+    '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/>',
+    '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.3 2.4 14 0 17M12 3.5c-2.4 2.3-2.4 14 0 17"/>',
+    '<path d="M12 3.5 5 6v5.5c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9V6z"/>'
+  ];
+  return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#285CE7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+paths[i]+'</svg>';
+}
+
+function render(){
+  const L = T[lang];
+  const root = $("#app");
+  root.setAttribute("dir", L.dir);
+
+  $$("[data-t]").forEach(el=>{ const v=L[el.dataset.t]; if(v!=null) el.textContent=v; });
+  $$("[data-t-ph]").forEach(el=>{ const v=L[el.dataset.tPh]; if(v!=null) el.setAttribute("placeholder",v); });
+  $("#langBtn").textContent = L.langLabel;
+  $("#copyLine").textContent = L.copy;
+  $(".d-tile").textContent = lang==="ar" ? "إ" : "S";
+
+  // Loop
+  $("#loop").innerHTML = L.howSteps.map(([h,p])=>`<div class="step"><span class="n"></span><h3>${h}</h3><p>${p}</p></div>`).join("");
+  // Features
+  $("#features-grid").innerHTML = L.features.map(([h,p],i)=>`<div class="card"><div class="ic">${svgFeat(i)}</div><h3>${h}</h3><p>${p}</p></div>`).join("");
+  // Plans
+  $("#free-feat").innerHTML = L.freeFeatures.map(f=>`<li>${svgCheck()}<span>${f}</span></li>`).join("");
+  $("#pro-feat").innerHTML = L.proFeatures.map(f=>`<li>${svgCheck()}<span>${f}</span></li>`).join("");
+
+  // re-render legal if open
+  if(!$("#view-legal").hidden && currentLegal){ $("#legal-body").innerHTML = legalContent(lang,currentLegal); bindGo(); }
+  document.title = "Nazzim";
+}
+
+let currentLegal = null;
+function show(view){
+  const legalPages = ["privacy","terms","support"];
+  if(legalPages.includes(view)){
+    currentLegal = view;
+    $("#view-home").hidden = true;
+    $("#view-legal").hidden = false;
+    $("#legal-body").innerHTML = legalContent(lang, view);
+    bindGo();
+    window.scrollTo(0,0);
+    location.hash = view;
+  } else {
+    currentLegal = null;
+    $("#view-legal").hidden = true;
+    $("#view-home").hidden = false;
+    if(view && view!=="home"){ const t=document.getElementById(view); if(t){ t.scrollIntoView({behavior:"smooth"}); } }
+    if(view==="home"){ window.scrollTo(0,0); location.hash=""; }
+  }
+  // close mobile menu
+  $("#nav").classList.remove("open");
+  $("#menuBtn").setAttribute("aria-expanded","false");
+}
+
+function bindGo(){
+  $$("[data-go]").forEach(b=>{ b.onclick = ()=> show(b.dataset.go); });
+}
+function bindScroll(){
+  $$("[data-scroll]").forEach(b=>{ b.onclick = ()=>{ if(!$("#view-home").hidden===false){} show("home"); const t=document.getElementById(b.dataset.scroll); if(t) requestAnimationFrame(()=>t.scrollIntoView({behavior:"smooth"})); $("#nav").classList.remove("open"); }; });
+}
+
+$("#langBtn").onclick = ()=>{ lang = lang==="ar"?"en":"ar"; try{localStorage.setItem("nz_lang",lang);}catch(e){} render(); };
+$("#menuBtn").onclick = ()=>{ const n=$("#nav"); const open=n.classList.toggle("open"); $("#menuBtn").setAttribute("aria-expanded",String(open)); };
+
+$("#wlForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const L=T[lang];
+  const v=$("#wlEmail").value.trim();
+  const ok=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  $("#wlNote").textContent = ok ? L.wlOk : L.wlBad;
+  if(ok) $("#wlForm").reset();
+});
+
+bindGo(); bindScroll(); render();
+
+// Open legal view if the link carried a hash
+const h = (location.hash||"").replace("#","");
+if(["privacy","terms","support"].includes(h)) show(h);
+</script>
