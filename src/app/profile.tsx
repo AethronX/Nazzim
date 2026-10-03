@@ -2,11 +2,11 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { Avatar, Page, Row, Section } from '../components/Page';
-import { Btn, Icon, T } from '../components/ui';
+import { Btn, Button, Icon, T } from '../components/ui';
 import { summarizeProgress } from '../engine/insights';
 import { hours, useAcademic } from '../lib/academic';
 import { useNazzim, type Profile as ProfileData } from '../lib/store';
-import { font } from '../lib/theme';
+import { font, TEXT } from '../lib/theme';
 
 const FIELDS: { key: keyof ProfileData; label: 'fName' | 'fUni' | 'fMajor' | 'fYear' }[] = [
   { key: 'name', label: 'fName' }, { key: 'uni', label: 'fUni' }, { key: 'major', label: 'fMajor' }, { key: 'year', label: 'fYear' },
@@ -55,7 +55,7 @@ export default function Profile() {
                 placeholderTextColor={C.ink3}
                 returnKeyType={i === FIELDS.length - 1 ? 'done' : 'next'}
                 autoCapitalize="words"
-                style={{ fontFamily: font('body', 600, ar), fontSize: 15, color: C.ink, paddingVertical: 4, textAlign: ar ? 'right' : 'left' }}
+                style={{ fontFamily: font('body', 600, ar), fontSize: TEXT.body, color: C.ink, paddingVertical: 4, textAlign: ar ? 'right' : 'left' }}
               />
             </View>
           ))}
@@ -63,12 +63,8 @@ export default function Profile() {
       )}
       {editing && (
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Btn onPress={() => setEditing(false)} style={{ flex: 1, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, alignItems: 'center' }}>
-            <T w={700} s="label">{L.cancel}</T>
-          </Btn>
-          <Btn onPress={save} pressedBg={accent.strong} style={{ flex: 1, padding: 14, borderRadius: 12, backgroundColor: accent.a1, alignItems: 'center', boxShadow: accent.glow }}>
-            <T w={700} s="label" c={C.onAccent}>{L.saveProfile}</T>
-          </Btn>
+          <View style={{ flex: 1 }}><Button variant="tertiary" title={L.cancel} onPress={() => setEditing(false)} /></View>
+          <View style={{ flex: 1 }}><Button title={L.saveProfile} onPress={save} /></View>
         </View>
       )}
 
@@ -96,7 +92,7 @@ export default function Profile() {
             <Icon name="crown" size={18} color={C.onHeroAccent} stroke={2} />
             <T w={800} s="micro" ls={ar ? 0 : 1} c={C.onHero2} style={{ flex: 1 }}>{L.yourPlan}</T>
             <View style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, backgroundColor: tier === 'pro' ? C.onHeroTrack : accent.a1 }}>
-              <T w={700} s="caption" c={C.onHero}>{tier === 'pro' ? L.manage : L.upgrade}</T>
+              <T w={700} s="caption" c={C.onHero}>{tier === 'pro' ? L.manage : L.csBadge}</T>
             </View>
           </View>
           <View>

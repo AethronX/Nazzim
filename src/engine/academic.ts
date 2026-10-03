@@ -2,6 +2,7 @@
 // so they run the same on the phone, in tests and (later) on the server.
 import { workDay, type AcademicContext, type DateKey, type Exam, type Subject, type Task } from '../domain/types';
 import { addDays, daysBetween, readiness } from '../lib/exams';
+import { rankTasks } from './tasks';
 
 // ── "What should I do right now?" ──────────────────────────────────────────────────────────
 
@@ -80,7 +81,8 @@ export function agendaFor(ctx: AcademicContext, day: DateKey, label: { exam: str
     const exam = examById.get(s.examId);
     blocks.push({ key: 's' + s.id, kind: 'session', refId: s.id, subjectId: exam?.subjectId, title: chapterTitle(s, exam), detail: `${exam?.subject ?? ''} · ${label.kind(s.kind)}`, minutes: s.minutes, done: s.done });
   }
-  for (const t of ctx.tasks.filter(x => workDay(x) === day)) {
+  // Tasks on the day follow the same smart order as the task list, so the two never disagree.
+  for (const t of rankTasks(ctx.tasks.filter(x => workDay(x) === day), ctx.exams, ctx.today).map(r => r.task)) {
     blocks.push({ key: 't' + t.id, kind: 'task', refId: t.id, subjectId: t.subjectId, title: t.title, detail: label.task, minutes: t.estimateMin, done: t.done });
   }
   let cursor = startMin;

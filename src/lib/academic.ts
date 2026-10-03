@@ -4,26 +4,16 @@ import { useMemo } from 'react';
 import type { AcademicContext } from '../domain/types';
 import type { NextReason } from '../engine/academic';
 import { STUDY_START } from '../engine/habits';
-import { chapterRecall } from '../engine/recall';
 import type { Copy } from './copy';
 import type { ExamItem, StudySession } from './exams';
+import { withEvidence } from './readiness';
 import { useNazzim } from './store';
 
 export function useAcademic() {
   const { today, subjects, tasks, exams, study, cards, dailyMinutes, studyTime, L } = useNazzim();
-  // Recall is derived from the cards, never stored twice: one source of truth, so a graded card updates
-  // readiness everywhere in the same render.
-  const withRecall = useMemo(() => exams.map(e => {
-    const recall: Record<number, { score: number; at: string }> = {};
-    e.chapters.forEach((_, i) => {
-      const score = chapterRecall(cards, e.id, i);
-      if (score !== undefined) {
-        const at = cards.filter(c => c.examId === e.id && c.chapter === i && c.lastAt).map(c => c.lastAt!).sort().pop();
-        if (at) recall[i] = { score, at };
-      }
-    });
-    return Object.keys(recall).length ? { ...e, recall } : e;
-  }), [exams, cards]);
+  // Recall evidence is derived from the cards by `withEvidence` in src/lib/readiness.ts — the one place it
+  // happens — so a graded card changes every surface in the same render and no screen can disagree.
+  const withRecall = useMemo(() => withEvidence(exams, cards), [exams, cards]);
   const ctx: AcademicContext = useMemo(() => ({ today, subjects, tasks, exams: withRecall, sessions: study, dailyMinutes }), [today, subjects, tasks, withRecall, study, dailyMinutes]);
   const chapterTitle = useMemo(() => (s: StudySession, e?: ExamItem) => (s.chapter < 0 ? L.exAll : e?.chapters[s.chapter] ?? ''), [L]);
   const subjectById = useMemo(() => new Map(subjects.map(s => [s.id, s])), [subjects]);

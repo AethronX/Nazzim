@@ -24,8 +24,12 @@ export type Task = {
   estimateMin: number;
   done: boolean;
   doneAt?: DateKey;
-  plannedFor?: DateKey; // the day NAZZIM scheduled it (Rescue Mode); `due` stays the real deadline
+  plannedFor?: DateKey; // the day the student (or Rescue Mode) chose to work on it; `due` stays the real deadline
+  priority?: TaskPriority; // the student's own judgement; absent = normal
+  notes?: string; // free text the student wrote. Stays on the device and in their own sync rows — never in analytics.
 };
+
+export type TaskPriority = 'high' | 'normal' | 'low';
 
 // The day a task sits on the schedule: where it was planned, else its due date.
 export const workDay = (t: Task): DateKey => t.plannedFor ?? t.due;

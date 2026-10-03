@@ -4,7 +4,7 @@ import { TextInput, View } from 'react-native';
 import { Choice, Page, Section } from '../../components/Page';
 import { PrimaryBtn, T } from '../../components/ui';
 import { useNazzim } from '../../lib/store';
-import { font } from '../../lib/theme';
+import { font, TEXT } from '../../lib/theme';
 
 // Writing a card is itself a study step (generation effect), so this screen stays out of the way:
 // pick the chapter, ask the question, write the key. Nothing is generated for the student.
@@ -18,7 +18,7 @@ export default function NewCard() {
 
   if (!exam) return <Page title={L.rcAdd}><T c={C.ink3}>{L.exNone}</T></Page>;
 
-  const input = { fontFamily: font('body', 600, ar), fontSize: 15, color: C.ink, textAlign: ar ? 'right' : 'left' } as const;
+  const input = { fontFamily: font('body', 600, ar), fontSize: TEXT.body, color: C.ink, textAlign: ar ? 'right' : 'left' } as const;
   const ready = q.trim().length > 2 && a.trim().length > 1;
 
   const save = () => {

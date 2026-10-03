@@ -47,7 +47,7 @@ export function ActivationChecklist() {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <T f="display" w={700} s="body" style={{ flex: 1 }}>{L.clTitle}</T>
         <T w={700} s="caption" c={accent.fg}>{L.clProgress.replace('{d}', String(c.done)).replace('{t}', String(c.total))}</T>
-        <Btn onPress={() => set({ checklistHidden: true })} style={{ paddingVertical: 4, paddingHorizontal: 8 }}>
+        <Btn onPress={() => set({ checklistHidden: true })} style={{ minHeight: 36, justifyContent: 'center', paddingHorizontal: 10 }}>
           <T w={700} s="caption" c={C.ink3}>{L.clHide}</T>
         </Btn>
       </View>

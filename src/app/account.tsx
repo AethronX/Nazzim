@@ -4,7 +4,7 @@ import { ActivityIndicator, TextInput, View } from 'react-native';
 import { Page, Row, Section } from '../components/Page';
 import { Btn, Icon, PrimaryBtn, T } from '../components/ui';
 import { useNazzim } from '../lib/store';
-import { font } from '../lib/theme';
+import { font, TEXT } from '../lib/theme';
 import { syncAvailable, type AuthError } from '../services/sync';
 
 // ACCOUNT: optional. Signed out, Nazzim works fully on this device; an account adds sync and backup.
@@ -20,7 +20,7 @@ export default function Account() {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(t); }, []);
   const valid = /^\S+@\S+\.\S+$/.test(email.trim()) && password.length >= 8;
-  const input = { fontFamily: font('body', 600, ar), fontSize: 15.5, color: C.ink, paddingVertical: 13, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, textAlign: ar ? 'right' : 'left' } as const;
+  const input = { fontFamily: font('body', 600, ar), fontSize: TEXT.body, color: C.ink, paddingVertical: 13, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, textAlign: ar ? 'right' : 'left' } as const;
 
   const submit = async () => {
     if (!valid || busy) return;

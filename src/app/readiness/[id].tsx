@@ -1,10 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { Page, Section } from '../../components/Page';
 import { Btn, Card, Icon, PrimaryBtn, T } from '../../components/ui';
 import { recallStats } from '../../engine/recall';
 import { useAcademic } from '../../lib/academic';
-import { EFFORT_CEILING, nextEvidence, readinessDetail, WEAK_CEILING } from '../../lib/exams';
+import { EFFORT_CEILING, nextEvidence, WEAK_CEILING } from '../../lib/exams';
+import { evidenceDetail } from '../../lib/readiness';
 import { useNazzim } from '../../lib/store';
 import { track } from '../../services/analytics';
 
@@ -16,11 +18,13 @@ export default function ReadinessWhy() {
   const { C, L, ar, accent, study, cards, today } = useNazzim();
   const { ctx } = useAcademic();
   const exam = ctx.exams.find(e => e.id === id);
+  // Before the early return: hooks must run in the same order every render.
+  useEffect(() => { track({ name: 'evidence_explainer_opened' }); }, [id]);
   if (!exam) return <Page title={L.rdTitle}><T c={C.ink3}>{L.exNone}</T></Page>;
 
-  const d = readinessDetail(exam, study, today);
+  const d = evidenceDetail(exam, study, cards, today);
   const gap = nextEvidence(exam, study, today);
-  const stats = recallStats(cards, exam.id, today);
+  const stats = recallStats(cards, exam.id, today, exam.date);
 
   const gapText =
     gap.kind === 'study' ? L.rdNextStudy.replace('{c}', exam.chapters[gap.chapter ?? 0] ?? '')
@@ -109,7 +113,7 @@ export default function ReadinessWhy() {
         <T w={600} s="label" lh={1.5} style={{ marginTop: 6 }}>{gapText}</T>
       </Card>
       {gap.kind === 'recall' && (
-        <PrimaryBtn title={L.rcOpen} icon="sparkle" onPress={() => { track({ name: 'readiness_explained' }); router.replace(`/recall/${exam.id}`); }} />
+        <PrimaryBtn title={L.rcOpen} icon="sparkle" onPress={() => router.replace(`/recall/${exam.id}`)} />
       )}
       <Btn onPress={() => router.back()} pressScale={0.98} style={{ alignItems: 'center', paddingVertical: 14 }}>
         <T w={700} s="label" c={C.ink3}>{L.rcBack}</T>

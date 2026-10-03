@@ -228,8 +228,8 @@ export const TEXT = {
   display: 28, // screen titles
   title: 22,   // card headlines, big numbers
   heading: 18, // section and list-item titles
-  body: 15.5,  // primary reading text
-  label: 13.5, // secondary text, buttons, most UI
+  body: 16,    // primary reading text — 16 is the floor for comfortable Arabic body copy on a phone
+  label: 14,   // secondary text, buttons, most UI
   caption: 12, // meta, timestamps, helper text
   micro: 10.5, // eyebrows, badges, chart ticks
 } as const;
@@ -240,7 +240,29 @@ export const RADIUS = { xs: 6, sm: 12, md: 16, lg: 20, xl: 24, full: 99 } as con
 export type RadiusRole = keyof typeof RADIUS;
 
 /** 4pt space grid, for padding and gaps. */
-export const SPACE = { '0.5': 2, 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 7: 28, 8: 32 } as const;
+export const SPACE = { '0.5': 2, 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 7: 28, 8: 32, 10: 40, 12: 48, 16: 64 } as const;
+
+/** Touch targets. 44 is the floor (Apple HIG); 48 is the default for anything a thumb is meant to hit. */
+export const TOUCH = { min: 44, comfortable: 48 } as const;
+
+/**
+ * Semantic colour roles. The palette above is organised by how colours are BUILT (tiers, ramps); screens
+ * should ask for what a colour is FOR. New components read these names; the raw palette keys stay as the
+ * storage underneath so nothing that already ships changes colour.
+ */
+export function semantic(C: Palette, a: Accent) {
+  return {
+    background: C.bg, surface: C.card, surfaceElevated: C.card, surfaceMuted: C.card2,
+    textPrimary: C.ink, textSecondary: C.ink2, textTertiary: C.ink3,
+    primary: a.a1, primaryPressed: a.strong, primaryForeground: C.onAccent, primaryContainer: a.tint, onPrimaryContainer: a.strong,
+    success: C.success, successText: C.successText, successContainer: C.successTint,
+    warning: C.warning, warningText: C.warningText, warningContainer: C.warningTint,
+    error: C.danger, errorText: C.danger, errorContainer: C.dangerTint,
+    info: a.fg, infoText: a.strong, infoContainer: a.tint,
+    border: C.line, borderSubtle: C.line2, overlay: C.scrim, disabled: C.line2, onDisabled: C.ink3,
+  } as const;
+}
+export type Semantic = ReturnType<typeof semantic>;
 
 
 // Line-height scale by role, not by language. Arabic has deeper descenders than Latin, so a single ratio

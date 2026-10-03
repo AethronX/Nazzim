@@ -85,7 +85,7 @@ export function Choice<V extends string | number>({ options, value, onChange, la
         const on = o === value;
         return (
           <Btn key={String(o)} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => onChange(o)}
-            style={{ paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: on ? accent.tint : 'transparent' }}>
+            style={{ minHeight: 36, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 99, backgroundColor: on ? accent.tint : 'transparent' }}>
             <T num={num} ltr={ltr} w={700} s="caption" c={on ? accent.strong : C.ink3}>{labels[i]}</T>
           </Btn>
         );

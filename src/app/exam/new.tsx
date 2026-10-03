@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { SubjectPicker } from '../../components/Academic';
 import { Page, Section } from '../../components/Page';
-import { Btn, Icon, T } from '../../components/ui';
+import { Btn, Icon, PrimaryBtn, T } from '../../components/ui';
 import { addDays, planExam } from '../../lib/exams';
-import { fmtDate, relDay } from '../../lib/format';
+import { fmtDate, inDays as inDaysLabel, relDay } from '../../lib/format';
 import { useNazzim } from '../../lib/store';
-import { font } from '../../lib/theme';
+import { font, TEXT } from '../../lib/theme';
 
 const QUICK_DAYS = [3, 7, 14, 21];
 
@@ -26,7 +26,7 @@ export default function NewExam() {
   // Live preview of what the engine will build.
   const preview = planExam({ id: 'preview', subject, date, chapters }, today);
   const canCreate = subject.trim().length > 0 && chapters.length > 0 && inDays >= 1;
-  const input = { fontFamily: font('body', 600, ar), fontSize: 15, color: C.ink, paddingVertical: 4, textAlign: ar ? 'right' : 'left' } as const;
+  const input = { fontFamily: font('body', 600, ar), fontSize: TEXT.body, color: C.ink, paddingVertical: 4, textAlign: ar ? 'right' : 'left' } as const;
 
   const create = () => {
     if (!canCreate) return;
@@ -65,7 +65,7 @@ export default function NewExam() {
               return (
                 <Btn key={n} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setInDays(n)}
                   style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 99, backgroundColor: on ? accent.tint : 'transparent', borderWidth: 1, borderColor: on ? accent.tint : C.line }}>
-                  <T w={700} s="caption" c={on ? accent.strong : C.ink3}>{L.dIn.replace('{n}', String(n))}</T>
+                  <T w={700} s="caption" c={on ? accent.strong : C.ink3}>{inDaysLabel(n, L, ar)}</T>
                 </Btn>
               );
             })}
@@ -88,10 +88,7 @@ export default function NewExam() {
         </T>
       </View>
 
-      <Btn onPress={create} disabled={!canCreate} pressedBg={accent.strong} accessibilityState={{ disabled: !canCreate }}
-        style={{ padding: 16, borderRadius: 16, alignItems: 'center', backgroundColor: canCreate ? accent.a1 : C.line2, boxShadow: canCreate ? accent.glow : undefined }}>
-        <T w={800} s="body" c={canCreate ? C.onAccent : C.ink3}>{L.exCreate}</T>
-      </Btn>
+      <PrimaryBtn title={L.exCreate} onPress={create} disabled={!canCreate} />
     </Page>
   );
 }

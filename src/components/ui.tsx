@@ -1,12 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
-  AccessibilityInfo, Animated, Easing, Pressable, Text, View,
+  AccessibilityInfo, ActivityIndicator, Animated, Easing, Pressable, Text, View,
   type PressableProps, type StyleProp, type TextProps, type TextStyle, type ViewStyle,
 } from 'react-native';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import type { Kind } from '../lib/copy';
 import { useNazzim } from '../lib/store';
-import { font, TEXT, type Face, type Numerals, type TextRole, type Weight } from '../lib/theme';
+import { font, semantic, TEXT, TOUCH, type Face, type Numerals, type TextRole, type Weight } from '../lib/theme';
 
 type TProps = TextProps & {
   f?: Face; w?: Weight; c?: string; ls?: number; lh?: number; style?: StyleProp<TextStyle>;
@@ -217,22 +217,152 @@ export function Eyebrow({ children, color }: { children: ReactNode; color?: stri
   return <T w={800} s="micro" ls={0.8} c={color ?? C.ink3}>{children}</T>;
 }
 
-// The one primary action on a screen: full width, indigo, white label.
-export function PrimaryBtn({ title, onPress, disabled, icon }: { title: string; onPress: () => void; disabled?: boolean; icon?: IconName }) {
+/**
+ * The button system. One shape, five jobs:
+ *
+ *   primary     — the one action the screen exists for. Solid brand fill. At most one per screen.
+ *   secondary   — a real alternative to the primary. Tinted container, brand text.
+ *   tertiary    — a quiet action that should not compete: outline on the surface.
+ *   destructive — removes something. Red text on a red-tinted container, never a red slab.
+ *   ghost       — text-only, for inline actions ("See all").
+ *
+ * Every variant is at least 48pt tall, shows a pressed state, dims and announces itself when disabled, and can
+ * show a spinner while it works — so a double tap during a save cannot submit twice.
+ */
+export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive' | 'ghost';
+
+export function Button({ title, onPress, variant = 'primary', disabled, loading, icon, hint, compact, align = 'center' }: {
+  title: string; onPress: () => void; variant?: ButtonVariant; disabled?: boolean; loading?: boolean;
+  icon?: IconName; hint?: string; compact?: boolean; align?: 'center' | 'start';
+}) {
   const { C, accent } = useNazzim();
+  const S = semantic(C, accent);
+  const off = !!disabled || !!loading;
+  const look: Record<ButtonVariant, { bg: string; fg: string; pressed: string; border?: string }> = {
+    primary: { bg: S.primary, fg: S.primaryForeground, pressed: S.primaryPressed },
+    secondary: { bg: S.primaryContainer, fg: S.onPrimaryContainer, pressed: accent.tint2 },
+    tertiary: { bg: S.surface, fg: S.textPrimary, pressed: S.surfaceMuted, border: S.border },
+    destructive: { bg: S.errorContainer, fg: S.errorText, pressed: S.errorContainer },
+    ghost: { bg: 'transparent', fg: accent.fg, pressed: S.primaryContainer },
+  };
+  const v = look[variant];
+  const bg = disabled ? S.disabled : v.bg, fg = disabled ? S.onDisabled : v.fg;
   return (
-    <Btn onPress={onPress} disabled={disabled} pressedBg={accent.strong} accessibilityState={{ disabled: !!disabled }}
-      style={{ flexDirection: 'row', gap: 8, padding: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: disabled ? C.line2 : accent.a1, boxShadow: disabled ? undefined : accent.glow }}>
-      {!!icon && <Icon name={icon} size={15} color={disabled ? C.ink3 : C.onAccent} stroke={2.4} />}
-      <T w={800} s="body" c={disabled ? C.ink3 : C.onAccent}>{title}</T>
+    <Btn onPress={onPress} disabled={off} pressedBg={v.pressed} pressScale={0.98} label={title} accessibilityHint={hint}
+      accessibilityState={{ disabled: off, busy: !!loading }}
+      style={{
+        flexDirection: 'row', gap: 8, minHeight: compact ? TOUCH.min : TOUCH.comfortable, paddingVertical: compact ? 10 : 14, paddingHorizontal: 16,
+        borderRadius: 16, alignItems: 'center', justifyContent: align === 'center' ? 'center' : 'flex-start', backgroundColor: bg,
+        borderWidth: v.border && !disabled ? 1 : 0, borderColor: v.border,
+        boxShadow: variant === 'primary' && !disabled ? accent.glow : undefined,
+      }}>
+      {loading ? <ActivityIndicator size="small" color={fg} />
+        : !!icon && <Icon name={icon} size={16} color={fg} stroke={2.4} />}
+      <T w={variant === 'primary' ? 800 : 700} s={variant === 'primary' ? 'body' : 'label'} c={fg}
+        style={align === 'start' ? { flex: 1 } : undefined}>{title}</T>
     </Btn>
   );
 }
 
-// Card: the one surface used for grouped content (radius 20, hairline border). Tappable when onPress is given.
-export function Card({ children, onPress, style, pad = 16, label }: { children: ReactNode; onPress?: () => void; style?: StyleProp<ViewStyle>; pad?: number; label?: string }) {
+// Kept for the screens that already call it: the primary variant of the button system.
+export function PrimaryBtn({ title, onPress, disabled, icon, loading }: { title: string; onPress: () => void; disabled?: boolean; icon?: IconName; loading?: boolean }) {
+  return <Button title={title} onPress={onPress} disabled={disabled} icon={icon} loading={loading} />;
+}
+
+/**
+ * An empty state is the first thing a new student sees on most screens, so it does the work of an onboarding
+ * card: what goes here, why it matters, and the one thing to do now. Never a blank area, never a bare "No data".
+ */
+export function EmptyState({ icon, title, body, action, secondary }: {
+  icon: IconName; title: string; body?: string;
+  action?: { label: string; onPress: () => void; icon?: IconName };
+  secondary?: { label: string; onPress: () => void };
+}) {
+  const { C, accent } = useNazzim();
+  return (
+    <View style={{ alignItems: 'center', gap: 10, paddingVertical: 28, paddingHorizontal: 16, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.line }}>
+      <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name={icon} size={24} color={accent.fg} stroke={2.2} />
+      </View>
+      <T f="display" w={700} s="heading" style={{ textAlign: 'center' }} accessibilityRole="header">{title}</T>
+      {!!body && <T w={500} s="label" lh={1.6} c={C.ink3} style={{ textAlign: 'center', maxWidth: 320 }}>{body}</T>}
+      {!!action && <View style={{ alignSelf: 'stretch', marginTop: 6 }}><Button title={action.label} icon={action.icon ?? 'plus'} onPress={action.onPress} variant="secondary" /></View>}
+      {!!secondary && <Button title={secondary.label} onPress={secondary.onPress} variant="ghost" compact />}
+    </View>
+  );
+}
+
+/**
+ * An inline note. `info` explains, `caution` asks for a second look, `success` confirms. Tone is carried by
+ * the icon and a tinted container — never by colour alone — so it reads in greyscale and to a screen reader.
+ */
+export function Notice({ tone = 'info', title, body, action }: {
+  tone?: 'info' | 'caution' | 'success'; title?: string; body: string; action?: { label: string; onPress: () => void };
+}) {
+  const { C, accent } = useNazzim();
+  const S = semantic(C, accent);
+  const t = {
+    info: { bg: S.surfaceMuted, fg: S.textSecondary, icon: 'help' as IconName },
+    caution: { bg: S.warningContainer, fg: S.warningText, icon: 'alert' as IconName },
+    success: { bg: S.successContainer, fg: S.successText, icon: 'check' as IconName },
+  }[tone];
+  return (
+    <View accessibilityRole={tone === 'caution' ? 'alert' : undefined} style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 16, backgroundColor: t.bg, alignItems: 'flex-start' }}>
+      <Icon name={t.icon} size={17} color={t.fg} stroke={2.2} />
+      <View style={{ flex: 1, gap: 4 }}>
+        {!!title && <T w={700} s="label" c={tone === 'info' ? C.ink : t.fg}>{title}</T>}
+        <T w={500} s="caption" lh={1.6} c={tone === 'info' ? C.ink2 : t.fg}>{body}</T>
+        {!!action && (
+          <Btn onPress={action.onPress} label={action.label} style={{ alignSelf: 'flex-start', paddingVertical: 6, marginTop: 2 }}>
+            <T w={700} s="label" c={tone === 'info' ? accent.fg : t.fg} style={{ textDecorationLine: 'underline' }}>{action.label}</T>
+          </Btn>
+        )}
+      </View>
+    </View>
+  );
+}
+
+// A placeholder block for content that is on its way. Pulses gently unless Reduce Motion is on.
+export function Skeleton({ height = 16, width = '100%', radius = 6 }: { height?: number; width?: number | `${number}%`; radius?: number }) {
   const { C } = useNazzim();
-  const base: StyleProp<ViewStyle> = [{ backgroundColor: C.card, borderRadius: 20, borderWidth: 1, borderColor: C.line, padding: pad, overflow: 'hidden' }, style];
+  const [v] = useState(() => new Animated.Value(0.55));
+  useEffect(() => {
+    let loop: Animated.CompositeAnimation | undefined;
+    AccessibilityInfo.isReduceMotionEnabled().then(reduce => {
+      if (reduce) return;
+      loop = Animated.loop(Animated.sequence([
+        Animated.timing(v, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(v, { toValue: 0.55, duration: 700, useNativeDriver: true }),
+      ]));
+      loop.start();
+    }).catch(() => {});
+    return () => loop?.stop();
+  }, [v]);
+  return <Animated.View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ height, width, borderRadius: radius, backgroundColor: C.line, opacity: v }} />;
+}
+
+/**
+ * Card surfaces, by emphasis. Border, fill, radius and shadow each announce "this is a separate object";
+ * giving every block the same ones flattens the page, which is what the app did — a screen of identical
+ * white cards where nothing said which one mattered.
+ *
+ *   hero   — the one element the screen exists for. Raised, wider radius. At most one per screen.
+ *   plain  — the default grouped surface: hairline border, no lift.
+ *   quiet  — grouped content that is secondary: a tint instead of a border, so it recedes.
+ *
+ * A screen with two heroes has none.
+ */
+export type CardTone = 'hero' | 'plain' | 'quiet';
+
+export function Card({ children, onPress, style, pad = 16, label, tone = 'plain' }:
+  { children: ReactNode; onPress?: () => void; style?: StyleProp<ViewStyle>; pad?: number; label?: string; tone?: CardTone }) {
+  const { C } = useNazzim();
+  const surface: Record<CardTone, ViewStyle> = {
+    hero: { backgroundColor: C.card, borderRadius: 24, borderWidth: 1, borderColor: C.line, boxShadow: C.shadowSoft },
+    plain: { backgroundColor: C.card, borderRadius: 20, borderWidth: 1, borderColor: C.line },
+    quiet: { backgroundColor: C.card2, borderRadius: 20 },
+  };
+  const base: StyleProp<ViewStyle> = [{ padding: pad, overflow: 'hidden' }, surface[tone], style];
   return onPress ? <Btn pressScale={0.99} onPress={onPress} label={label} style={base}>{children}</Btn> : <View style={base}>{children}</View>;
 }
 

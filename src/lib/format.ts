@@ -14,10 +14,15 @@ export function fmtDateLine(key: string, L: Copy, ar: boolean) {
   return `${L.wdLong[d.getDay()]} · ${d.getDate()} ${month}`;
 }
 
-// "today" / "tomorrow" / "in 5 days".
-export function relDay(key: string, today: string, L: Copy, ar = false) {
-  const n = daysBetween(today, key);
+// "today" / "tomorrow" / "in 5 days" from a day count. The one place that fills `dIn`: three screens used to
+// replace a `{n}` placeholder the string does not have, so students saw the raw template "in {c}".
+export function inDays(n: number, L: Copy, ar = false) {
   if (n <= 0) return L.dToday;
   if (n === 1) return L.dTomorrow;
   return L.dIn.replace('{c}', counted(n, 'day', L, ar));
+}
+
+// The same, from a date key.
+export function relDay(key: string, today: string, L: Copy, ar = false) {
+  return inDays(daysBetween(today, key), L, ar);
 }

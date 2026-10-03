@@ -16,26 +16,31 @@ import { useNazzim } from '../../lib/store';
 // and one primary action: the next session. The full day-by-day plan sits below.
 export default function ExamDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { C, L, ar, accent, exams, study, cards, today, deleteExam, startFocusOn } = useNazzim();
-  const { chapterTitle, subjectById } = useAcademic();
+  const { C, L, ar, accent, study, cards, today, deleteExam, startFocusOn } = useNazzim();
+  // `ctx.exams` carries the derived recall evidence. Reading the store's raw `exams` here scored the exam
+  // without it, so this screen reported 32% while Today reported 36% for the same student.
+  const { ctx, chapterTitle, subjectById } = useAcademic();
   const [confirm, setConfirm] = useState(false);
   const [showDone, setShowDone] = useState(false);
-  const exam = exams.find(e => e.id === id);
+  const exam = ctx.exams.find(e => e.id === id);
   if (!exam) return <Page title={L.exams}><T c={C.ink3}>{L.exNone}</T></Page>;
 
   const r = examReport(exam, study, today);
-  const dueN = recallStats(cards, exam.id, today).due;
+  const dueN = recallStats(cards, exam.id, today, exam.date).due;
   const subject = exam.subjectId ? subjectById.get(exam.subjectId) : undefined;
   const mine = study.filter(s => s.examId === exam.id);
   const dates = [...new Set(mine.filter(s => showDone || !s.done || s.date >= today).map(s => s.date))].sort();
   const doneCount = mine.filter(s => s.done).length;
-  const chip = r.daysLeft < 0 ? L.xOver : r.daysLeft === 0 ? L.xToday : r.daysLeft === 1 ? L.xDayLeft : L.xDaysLeft.replace('{c}', counted(r.daysLeft, 'day', L, ar));
+  // An unreadable date has no day count to show, so the chip falls back to the status word itself.
+  const chip = r.status === 'unknown' ? L.xStatus.unknown
+    : r.daysLeft < 0 ? L.xOver : r.daysLeft === 0 ? L.xToday : r.daysLeft === 1 ? L.xDayLeft : L.xDaysLeft.replace('{c}', counted(r.daysLeft, 'day', L, ar));
   const tone = {
     onTrack: { fg: C.successText, bg: C.successTint, icon: 'check' as IconName },
     ready: { fg: C.successText, bg: C.successTint, icon: 'check' as IconName },
     behind: { fg: C.warningText, bg: C.warningTint, icon: 'alert' as IconName },
     atRisk: { fg: C.warningText, bg: C.warningTint, icon: 'alert' as IconName },
     over: { fg: C.ink2, bg: C.line2, icon: 'check' as IconName },
+    unknown: { fg: C.warningText, bg: C.warningTint, icon: 'alert' as IconName },
   }[r.status];
   const nextTitle = r.next ? `${chapterTitle(r.next, exam)} · ${{ learn: L.kLearn, review: L.kReview, mock: L.kMock }[r.next.kind]}` : '';
 

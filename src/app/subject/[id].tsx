@@ -59,6 +59,7 @@ export default function SubjectDetail() {
       <Section label={L.tasksL.toUpperCase()}>
         {tasks.map((t, i) => (
           <Row key={t.id} title={t.title} sub={`${fmtDate(t.due, L)} · ${t.estimateMin} ${L.min}`} last={i === tasks.length - 1}
+            onPress={() => router.push(`/task/${t.id}`)}
             style={t.done ? { opacity: 0.55 } : undefined}
             right={
               <Btn label={L.markDoneA} accessibilityRole="checkbox" accessibilityState={{ checked: t.done }} onPress={() => toggleTask(t.id)} pressScale={0.9}

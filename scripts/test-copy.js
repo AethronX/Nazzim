@@ -1,5 +1,7 @@
 require('./register-ts');
 const assert = require('node:assert');
+const fs = require('node:fs');
+const path = require('node:path');
 const { COPY, counted } = require('../src/lib/copy.ts');
 const { en, ar } = { en: COPY.en, ar: COPY.ar };
 
@@ -63,3 +65,20 @@ assert.ok(font('body', 800, true).startsWith('IBMPlexSansArabic'), 'weight 800 c
 assert.equal(font('body', 800, false), 'Inter_800ExtraBold');
 
 console.log('all numeral-role checks passed');
+
+// ── The number must never be sold as a probability ───────────────────────────────────────────────
+//
+// Evidence completeness measures how strong the collected evidence is. It has never been calibrated against
+// a real exam result, so any phrasing that reads as "X% chance of passing" is a claim the product cannot
+// support. This check fails the build on that phrasing rather than trusting everyone to remember.
+const FORBIDDEN = [
+  'فرصة نجاح', 'احتمال نجاح', 'احتمال A', 'جاهز بنسبة', 'ستنجح بنسبة', 'فرصتك في النجاح',
+  'probability of passing', 'chance of success', 'chance of passing', 'likely to pass', 'you will pass',
+];
+{
+  const raw = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'copy.ts'), 'utf8');
+  const hay = raw.toLowerCase();
+  const hits = FORBIDDEN.filter(p => hay.includes(p.toLowerCase()));
+  assert.equal(hits.length, 0, `copy must not promise a probability of success: found ${JSON.stringify(hits)}`);
+  console.log(`no-promise guard passed — ${FORBIDDEN.length} forbidden phrasings absent from both languages`);
+}

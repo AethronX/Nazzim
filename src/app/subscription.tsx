@@ -1,126 +1,58 @@
+import { router } from 'expo-router';
 import { View } from 'react-native';
 import { Page } from '../components/Page';
-import { Btn, Icon, T } from '../components/ui';
-import { fmtPrice, planConfig, yearlySaving } from '../config/plans';
-import { useNazzim, type Tier } from '../lib/store';
+import { Button, Icon, T } from '../components/ui';
+import { useNazzim } from '../lib/store';
 
-const ORDER: Tier[] = ['free', 'plus', 'pro'];
-
-// Three plans. Pro sits on the midnight brand surface (the one dark card), Plus is outlined in Blue 500,
-// Free is a plain card. App Store Guideline 3.1.2: price, period, trial, auto-renewal and how to cancel are
-// shown before purchase, with Restore / Terms / Privacy. Purchases are not wired to StoreKit yet.
+// Pro is not purchasable yet, so this screen never offers a purchase — App Store Guideline 2.2 / 3.1.1: no
+// non-functional buy buttons, no price/renewal/restore flow before StoreKit is wired. It sets expectations
+// honestly: everything is free now, and it previews what Pro will add. When billing ships, this screen
+// becomes the paywall again (price, period, trial, auto-renewal, Restore/Terms/Privacy).
 export default function Subscription() {
-  const { C, L, ar, accent, tier, plan: billing, set, subscribe, restorePurchase, purchasesAvailable } = useNazzim();
-  const yearly = billing === 'year';
-
-  // Prices come from the plan config (remote-overridable), never from copy.
-  const priceOf = (k: Tier) => (k === 'free' ? fmtPrice(0, ar) : fmtPrice(planConfig().prices[k][yearly ? 'year' : 'month'], ar));
-  const perMonthOnYear = (k: Tier) => (k === 'free' ? '' : fmtPrice(planConfig().prices[k].year / 12, ar));
-  const selectedPaid: Tier = tier === 'free' ? 'pro' : tier;
-  const legal = L.legal.replace('{p}', `${priceOf(selectedPaid)} ${yearly ? L.perYear : L.perMonth}`);
+  const { C, L, ar, accent } = useNazzim();
+  const pro = L.tiers.pro;
 
   return (
     <Page title={L.plans} sub={L.plansSub}>
-      {/* Billing period */}
-      <View style={{ flexDirection: 'row', alignSelf: 'center', padding: 4, borderRadius: 99, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, gap: 4 }} accessibilityRole="radiogroup">
-        {(['month', 'year'] as const).map(k => {
-          const on = billing === k;
-          return (
-            <Btn key={k} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => set({ plan: k })}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 99, backgroundColor: on ? C.inv : 'transparent' }}>
-              <T w={700} s="label" c={on ? C.onInv : C.ink2}>{k === 'month' ? L.monthly : L.yearly}</T>
-              {k === 'year' && (
-                <View style={{ paddingVertical: 2, paddingHorizontal: 7, borderRadius: 99, backgroundColor: on ? accent.a1 : accent.tint }}>
-                  <T w={800} s="micro" c={on ? C.onAccent : accent.strong}>{L.save.replace('{n}', String(yearlySaving('plus')))}</T>
-                </View>
-              )}
-            </Btn>
-          );
-        })}
-      </View>
-
-      {!purchasesAvailable && (
-        <View style={{ flexDirection: 'row', gap: 10, padding: 14, borderRadius: 16, backgroundColor: C.card2, alignItems: 'flex-start' }}>
-          <Icon name="shield" size={16} color={C.ink2} stroke={2.2} />
-          <T w={600} s="caption" lh={1.5} c={C.ink2} style={{ flex: 1 }}>{L.payOff}</T>
-        </View>
-      )}
-
-      {ORDER.map(k => {
-        const t = L.tiers[k];
-        const current = tier === k;
-        const pro = k === 'pro', plus = k === 'plus';
-        const ink = pro ? C.onHero : C.ink, ink2 = pro ? C.onHero2 : C.ink2, ink3 = pro ? C.onHero3 : C.ink3;
-        const check = pro ? C.onHeroAccent : accent.fg;
-        const cta = current ? L.currentPlan : k === 'free' ? L.switchFree : (tier === 'free' ? L.trialCta : L.choose.replace('{name}', t.name));
-        return (
-          <View key={k}
-            style={{
-              borderRadius: 24, padding: 18, gap: 14,
-              backgroundColor: pro ? C.hero : C.card,
-              borderWidth: pro ? 0 : plus ? 1.5 : 1, borderColor: plus ? accent.a1 : C.line,
-              boxShadow: pro ? C.shadowHero : undefined,
-            }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <T f="display" w={700} s="title" ls={ar ? 0 : -0.5} c={ink} style={{ flex: 1 }}>{L.appName + ' ' + t.name}</T>
-              {pro && !current && (
-                <View style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 99, backgroundColor: accent.a1 }}>
-                  <T w={800} s="micro" c={C.onAccent}>{L.bestValue}</T>
-                </View>
-              )}
-              {current && (
-                <View style={{ paddingVertical: 4, paddingHorizontal: 10, borderRadius: 99, backgroundColor: pro ? C.onHeroTrack : accent.tint }}>
-                  <T w={800} s="micro" c={pro ? C.onHero : accent.strong}>{L.currentPlan}</T>
-                </View>
-              )}
-            </View>
-            <T w={600} s="label" c={ink2} style={{ marginTop: -8 }}>{t.tag}</T>
-
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-              <T num="data" w={700} s="hero" ls={-1.4} c={ink}>{priceOf(k)}</T>
-              <T w={600} s="label" c={ink3}>{k === 'free' ? t.per : yearly ? L.perYear : L.perMonth}</T>
-            </View>
-            {yearly && k !== 'free' && (
-              <T w={600} s="caption" c={pro ? C.onHeroAccent : accent.fg} style={{ marginTop: -10 }}>{L.yearNote.replace('{m}', perMonthOnYear(k))}</T>
-            )}
-
-            <View style={{ gap: 9, borderTopWidth: 1, borderTopColor: pro ? C.onHeroLine : C.line2, paddingTop: 14 }}>
-              {t.features.map(f => (
-                <View key={f} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <Icon name="check" size={15} color={check} stroke={3} />
-                  <T w={600} s="label" c={ink} style={{ flex: 1 }}>{f}</T>
-                </View>
-              ))}
-            </View>
-
-            <Btn
-              disabled={current}
-              onPress={() => { void subscribe(k, billing); }}
-              pressedBg={pro ? accent.wash : plus ? accent.strong : undefined}
-              accessibilityState={{ disabled: current, selected: current }}
-              style={{
-                padding: 15, borderRadius: 16, alignItems: 'center',
-                backgroundColor: current ? (pro ? C.onHeroTrack : C.line2) : pro ? C.onHero : plus ? accent.a1 : 'transparent',
-                borderWidth: !current && k === 'free' ? 1 : 0, borderColor: C.line,
-                boxShadow: !current && plus ? accent.glow : undefined,
-              }}>
-              <T w={800} s="label" c={current ? ink3 : pro ? accent.deep : plus ? C.onAccent : C.ink2}>{cta}</T>
-            </Btn>
+      {/* The one hero: Pro, clearly marked as coming — no price, no purchase. */}
+      <View style={{ borderRadius: 24, padding: 22, gap: 14, backgroundColor: C.hero, boxShadow: C.shadowHero }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: C.onHeroTrack, alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="crown" size={22} color={C.onHero} stroke={2.2} />
           </View>
-        );
-      })}
-
-      <T w={500} s="caption" lh={1.55} c={C.ink3} style={{ textAlign: 'center', paddingHorizontal: 8 }}>{legal}</T>
-      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 18 }}>
-        {[L.restore, L.terms, L.privacyL].map(l => (
-          <Btn key={l} accessibilityRole="link" pressScale={1} style={{ paddingVertical: 6 }}>
-            <T w={700} s="caption" c={C.ink2}>{l}</T>
-          </Btn>
-        ))}
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <T f="display" w={700} s="title" ls={ar ? 0 : -0.5} c={C.onHero}>{L.appName + ' ' + pro.name}</T>
+          </View>
+          <View style={{ paddingVertical: 5, paddingHorizontal: 12, borderRadius: 99, backgroundColor: accent.a1 }}>
+            <T w={800} s="micro" c={C.onAccent}>{L.csBadge}</T>
+          </View>
+        </View>
+        <T w={700} s="heading" lh={1.3} c={C.onHero}>{L.csTitle}</T>
+        <T w={500} s="label" lh={1.6} c={C.onHero2}>{L.csSub}</T>
       </View>
-      <Btn onPress={() => { void restorePurchase(); }} pressScale={0.98} style={{ alignItems: 'center', paddingVertical: 14 }}>
-        <T w={700} s="label" c={C.ink3}>{L.payRestore}</T>
-      </Btn>
+
+      {/* Reassurance: nothing is locked today. */}
+      <View style={{ flexDirection: 'row', gap: 12, padding: 16, borderRadius: 16, backgroundColor: C.successTint, alignItems: 'center' }}>
+        <Icon name="check" size={18} color={C.successText} stroke={3} />
+        <T w={700} s="label" lh={1.5} c={C.successText} style={{ flex: 1 }}>{L.csFreeNow}</T>
+      </View>
+
+      {/* What Pro will add, drawn from the Pro tier's own feature list. */}
+      <View style={{ gap: 12 }}>
+        <T w={800} s="micro" ls={ar ? 0 : 1.2} c={C.ink3} style={{ paddingHorizontal: 4 }}>{L.csWhat}</T>
+        <View style={{ backgroundColor: C.card, borderWidth: 1, borderColor: C.line, borderRadius: 20, padding: 18, gap: 12 }}>
+          {pro.features.map(f => (
+            <View key={f} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="sparkle" size={13} color={accent.fg} stroke={2.4} />
+              </View>
+              <T w={600} s="label" c={C.ink} style={{ flex: 1 }}>{f}</T>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <Button variant="secondary" title={L.csBack} icon="arrow" onPress={() => router.back()} />
     </Page>
   );
 }

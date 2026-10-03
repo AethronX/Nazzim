@@ -2,14 +2,15 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { Page, Section } from '../../components/Page';
-import { Btn, Card, Icon, PrimaryBtn, T } from '../../components/ui';
+import { Btn, Button, Card, EmptyState, Icon, Notice, PrimaryBtn, T } from '../../components/ui';
+import { similarity, VERIFY_THRESHOLD } from '../../engine/answer';
 import { dueCards, mastery, recallStats, type Grade } from '../../engine/recall';
 import { useAcademic } from '../../lib/academic';
 import { counted } from '../../lib/copy';
 import { relDay } from '../../lib/format';
-import { readiness } from '../../lib/exams';
+import { evidenceScore } from '../../lib/readiness';
 import { useNazzim } from '../../lib/store';
-import { font } from '../../lib/theme';
+import { font, TEXT } from '../../lib/theme';
 import { track } from '../../services/analytics';
 
 // SELF-TEST: the only screen that can raise an exam's readiness past the effort ceiling.
@@ -28,27 +29,28 @@ export default function Recall() {
   const [typed, setTyped] = useState('');
   const [revealed, setRevealed] = useState(false);
   const [correct, setCorrect] = useState(0);
+  const [confirmDel, setConfirmDel] = useState<string | null>(null);
   // Readiness as it stood when this session began — state, not a ref, so the finish screen can read it.
   const [readyAtStart, setReadyAtStart] = useState<number | null>(null);
 
-  const stats = useMemo(() => (exam ? recallStats(cards, exam.id, today) : null), [cards, exam, today]);
-  const due = useMemo(() => (exam ? dueCards(cards, exam.id, today) : []), [cards, exam, today]);
+  const stats = useMemo(() => (exam ? recallStats(cards, exam.id, today, exam.date) : null), [cards, exam, today]);
+  const due = useMemo(() => (exam ? dueCards(cards, exam.id, today, 20, exam.date) : []), [cards, exam, today]);
 
   if (!exam) return <Page title={L.rcTitle}><T c={C.ink3}>{L.exNone}</T></Page>;
 
-  const input = { fontFamily: font('body', 600, ar), fontSize: 15, color: C.ink, textAlign: ar ? 'right' : 'left' } as const;
+  const input = { fontFamily: font('body', 600, ar), fontSize: TEXT.body, color: C.ink, textAlign: ar ? 'right' : 'left' } as const;
   const list = queue ?? [];
   const card = queue ? cards.find(c => c.id === list[at]) : undefined;
   const finished = !!queue && at >= list.length;
 
   const start = () => {
-    setReadyAtStart(exam ? readiness(exam, study, today) : 0);
+    setReadyAtStart(exam ? evidenceScore(exam, study, cards, today) : 0);
     setQueue(due.map(c => c.id)); setAt(0); setCorrect(0); setTyped(''); setRevealed(false);
   };
 
   const grade = (g: Grade) => {
     if (!card) return;
-    gradeCard(card.id, g);
+    gradeCard(card.id, g, typed);
     if (g === 2) setCorrect(n => n + 1);
     const next = at + 1;
     setAt(next); setTyped(''); setRevealed(false);
@@ -56,7 +58,7 @@ export default function Recall() {
   };
 
   // ── Finished ──
-  const readyNow = readiness(exam, study, today);
+  const readyNow = evidenceScore(exam, study, cards, today);
   const gained = readyAtStart === null ? 0 : Math.max(0, readyNow - readyAtStart);
 
   if (finished) {
@@ -104,19 +106,31 @@ export default function Recall() {
             </Section>
             {/* Revealing stays locked until something is written: the commitment is the practice. */}
             <PrimaryBtn title={L.rcReveal} onPress={() => setRevealed(true)} disabled={typed.trim().length < 2} />
+            {typed.trim().length < 2 && <T w={500} s="caption" c={C.ink3} style={{ textAlign: 'center' }}>{L.rcRevealHint}</T>}
           </>
         ) : (
           <>
+            {/* Both answers side by side, so the self-grade is a comparison rather than a memory of what was typed. */}
+            <Section label={L.rcYours}>
+              <View style={{ padding: 16 }}><T w={500} s="body" lh={1.55} c={C.ink}>{typed.trim()}</T></View>
+            </Section>
             <Section label={L.rcA}>
               <View style={{ padding: 16 }}><T w={600} s="body" lh={1.55} c={C.ink2}>{card.a}</T></View>
             </Section>
-            <T w={700} s="caption" ls={ar ? 0 : 0.6} c={C.ink3} style={{ marginTop: 6, paddingHorizontal: 4 }}>{L.rcGradeQ.toUpperCase()}</T>
+            {/* Lexical matching is evidence classification, not grading. When it finds no overlap we say so
+                and still let the student grade themselves however they judge — we only state what the app
+                will be able to call that grade. */}
+            {similarity(typed, card.a) < VERIFY_THRESHOLD && (
+              <Notice tone="caution" title={L.rcCheckT} body={L.rcSelfNote} action={{ label: L.rcOverride, onPress: () => grade(2) }} />
+            )}
+            <T w={700} s="label" c={C.ink2} style={{ marginTop: 6, paddingHorizontal: 4 }} accessibilityRole="header">{L.rcGradeQ}</T>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               {([0, 1, 2] as Grade[]).map(g => {
-                const tone = [{ bg: C.dangerTint, fg: C.danger }, { bg: C.warningTint, fg: C.warningText }, { bg: C.successTint, fg: C.successText }][g];
+                const tone = [{ bg: C.dangerTint, fg: C.danger, icon: 'reset' as const }, { bg: C.warningTint, fg: C.warningText, icon: 'clock' as const }, { bg: C.successTint, fg: C.successText, icon: 'check' as const }][g];
                 return (
-                  <Btn key={g} onPress={() => grade(g)} pressScale={0.96}
-                    style={{ flex: 1, paddingVertical: 15, borderRadius: 16, backgroundColor: tone.bg, alignItems: 'center' }}>
+                  <Btn key={g} onPress={() => grade(g)} pressScale={0.96} label={L.rcGrades[g]} accessibilityHint={L.rcGradeHint[g]}
+                    style={{ flex: 1, minHeight: 64, paddingVertical: 12, borderRadius: 16, backgroundColor: tone.bg, alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <Icon name={tone.icon} size={18} color={tone.fg} stroke={2.4} />
                     <T w={700} s="label" c={tone.fg}>{L.rcGrades[g]}</T>
                   </Btn>
                 );
@@ -133,12 +147,10 @@ export default function Recall() {
   return (
     <Page title={L.rcTitle} sub={exam.subject}>
       {!stats?.total ? (
-        <Card pad={20}>
-          <T w={600} s="label" lh={1.6} c={C.ink2}>{L.rcEmpty}</T>
-          <T w={600} s="caption" lh={1.55} c={C.ink3} style={{ marginTop: 10 }}>{L.rcEmptyWhy}</T>
-        </Card>
+        <EmptyState icon="sparkle" title={L.rcEmptyT} body={`${L.rcEmpty} ${L.rcEmptyWhy}`}
+          action={{ label: L.rcAdd, onPress: () => router.push(`/recall/new?exam=${exam.id}`) }} />
       ) : (
-        <Card pad={18}>
+        <Card pad={18} tone="hero">
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
             <View style={{ flex: 1 }}>
               <T f="display" w={700} s="title">{counted(stats.total, 'card', L, ar)}</T>
@@ -148,7 +160,7 @@ export default function Recall() {
             </View>
             {stats.score !== undefined && (
               <View style={{ alignItems: 'center' }}>
-                <T f="display" w={800} s="display" c={C.ink}>{Math.round(stats.score * 100)}%</T>
+                <T num="data" w={800} s="display" c={C.ink}>{`${Math.round(stats.score * 100)}%`}</T>
                 <T w={600} s="micro" c={C.ink3}>{L.rdRecall}</T>
               </View>
             )}
@@ -156,8 +168,9 @@ export default function Recall() {
         </Card>
       )}
 
+      {/* One primary action: practise when something is due, otherwise adding a card is the next step. */}
       {!!stats?.due && <PrimaryBtn title={L.rcOpen} icon="sparkle" onPress={start} />}
-      <PrimaryBtn title={L.rcAdd} icon="plus" onPress={() => router.push(`/recall/new?exam=${exam.id}`)} />
+      {!!stats?.total && <Button variant={stats.due ? 'tertiary' : 'secondary'} title={L.rcAdd} icon="plus" onPress={() => router.push(`/recall/new?exam=${exam.id}`)} />}
 
       {!!stats?.total && (
         <Section label={L.rcTitle}>
@@ -165,7 +178,7 @@ export default function Recall() {
             const m = mastery(c);
             const dot = m === undefined ? C.line2 : m >= 0.65 ? C.successText : m >= 0.5 ? C.warningText : C.danger;
             return (
-              <View key={c.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderBottomWidth: i === arr.length - 1 ? 0 : 1, borderBottomColor: C.line }}>
+              <View key={c.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderBottomWidth: i === arr.length - 1 ? 0 : 1, borderBottomColor: C.line2 }}>
                 <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: dot }} />
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <T w={600} s="label" numberOfLines={2}>{c.q}</T>
@@ -173,8 +186,13 @@ export default function Recall() {
                     {c.chapter < 0 ? L.exAll : exam.chapters[c.chapter] ?? ''}
                   </T>
                 </View>
-                <Btn label={L.rcDelete} onPress={() => deleteCard(c.id)} pressScale={0.9} style={{ padding: 6 }}>
-                  <Icon name="trash" size={16} color={C.ink3} />
+                {/* Two taps: a card is the student's own writing, and one stray tap should not erase it. */}
+                <Btn label={confirmDel === c.id ? L.rcDeleteConfirm : L.rcDelete} pressScale={0.9}
+                  onPress={() => { if (confirmDel === c.id) { deleteCard(c.id); setConfirmDel(null); } else setConfirmDel(c.id); }}
+                  style={{ minWidth: 44, minHeight: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8, backgroundColor: confirmDel === c.id ? C.dangerTint : 'transparent' }}>
+                  {confirmDel === c.id
+                    ? <T w={700} s="caption" c={C.danger}>{L.rcDeleteConfirm}</T>
+                    : <Icon name="trash" size={16} color={C.ink3} />}
                 </Btn>
               </View>
             );

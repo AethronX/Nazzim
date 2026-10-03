@@ -4,42 +4,72 @@ import { ProgressRing, SubjectTile } from '../../components/Academic';
 import { Timeline } from '../../components/Agenda';
 import { ActivationChecklist, StreakChip, WeeklyRecapCard } from '../../components/Habits';
 import { Avatar } from '../../components/Page';
-import { Btn, Card, Icon, SectionHeader, T } from '../../components/ui';
-import { ai } from '../../ai';
-import { agendaFor, overallReadiness, semesterProgress } from '../../engine/academic';
-import { hours, reasonText, useAcademic } from '../../lib/academic';
-import { addDays } from '../../lib/exams';
+import { Btn, Button, Card, EmptyState, Icon, SectionHeader, T } from '../../components/ui';
+import { agendaFor } from '../../engine/academic';
+import { assessBehind } from '../../engine/rescue';
+import { hours, useAcademic } from '../../lib/academic';
+import { daysBetween } from '../../lib/exams';
 import { fmtDateLine, relDay } from '../../lib/format';
 import { useChrome } from '../../lib/layout';
+import { evidenceDetail, nextEvidence } from '../../lib/readiness';
 import { useNazzim } from '../../lib/store';
 
 // TODAY answers one question: "What should I do right now?"
-// One primary action (the next move), then the context that explains it: progress, load, deadline, the day's plan.
+//
+// It used to answer a different one — "what is the next thing on my calendar?" — by calling
+// `recommendNextAction`, which ranks by exam proximity and overdue-ness and knows nothing about evidence.
+// Executed against a student who had ticked every block with zero focused minutes, four days from an exam at
+// 32% evidence, it returned `{kind:'clear'}`: *you're done for today*. That is a to-do list's answer.
+//
+// The hero now reads straight from the evidence model: the nearest exam, how complete its evidence is, the
+// single highest-value gap across every upcoming exam, and one button that goes and closes it.
 export default function Today() {
-  const { C, L, ar, accent, me, today, startFocusOn, toggleTask, setQuick } = useNazzim();
+  const { C, L, ar, accent, me, today, cards, startFocusOn, setQuick } = useNazzim();
   const { headerTop, scrollBottom } = useChrome();
   const { ctx, chapterTitle, subjectById, studyStart } = useAcademic();
 
-  const next = ai.recommendNextAction(ctx, chapterTitle);
-  const behind = ai.assessBehind(ctx);
   const agenda = agendaFor(ctx, today, { exam: L.kExam, task: L.kTaskB, kind: k => ({ learn: L.kLearn, review: L.kReview, mock: L.kMock })[k] }, chapterTitle, studyStart);
-  const load = ai.analyzeAcademicLoad(ctx, today, 7);
-  // One headline number, and it is the one that matters: readiness for the exams still ahead. With no exam
-  // to be ready for there is nothing to be ready *for*, so we show task completion and say so.
-  const ready = overallReadiness(ctx);
-  const headline = ready ?? semesterProgress(ctx);
-  const headlineLabel = ready === undefined ? L.glanceNoExam : L.glanceSemester;
-  const hour = new Date().getHours();
-  const greet = L.greetings[hour < 12 ? 0 : hour < 18 ? 1 : 2];
-
-  const loadColor = { light: C.successText, moderate: C.warningText, heavy: C.danger }[load.level];
-  const loadIdx = { light: 0, moderate: 1, heavy: 2 }[load.level];
-
-  const nextSubject = 'subjectId' in next && next.subjectId ? subjectById.get(next.subjectId) : undefined;
   const blocks = agenda.filter(a => a.kind !== 'exam');
   const doneN = blocks.filter(b => b.done).length;
   const leftMin = blocks.filter(b => !b.done).reduce((a, b) => a + b.minutes, 0);
+  const hour = new Date().getHours();
+  const greet = L.greetings[hour < 12 ? 0 : hour < 18 ? 1 : 2];
+
+  // The exam the student is closest to sitting, and the one gap worth their next hour.
   const nextExam = ctx.exams.filter(e => e.date >= today).sort((a, b) => a.date.localeCompare(b.date))[0];
+  const detail = nextExam ? evidenceDetail(nextExam, ctx.sessions, cards, today) : null;
+  const target = nextEvidence(ctx.exams, ctx.sessions, cards, today);
+  const subject = nextExam?.subjectId ? subjectById.get(nextExam.subjectId) : undefined;
+  const daysLeft = nextExam ? daysBetween(today, nextExam.date) : NaN;
+
+  // The block the suggested action belongs to, so the button can start it rather than just point at it.
+  const targetSession = target && target.chapter >= -1
+    ? ctx.sessions.find(s => s.examId === target.examId && s.chapter === target.chapter && !s.done && !s.orphan)
+    : undefined;
+  const targetExam = target ? ctx.exams.find(e => e.id === target.examId) : undefined;
+  const targetChapter = target && targetExam
+    ? (target.chapter < 0 ? L.exAll : targetExam.chapters[target.chapter] ?? '')
+    : '';
+  const headline = !target ? L.evReady
+    : target.kind === 'study' ? L.evStudy.replace('{c}', targetChapter)
+    : target.kind === 'focus' ? L.evFocus.replace('{c}', targetChapter)
+    : target.kind === 'recall' ? L.evRecall.replace('{c}', targetChapter)
+    : target.kind === 'mock' ? L.evMock
+    : L.evReady;
+
+  const act = () => {
+    if (!target || !targetExam) return;
+    if (target.kind === 'recall') { router.push(`/recall/${target.examId}`); return; }
+    if (targetSession) {
+      startFocusOn(`${targetChapter}${subject ? ' · ' + targetExam.subject : ''}`, { kind: 'session', id: targetSession.id }, targetSession.minutes);
+      return;
+    }
+    router.push(`/exam/${target.examId}`);
+  };
+
+  // Triage is offered on today's real pressure, measured against the student's own capacity — and now also
+  // against the evidence gap on the nearest exam. One forgotten ten-minute task no longer qualifies.
+  const behind = assessBehind(ctx, 7, detail?.score);
 
   return (
     <View style={{ flex: 1, direction: ar ? 'rtl' : 'ltr' }}>
@@ -58,7 +88,6 @@ export default function Today() {
             ) : (
               <T f="display" w={700} s="title" ls={ar ? 0 : -0.8} style={{ marginTop: 2 }} accessibilityRole="header" numberOfLines={1}>{greet}</T>
             )}
-            {/* Where the day stands, in one line */}
             {!!blocks.length && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
                 <View style={{ flexDirection: 'row', gap: 3 }}>
@@ -72,66 +101,80 @@ export default function Today() {
           </View>
           <StreakChip />
           <Btn label={L.qaTitle} onPress={() => setQuick(true)} pressScale={0.94}
-            style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
+            style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="plus" size={18} color={accent.strong} stroke={2.6} />
           </Btn>
           <Btn label={L.profile} onPress={() => router.push('/profile')} pressScale={0.94}>
-            <Avatar name={me.name} size={40} />
+            <Avatar name={me.name} size={44} />
           </Btn>
         </View>
 
-        {/* YOUR NEXT MOVE */}
-        <View style={{ backgroundColor: C.card, borderRadius: 24, borderWidth: 1, borderColor: C.line, padding: 18, gap: 14, boxShadow: C.shadowSoft }}>
-          <T w={800} s="micro" ls={ar ? 0 : 1.2} c={C.ink3}>{L.nextMove}</T>
-          {next.kind === 'session' || next.kind === 'task' ? (
-            <>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <SubjectTile subject={nextSubject} size={44} />
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  {!!nextSubject && <T w={700} s="caption" c={C.ink3}>{nextSubject.name}</T>}
-                  <T f="display" w={700} s="heading" lh={1.25} ls={ar ? 0 : -0.4} style={{ marginTop: 1 }}>{next.title}</T>
+        {/* THE HERO: exam → evidence → next evidence → one action */}
+        {nextExam && detail ? (
+          <Card tone="hero" pad={18} style={{ gap: 16 }}>
+            {/* 1. which exam, and when */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <SubjectTile subject={subject} size={40} />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <T f="display" w={700} s="heading" numberOfLines={1}>{nextExam.subject}</T>
+                <T w={600} s="caption" c={Number.isFinite(daysLeft) && daysLeft <= 3 ? C.warningText : C.ink3} style={{ marginTop: 1 }}>
+                  {L.glanceExam} · {relDay(nextExam.date, today, L, ar)}
+                </T>
+              </View>
+            </View>
+
+            {/* 2. evidence completeness — named honestly, and tappable to its own explanation */}
+            <Btn pressScale={0.99} onPress={() => router.push(`/readiness/${nextExam.id}`)}
+              accessibilityLabel={`${L.glanceSemester} ${detail.score}% · ${L.evWhy}`}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+              <ProgressRing value={detail.score} size={52} stroke={5} label="" />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <T w={600} s="caption" c={C.ink3}>{L.glanceSemester}</T>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+                  <T num="data" f="display" w={800} s="display" c={accent.fg}>{`${detail.score}%`}</T>
+                  <T w={600} s="caption" c={accent.fg} style={{ textDecorationLine: 'underline' }}>{L.evWhy}</T>
                 </View>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <Icon name="clock" size={15} color={C.ink3} />
-                  <T w={600} s="caption" c={C.ink2}>{`${next.minutes} ${L.min}`}</T>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <Icon name={next.reason.code === 'overdue' ? 'alert' : 'calendar'} size={15} color={next.reason.code === 'overdue' ? C.warningText : C.ink3} />
-                  <T w={600} s="caption" c={next.reason.code === 'overdue' ? C.warningText : C.ink2}>{reasonText(next.reason, L)}</T>
-                </View>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Btn pressedBg={accent.strong}
-                  onPress={() => startFocusOn(`${next.title}${nextSubject ? ' · ' + nextSubject.name : ''}`, { kind: next.kind, id: next.id }, next.minutes)}
-                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12, backgroundColor: accent.a1, boxShadow: accent.glow }}>
-                  <Icon name="play" size={14} color={C.onAccent} />
-                  <T w={700} s="label" c={C.onAccent}>{L.startSession}</T>
-                </Btn>
-                {next.kind === 'task' && (
-                  <Btn label={L.markDoneA} onPress={() => toggleTask(next.id)}
-                    style={{ width: 50, borderRadius: 12, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name="check" size={18} color={C.ink2} stroke={2.4} />
-                  </Btn>
-                )}
-              </View>
-            </>
-          ) : (
-            <Btn pressScale={0.99} onPress={() => next.kind === 'addExam' && router.push('/planner')} disabled={next.kind !== 'addExam'}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: next.kind === 'clear' ? C.successTint : accent.tint, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name={next.kind === 'clear' ? 'check' : 'plus'} size={20} color={next.kind === 'clear' ? C.successText : accent.fg} stroke={2.4} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <T f="display" w={700} s="heading">{next.kind === 'clear' ? L.nextClear : L.nextAdd}</T>
-                <T w={500} s="caption" c={C.ink2} style={{ marginTop: 2 }}>{next.kind === 'clear' ? L.nextClearSub : L.nextAddSub}</T>
+                {/* Context, not a prediction: what this much evidence means and what moves it. */}
+                <T w={500} s="caption" lh={1.5} c={C.ink2}>{L.evBand[detail.score < 35 ? 0 : detail.score < 70 ? 1 : 2]}</T>
               </View>
             </Btn>
-          )}
-        </View>
 
-        {/* Calm nudge into Rescue Mode when work has piled up */}
+            {/* 3. the single next piece of evidence */}
+            <View style={{ height: 1, backgroundColor: C.line }} />
+            <View style={{ gap: 6 }}>
+              <T w={800} s="micro" ls={ar ? 0 : 1.2} c={C.ink3}>{L.evNext}</T>
+              <T f="display" w={700} s="heading" lh={1.3} ls={ar ? 0 : -0.3}>{headline}</T>
+              {!target && <T w={500} s="caption" c={C.ink2} lh={1.5}>{L.evDayDone}</T>}
+            </View>
+
+            {/* 4. one action */}
+            {!!target && (
+              <Button title={L.evStart} icon={target.kind === 'recall' ? 'sparkle' : 'play'} onPress={act} hint={headline} />
+            )}
+          </Card>
+        ) : (
+          <Card tone="hero" pad={18}>
+            <Btn pressScale={0.99} onPress={() => router.push('/exam/new')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="plus" size={20} color={accent.fg} stroke={2.4} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <T f="display" w={700} s="heading">{L.evNoExam}</T>
+                <T w={500} s="caption" c={C.ink2} lh={1.5} style={{ marginTop: 2 }}>{L.evNoExamSub}</T>
+              </View>
+            </Btn>
+          </Card>
+        )}
+
+        <WeeklyRecapCard />
+
+        {/* Today's schedule */}
+        <SectionHeader title={L.todaySchedule} action={{ label: L.plan, onPress: () => router.push('/plan') }} />
+        {agenda.length ? <Timeline items={agenda} /> : (
+          <EmptyState icon="calendar" title={L.emptyTodayT} body={L.emptyTodayS} action={{ label: L.qaTitle, onPress: () => setQuick(true) }} />
+        )}
+
+        {/* Triage, last and only when today is genuinely overcommitted. No blame in the copy. */}
         {behind.behind && (
           <Btn pressScale={0.99} onPress={() => router.push('/rescue')} accessibilityLabel={L.rescueMenu}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, backgroundColor: C.warningTint }}>
@@ -140,9 +183,7 @@ export default function Today() {
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <T w={700} s="label" c={C.warningText}>{L.behindTitle}</T>
-              <T w={500} s="caption" c={C.warningText} style={{ marginTop: 1 }}>
-                {behind.overdue ? L.behindOverdue.replace('{n}', String(behind.overdue)) : L.behindLoad}
-              </T>
+              <T w={500} s="caption" c={C.warningText} style={{ marginTop: 1 }}>{L.behindLoad}</T>
             </View>
             <View style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 99, backgroundColor: C.card }}>
               <T w={700} s="caption" c={C.warningText}>{L.rebuild}</T>
@@ -150,46 +191,7 @@ export default function Today() {
           </Btn>
         )}
 
-        <WeeklyRecapCard />
         <ActivationChecklist />
-
-        {/* At a glance: three numbers, one card, each opens its detail */}
-        <Card pad={0}>
-          <View style={{ flexDirection: 'row' }}>
-            <Btn pressScale={0.98} onPress={() => router.push(nextExam ? `/readiness/${nextExam.id}` : '/progress')} label={`${headlineLabel} ${headline}%`} style={{ flex: 1, padding: 14, gap: 6, alignItems: 'flex-start' }}>
-              <T w={600} s="caption" c={C.ink3} numberOfLines={1}>{headlineLabel}</T>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <ProgressRing value={headline} size={26} stroke={3.5} label="" />
-                <T num="data" w={700} s="heading">{`${headline}%`}</T>
-              </View>
-            </Btn>
-            <View style={{ width: 1, backgroundColor: C.line2, marginVertical: 12 }} />
-            <Btn pressScale={0.98} onPress={() => router.push('/plan')} style={{ flex: 1, padding: 14, gap: 6, alignItems: 'flex-start' }}>
-              <T w={600} s="caption" c={C.ink3}>{L.glanceWeek}</T>
-              <T f="display" w={700} s="heading" c={loadColor}>{L.loadLevels[loadIdx]}</T>
-              <T w={600} s="caption" c={C.ink3}>{hours(load.total, ar)}</T>
-            </Btn>
-            <View style={{ width: 1, backgroundColor: C.line2, marginVertical: 12 }} />
-            <Btn pressScale={0.98} disabled={!nextExam} onPress={() => nextExam && router.push(`/exam/${nextExam.id}`)} style={{ flex: 1.15, padding: 14, gap: 6, alignItems: 'flex-start' }}>
-              <T w={600} s="caption" c={C.ink3}>{L.glanceExam}</T>
-              <T w={700} s="label" numberOfLines={1}>{nextExam ? nextExam.subject : L.glanceNone}</T>
-              {!!nextExam && <T w={700} s="caption" c={nextExam.date <= addDays(today, 3) ? C.warningText : accent.fg}>{relDay(nextExam.date, today, L, ar)}</T>}
-            </Btn>
-          </View>
-        </Card>
-
-        {/* Today's schedule as a timeline */}
-        <SectionHeader title={L.todaySchedule} action={{ label: L.plan, onPress: () => router.push('/plan') }} />
-        {agenda.length ? <Timeline items={agenda} /> : (
-          <Card style={{ alignItems: 'center', gap: 8, paddingVertical: 22 }}>
-            <Icon name="calendar" size={24} color={accent.fg} />
-            <T w={700} s="body">{L.emptyTodayT}</T>
-            <T w={500} s="label" c={C.ink3} style={{ textAlign: 'center', maxWidth: 280 }}>{L.emptyTodayS}</T>
-            <Btn onPress={() => setQuick(true)} style={{ marginTop: 6, paddingVertical: 9, paddingHorizontal: 16, borderRadius: 99, backgroundColor: accent.tint }}>
-              <T w={700} s="label" c={accent.strong}>{L.qaTitle}</T>
-            </Btn>
-          </Card>
-        )}
       </ScrollView>
     </View>
   );

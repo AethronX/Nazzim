@@ -18,7 +18,9 @@ export const DEFAULT_PLAN_CONFIG: PlanConfig = {
   trialDays: 7,
   prices: { plus: { month: 4.99, year: 29.99 }, pro: { month: 9.99, year: 59.99 } },
   limits: {
-    free: { activeExams: 2, insights: 1 },
+    // MVP: Pro is not purchasable yet, so the free tier is unlimited — no student is pushed to a paywall that
+    // cannot complete. When Pro ships with real StoreKit billing, restore the free limit here (remote config).
+    free: { activeExams: Infinity, insights: 3 },
     plus: { activeExams: Infinity, insights: 3 },
     pro: { activeExams: Infinity, insights: 3 },
   },

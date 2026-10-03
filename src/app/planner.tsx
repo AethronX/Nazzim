@@ -10,7 +10,7 @@ import { hours, useAcademic } from '../lib/academic';
 import type { Copy } from '../lib/copy';
 import { fmtDate, relDay } from '../lib/format';
 import { useNazzim } from '../lib/store';
-import { font } from '../lib/theme';
+import { font, TEXT } from '../lib/theme';
 
 // SMART PLANNER: an action engine, not a chat. One sentence → a concrete plan with its reasons → one tap adds it.
 export default function Planner() {
@@ -41,7 +41,7 @@ export default function Planner() {
       <View style={{ backgroundColor: C.card, borderRadius: 20, borderWidth: 1.5, borderColor: accent.a1, padding: 6 }}>
         <TextInput value={text} onChangeText={setText} placeholder={L.plPh} placeholderTextColor={C.ink3} multiline autoFocus={!q}
           onSubmitEditing={() => run()} blurOnSubmit returnKeyType="go" accessibilityLabel={L.plTitle}
-          style={{ fontFamily: font('body', 600, ar), fontSize: 15.5, lineHeight: 22, color: C.ink, minHeight: 64, padding: 12, textAlign: ar ? 'right' : 'left', textAlignVertical: 'top' }} />
+          style={{ fontFamily: font('body', 600, ar), fontSize: TEXT.body, lineHeight: 22, color: C.ink, minHeight: 64, padding: 12, textAlign: ar ? 'right' : 'left', textAlignVertical: 'top' }} />
       </View>
       <PrimaryBtn title={L.plRun} icon="sparkle" disabled={!text.trim()} onPress={() => run()} />
 

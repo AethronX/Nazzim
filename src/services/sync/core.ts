@@ -2,6 +2,7 @@
 // one JSON document per entity, stamped with server time. A sync is: push local changes (diff against the last
 // synced snapshot), then pull rows changed on the server since the last cursor. Same id → last write wins.
 import type { Exam, Subject, Task } from '../../domain/types';
+import { checkCard, checkExam, checkSession, checkSubject, checkTask, type Check } from '../../domain/validate';
 import type { Card } from '../../engine/recall';
 import type { StudySession } from '../../lib/exams';
 
@@ -53,10 +54,23 @@ export function afterPush(snap: Snapshot, p: Push): Snapshot {
   return next;
 }
 
+const CHECKS: Record<Collection, (v: unknown) => Check<{ id: string }>> = {
+  subjects: checkSubject, tasks: checkTask, exams: checkExam, study_sessions: checkSession, cards: checkCard,
+};
+
+export type Quarantined = { collection: Collection; id?: string; reason: string };
+
 // Apply rows pulled from the server: deleted rows leave, others replace or join local ones.
+//
+// Every incoming row is validated first. A row that can be repaired (minutes stored as a string, a focus
+// total above what the block planned) is repaired and applied; a row that cannot (no usable exam date, no
+// chapters at all) is QUARANTINED — set aside with a reason, so one corrupt row cannot take the rest of the
+// sync down with it, and nothing unvalidated is cast into state. It stays on the server untouched and is
+// re-examined on the next pull, so a later app version can rescue it.
 export function applyPull(local: LocalAcademic, snap: Snapshot, rows: Record<Collection, RemoteRow[]>, focus: RemoteFocus[]):
-  { local: LocalAcademic; snap: Snapshot; changed: boolean } {
+  { local: LocalAcademic; snap: Snapshot; changed: boolean; quarantined: Quarantined[] } {
   const next = structuredCloneSafe(snap);
+  const quarantined: Quarantined[] = [];
   let changed = false;
   const out: LocalAcademic = { ...local, focusLog: { ...local.focusLog } };
   for (const c of COLLECTIONS) {
@@ -68,16 +82,24 @@ export function applyPull(local: LocalAcademic, snap: Snapshot, rows: Record<Col
         if (map.delete(r.id)) changed = true;
         delete next[c][r.id];
       } else {
-        const text = JSON.stringify(r.data);
-        if (JSON.stringify(map.get(r.id)) !== text) { map.set(r.id, r.data as { id: string }); changed = true; }
+        const checked = CHECKS[c](r.data);
+        if (!checked.ok) {
+          quarantined.push({ collection: c, ...(typeof r.id === 'string' ? { id: r.id } : {}), reason: checked.reason });
+          continue; // leave the cursor to re-offer it; never record it as agreed with the server
+        }
+        const text = JSON.stringify(checked.value);
+        if (JSON.stringify(map.get(r.id)) !== text) { map.set(r.id, checked.value); changed = true; }
         next[c][r.id] = text;
       }
     }
     const list = [...map.values()];
+    // One branch per collection. `cards` used to fall through to the task list, which replaced a student's
+    // tasks with their flashcards the first time a second device pulled cards down.
     if (c === 'study_sessions') out.study = (list as StudySession[]).sort((a, b) => a.date.localeCompare(b.date));
     else if (c === 'exams') out.exams = (list as Exam[]).sort((a, b) => a.date.localeCompare(b.date));
     else if (c === 'subjects') out.subjects = list as Subject[];
-    else out.tasks = list as Task[];
+    else if (c === 'tasks') out.tasks = list as Task[];
+    else if (c === 'cards') out.cards = list as Card[];
   }
   for (const f of focus) {
     // Focus minutes only grow on a device; keep the larger value so two devices never lose time.
@@ -85,7 +107,7 @@ export function applyPull(local: LocalAcademic, snap: Snapshot, rows: Record<Col
     if (out.focusLog[f.day] !== m) { out.focusLog[f.day] = m; changed = true; }
     next.focus[f.day] = f.minutes;
   }
-  return { local: out, snap: next, changed };
+  return { local: out, snap: next, changed, quarantined };
 }
 
 // Newest server timestamp seen; the next pull asks for rows after it (minus a small overlap).

@@ -1,7 +1,11 @@
-# The readiness model
+# The evidence model
 
-Readiness is the one number Nazzim asks a student to trust. This document says exactly how it is produced,
-why it is built this way, and what would break it.
+Evidence completeness is the one number Nazzim asks a student to trust. This document says exactly how it is
+produced, why it is built this way, and what would break it.
+
+> **It is not a prediction.** The number describes how strong the evidence is that the student is prepared.
+> It has never been calibrated against a real exam result, so the interface must never phrase it as a chance
+> of passing. `scripts/test-copy.js` fails the build on that phrasing.
 
 ## The problem it was built to fix
 
@@ -19,7 +23,10 @@ for self-deception, and the failure would surface on exam day, where it cannot b
 
 ## The rule
 
-> **A tick is a claim. Readiness is the evidence for it.**
+> **A tick is a claim. Evidence completeness is the evidence for it.**
+
+The identifiers `readinessDetail()`, `readiness()` and the `/readiness/[id]` route keep their names for now:
+renaming them is a mechanical change across the app and belongs with the Today rebuild, not here.
 
 Three independent pieces of evidence, each harder to fake than the last:
 
@@ -29,32 +36,61 @@ Three independent pieces of evidence, each harder to fake than the last:
 | **Effort** | `focusedMin` written by the focus timer when the session ends | that time was actually spent |
 | **Recall** | a self-test the student wrote, answered in writing, then graded | that they can retrieve it |
 
-Each chapter's score is `max(coverage × ceiling, recall × 0.9) × decay`, and the ceiling is what caps the
-whole thing:
+Recall carries a second input, `q`: how much of the chapter was actually tested. Breadth of testing and
+quality of testing are different things, and conflating them is what let four cards stand in for a syllabus.
 
 ```
-ceiling = WEAK_CEILING                                      // 0.35 — ticked, nothing more
-        + (EFFORT_CEILING - WEAK_CEILING) × effort          // → 0.70 with the planned minutes focused
-        + (1 - EFFORT_CEILING) × recall                     // → 1.00 only with proven recall
+covEff = max(cov, q × r)                      // demonstrated recall counts as coverage, weighted by breadth
+study  = covEff × (W + (E − W) × eff)         // 0 … 0.70 — identical to the previous formula when q = 0
+m      = 1 + q × (r − R_NEUTRAL) / R_NEUTRAL  // the directional term
+gated  = study × clamp(m, PENALTY_MIN, 1)     // ≤ study: recall can only REDUCE the study evidence here
+bonus  = q × max(0, r − R_NEUTRAL) / (1 − R_NEUTRAL) × (1 − E)   // only strong recall buys the top band
+score  = clamp01(gated + bonus) × decay
 ```
+
+`clamp(m, …, 1)` is the whole point. The previous formula combined the two paths with `max()`, so recall
+could only ever raise the number: executing it showed a chapter worth 64% rising to **69%** when the student
+pressed *forgot*. The app rewarded proving you could not remember. Now the multiplier bites below
+`R_NEUTRAL` and the reward for strong recall lives in a separate term that failure cannot reach.
+
+`R_NEUTRAL` must equal the *almost* rung of `mastery()`. "Almost" is the grade that settles nothing, so it
+has to be the grade that moves nothing; if the two constants drift apart, answering "almost" silently
+becomes a penalty. `scripts/test-evidence.js` asserts they are equal.
 
 Measured on the same four-chapter exam as above:
 
-| What the student did | New score |
+| What the student did | Score |
 | --- | --- |
 | Tapped done, zero minutes | **32%** |
-| Tapped done, focused the full planned minutes | 64% |
-| …and proved recall on every chapter | 92% |
-| …and only half-recalled them | 78% |
+| Tapped done, spent the full planned minutes in focus | 64% |
+| …then pressed *forgot* on every chapter | **16%** |
+| …then pressed *almost* | 64% |
+| …then proved recall on three cards per chapter | 84% |
+| Four cards, eight taps, no study at all | **2%** *(was 66%)* |
 
-`scripts/test-recall.js` asserts these relationships rather than the exact numbers, so the constants can be
-tuned without the guarantees quietly lapsing.
+`scripts/test-evidence.js` asserts the ordering `forgot ≤ none ≤ almost ≤ knew` across the whole grid of
+coverage and effort, rather than the exact numbers, so the constants can be tuned without the guarantees
+quietly lapsing. It also asserts that a student with no cards scores exactly what they scored before — the
+property the migration rests on.
 
 ## Decisions worth knowing
 
-**Recall stands on its own.** A chapter with proven recall scores at least `recall × 0.9` even if no session
-was ever ticked. A student who revises from a textbook and then demonstrates they can recall the chapter *is*
-ready for it. Tying the score only to our own timer would have rewarded opening the app over studying.
+**Recall stands on its own, in proportion to breadth.** A chapter with demonstrated recall earns coverage
+(`q × r`) even if no session was ever ticked: a student who revises from a textbook and then demonstrates
+they can recall the chapter has evidence for it, and tying the score only to our own timer would reward
+opening the app over studying. But `q` is what keeps that honest — one card gives `q = 1/3`, so the
+textbook route needs three cards per chapter, not one.
+
+**Self-reported and corroborated evidence are different.** The student types their answer before the reveal.
+`src/engine/answer.ts` folds both strings (Arabic diacritics, alef and ya forms, ta-marbuta, digit systems)
+and takes a Dice coefficient over the tokens. This is **lexical classification, never semantic grading**: a
+correct Arabic answer worded differently will score low, so it never blocks the student, never contradicts
+them, and never changes the grade they chose. Its only effect is that a claimed *knew it* with no overlap is
+recorded as `self` — scored as *almost*, and worth half weight toward `q`. A grade of *forgot* or *almost* is
+always taken at face value: nobody games a self-test downwards.
+
+**Nothing is ever fully mastered.** `mastery()` caps at 0.84. Repeated success on one question is not
+certainty about a chapter, and a number that can reach 100% invites being read as a guarantee.
 
 **Confidence no longer feeds the score.** "Easy" is a feeling, and feelings are exactly what retrieval
 practice exists to correct. Confidence still shapes the *plan* — Hard adds a review tomorrow, Easy drops one

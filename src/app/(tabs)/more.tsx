@@ -12,7 +12,8 @@ const URLS = { support: extra.supportUrl ?? 'https://nazzim.app/support' };
 
 // MORE: who you are, what's coming up, and everything that isn't a daily action.
 export default function More() {
-  const { C, L, ar, me, tier, exams, today, account, syncState } = useNazzim();
+  const { C, L, ar, me, tier, exams, tasks, today, account, syncState } = useNazzim();
+  const openTasks = tasks.filter(x => !x.done).length;
   const { headerTop, scrollBottom } = useChrome();
   const upcoming = exams.filter(e => e.date > today).slice(0, 3);
 
@@ -44,6 +45,7 @@ export default function More() {
           <Row icon="crown" title={L.plans} sub={L.tiers[tier].name} onPress={() => router.push('/subscription')} last />
         </Section>
         <Section label={L.secStudy}>
+          <Row icon="check" title={L.tasksTitle} sub={openTasks ? L.tkOpenN.replace('{n}', String(openTasks)) : undefined} onPress={() => router.push('/tasks')} />
           <Row icon="chart" title={L.progressMenu} onPress={() => router.push('/progress')} />
           <Row icon="reset" title={L.rescueMenu} onPress={() => router.push('/rescue')} last />
         </Section>

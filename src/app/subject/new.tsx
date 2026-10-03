@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { GRADES, SUBJECT_COLOR_KEYS, SUBJECT_ICONS, SubjectTile } from '../../components/Academic';
 import { Page, Section } from '../../components/Page';
-import { Btn, Icon, T } from '../../components/ui';
+import { Btn, Icon, PrimaryBtn, T } from '../../components/ui';
 import type { SubjectColor, SubjectIcon } from '../../domain/types';
 import { useNazzim } from '../../lib/store';
 import { font, swatch } from '../../lib/theme';
@@ -79,10 +79,7 @@ export default function NewSubject() {
         </View>
       </Section>
 
-      <Btn onPress={create} disabled={!ok} pressedBg={accent.strong}
-        style={{ padding: 16, borderRadius: 16, alignItems: 'center', backgroundColor: ok ? accent.a1 : C.line2, boxShadow: ok ? accent.glow : undefined }}>
-        <T w={800} s="body" c={ok ? C.onAccent : C.ink3}>{L.create}</T>
-      </Btn>
+      <PrimaryBtn title={L.create} onPress={create} disabled={!ok} />
     </Page>
   );
 }

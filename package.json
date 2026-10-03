@@ -40,7 +40,7 @@
     "lint": "expo lint",
     "test:engine": "node scripts/test-exams.js",
     "build:web": "expo export --platform web",
-    "test": "node scripts/test-exams.js && node scripts/test-engine.js && node scripts/test-rescue.js && node scripts/test-planner.js && node scripts/test-exam.js && node scripts/test-insights.js && node scripts/test-habits.js && node scripts/test-recall.js && node scripts/test-copy.js && node scripts/test-design.js && node scripts/test-sync.js && node scripts/test-contrast.js && node scripts/test-palette.js && node scripts/test-release.js",
+    "test": "node scripts/test-exams.js && node scripts/test-engine.js && node scripts/test-rescue.js && node scripts/test-planner.js && node scripts/test-exam.js && node scripts/test-insights.js && node scripts/test-habits.js && node scripts/test-recall.js && node scripts/test-evidence.js && node scripts/test-answer.js && node scripts/test-next-evidence.js && node scripts/test-integrity.js && node scripts/test-focus-integrity.js && node scripts/test-tasks.js && node scripts/test-copy.js && node scripts/test-design.js && node scripts/test-ui-system.js && node scripts/test-sync.js && node scripts/test-contrast.js && node scripts/test-palette.js && node scripts/test-release.js",
     "publish": "eas update --branch preview",
     "publish:prod": "eas update --branch production"
   },

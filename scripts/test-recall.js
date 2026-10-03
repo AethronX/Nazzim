@@ -14,7 +14,7 @@ assert.equal(R.mastery(c), undefined);
 assert.equal(R.chapterRecall([c], 'e1', 0), undefined, 'never attempted → no recall score');
 
 // Knowing it pushes the card out; forgetting brings it back tomorrow and resets the streak.
-const knew = R.review(c, 2, today, exam.date);
+const knew = R.review(c, 2, today, exam.date, 'verified');
 assert.ok(knew.due > today && knew.reps === 1);
 const forgot = R.review(knew, 0, today, exam.date);
 assert.equal(forgot.due, '2026-10-02');
@@ -23,17 +23,17 @@ assert.ok(forgot.ease < knew.ease, 'forgetting lowers ease');
 
 // Intervals never jump past the exam.
 let far = card(2, 0);
-for (let i = 0; i < 6; i++) far = R.review(far, 2, today, exam.date);
+for (let i = 0; i < 6; i++) far = R.review(far, 2, today, exam.date, 'verified');
 assert.ok(E.daysBetween(today, far.due) <= 4, 'interval is clamped to half the days left, got ' + far.due);
 
 // Mastery ordering: forgot < almost < knew, and repeated success earns more.
 assert.ok(R.mastery(R.review(card(3, 0), 0, today)) < R.mastery(R.review(card(3, 0), 1, today)));
-assert.ok(R.mastery(R.review(card(3, 0), 1, today)) < R.mastery(R.review(card(3, 0), 2, today)));
-let twice = R.review(R.review(card(4, 0), 2, today), 2, today);
-assert.ok(R.mastery(twice) > R.mastery(R.review(card(4, 0), 2, today)), 'a second success scores higher');
+assert.ok(R.mastery(R.review(card(3, 0), 1, today)) < R.mastery(R.review(card(3, 0), 2, today, undefined, 'verified')));
+let twice = R.review(R.review(card(4, 0), 2, today, undefined, 'verified'), 2, today, undefined, 'verified');
+assert.ok(R.mastery(twice) > R.mastery(R.review(card(4, 0), 2, today, undefined, 'verified')), 'a second success scores higher');
 
 // Untested cards drag the chapter score down — the point of the rewrite.
-const strong = R.review(card(5, 0), 2, today);
+const strong = R.review(card(5, 0), 2, today, undefined, 'verified');
 const alone = R.chapterRecall([strong], 'e1', 0);
 const withUntested = R.chapterRecall([strong, card(6, 0)], 'e1', 0);
 assert.ok(withUntested < alone, 'an untested card must lower the chapter score');
@@ -72,6 +72,7 @@ assert.ok(E.readiness(proven, [], today) > 0, 'proven recall with no logged sess
 let weakly = exam2;
 [0, 1].forEach(c => { weakly = E.recordRecall(weakly, c, 0.3, today); });
 assert.ok(E.readiness(weakly, worked, today) < E.readiness(proven, worked, today), 'a weak self-test scores lower');
+assert.ok(E.readiness(weakly, worked, today) < E.readiness(exam2, worked, today), 'a weak self-test must score below never having tested — the defect Phase 1 exists to fix');
 
 // The explainer must never promise less than the score it explains.
 const d2 = E.readinessDetail(proven, worked, today);

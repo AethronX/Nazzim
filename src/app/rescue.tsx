@@ -3,8 +3,10 @@ import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { KindBadge, SubjectTile } from '../components/Academic';
 import { Choice, Page, Section } from '../components/Page';
-import { Icon, PrimaryBtn, T } from '../components/ui';
+import { Btn, Icon, PrimaryBtn, T } from '../components/ui';
 import { ai } from '../ai';
+import { triageToday } from '../engine/rescue';
+import { rankEvidence } from '../lib/readiness';
 import { useAcademic, hours } from '../lib/academic';
 import { fmtDate, relDay } from '../lib/format';
 import { unitOf } from '../lib/copy';
@@ -15,10 +17,31 @@ const CAPACITY = [60, 90, 120, 180, 240];
 // RESCUE MODE: calm, honest, one action. Shows where things stand, rebuilds the week within the student's
 // real daily time, and only changes the schedule when they apply it.
 export default function Rescue() {
-  const { C, L, ar, accent, today, dailyMinutes, set, applyRescue } = useNazzim();
+  const { C, L, ar, accent, today, cards, dailyMinutes, set, applyRescue, startFocusOn } = useNazzim();
   const { ctx, chapterTitle, subjectById } = useAcademic();
   const [built, setBuilt] = useState(false);
   const plan = useMemo(() => ai.generateRescuePlan(ctx), [ctx]);
+  // The shortlist comes first; the seven-day rebuild is still here, below, behind its own button.
+  const targets = useMemo(() => rankEvidence(ctx.exams, ctx.sessions, cards, today), [ctx.exams, ctx.sessions, cards, today]);
+  const triage = useMemo(() => triageToday(ctx, targets), [ctx, targets]);
+
+  const itemInfo = (it: (typeof triage.now)[number]) => {
+    if (it.kind === 'task') {
+      const t = ctx.tasks.find(x => x.id === it.id);
+      return { title: t?.title ?? '', subjectId: t?.subjectId, onPress: () => t && startFocusOn(t.title, { kind: 'task', id: t.id }, t.estimateMin) };
+    }
+    const exam = ctx.exams.find(x => x.id === it.examId);
+    if (it.kind === 'recall') {
+      const ch = it.chapter !== undefined && it.chapter >= 0 ? exam?.chapters[it.chapter] ?? '' : L.exAll;
+      return { title: `${L.evRecall.replace('{c}', ch)}`, subjectId: exam?.subjectId, onPress: () => exam && router.push(`/recall/${exam.id}`) };
+    }
+    const s = ctx.sessions.find(x => x.id === it.id);
+    return {
+      title: s ? `${chapterTitle(s, exam)} · ${exam?.subject ?? ''}` : '',
+      subjectId: exam?.subjectId,
+      onPress: () => s && startFocusOn(`${chapterTitle(s, exam)} · ${exam?.subject ?? ''}`, { kind: 'session', id: s.id }, s.minutes),
+    };
+  };
 
   const label = (id: string, kind: 'session' | 'task') => {
     if (kind === 'task') {
@@ -57,13 +80,54 @@ export default function Rescue() {
         ))}
       </View>
 
+      {/* NOW: at most three things, chosen by evidence gained per minute, and they fit in a normal day. */}
+      {triage.now.length ? (
+        <Section label={`${L.trNow} · ${L.trCapacity.replace('{a}', hours(triage.committedMin, ar)).replace('{b}', hours(triage.capacityMin, ar))}`}>
+          {triage.now.map((it, i) => {
+            const info = itemInfo(it);
+            return (
+              <Btn key={it.kind + it.id} onPress={info.onPress} pressScale={0.99} accessibilityLabel={`${L.evStart}: ${info.title}`}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, paddingHorizontal: 14, borderBottomWidth: i === triage.now.length - 1 ? 0 : 1, borderBottomColor: C.line2 }}>
+                <View style={{ width: 26, height: 26, borderRadius: 99, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
+                  <T num="data" w={800} s="caption" c={accent.strong}>{String(i + 1)}</T>
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <T w={600} s="label" numberOfLines={1}>{info.title}</T>
+                  <T w={600} s="caption" c={C.ink3} style={{ marginTop: 2 }}>{`${it.minutes} ${L.min} · ${L.trWhy[it.why]}`}</T>
+                </View>
+                <Icon name="play" size={15} color={accent.fg} />
+              </Btn>
+            );
+          })}
+        </Section>
+      ) : (
+        <View style={{ padding: 14, borderRadius: 16, backgroundColor: C.successTint }}>
+          <T w={600} s="label" c={C.successText}>{L.trNothing}</T>
+        </View>
+      )}
+
+      {!!triage.later.length && (
+        <Section label={L.trLater}>
+          {triage.later.slice(0, 6).map((it, i, arr) => {
+            const info = itemInfo(it);
+            return (
+              <View key={it.kind + it.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 14, borderBottomWidth: i === arr.length - 1 ? 0 : 1, borderBottomColor: C.line2 }}>
+                <SubjectTile subject={info.subjectId ? subjectById.get(info.subjectId) : undefined} size={26} />
+                <T w={600} s="label" c={C.ink2} style={{ flex: 1 }} numberOfLines={1}>{info.title}</T>
+                <T w={600} s="caption" c={C.ink3}>{`${it.minutes} ${L.min}`}</T>
+              </View>
+            );
+          })}
+        </Section>
+      )}
+
       <Section label={L.capacityL}>
         <View style={{ padding: 12 }}>
           <Choice options={CAPACITY} value={dailyMinutes} onChange={m => set({ dailyMinutes: m })} labels={CAPACITY.map(m => hours(m, ar))} />
         </View>
       </Section>
 
-      {!built && <PrimaryBtn title={L.buildRescue} icon="reset" onPress={() => setBuilt(true)} />}
+      {!built && <PrimaryBtn title={L.trRebuild} icon="reset" onPress={() => setBuilt(true)} />}
 
       {built && (
         <>

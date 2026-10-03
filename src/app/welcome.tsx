@@ -2,39 +2,48 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GRADES } from '../components/Academic';
 import { LogoMark } from '../components/Logo';
 import { Choice } from '../components/Page';
 import { Btn, Icon, PrimaryBtn, T } from '../components/ui';
-import type { StudyTime } from '../engine/habits';
+import { isDateKey } from '../domain/validate';
+import { addDays, daysBetween, todayKey } from '../lib/exams';
+import { fmtDate, inDays as inDaysLabel } from '../lib/format';
 import { useNazzim, type Onboarding } from '../lib/store';
-import { font } from '../lib/theme';
+import { font, TEXT } from '../lib/theme';
 
-const IN_DAYS = [3, 7, 14, 21, 30];
+const QUICK_DAYS = [3, 7, 14, 21, 30];
 
-// First run: the minimum Nazzim needs (where you study, your subjects, your next exam), then the semester is built.
-// Everything else is learned progressively. One primary action per step; every step can be skipped.
+// FIRST RUN asks for the three things the evidence model cannot work without, and nothing else:
+//
+//   subject → exam date → chapter names → go
+//
+// What it used to ask first was the student's name, university and major. None of those feed the plan, the
+// evidence number or the next action; they were three text fields standing between a new student and the
+// only thing that would show them why the app exists. They live in Profile now, where they belong.
+//
+// Chapters are typed, not counted. A generated "Chapter 3" propagates into every Next Evidence sentence the
+// student will ever read ("self-test Chapter 3"), and tells them nothing.
 export default function Welcome() {
   const { C, L, ar, accent, lang, set, onboard, loadSample } = useNazzim();
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
-  const [profile, setProfile] = useState({ name: '', uni: '', major: '' });
-  const [subjects, setSubjects] = useState<Onboarding['subjects']>([]);
-  const [draft, setDraft] = useState('');
-  const [examSubject, setExamSubject] = useState<number | null>(0);
+  const [subject, setSubject] = useState('');
   const [inDays, setInDays] = useState(7);
-  const [chapters, setChapters] = useState(4);
-  const [studyTime, setStudyTime] = useState<StudyTime>('afternoon');
-  const input = { fontFamily: font('body', 600, ar), fontSize: 15.5, color: C.ink, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, textAlign: ar ? 'right' : 'left' } as const;
+  const [chaptersText, setChaptersText] = useState('');
+  const today = todayKey();
+  const date = addDays(today, inDays);
+  const chapters = chaptersText.split('\n').map(c => c.trim()).filter(Boolean);
 
-  const addSubject = () => {
-    const name = draft.trim();
-    if (!name || subjects.some(s => s.name.toLowerCase() === name.toLowerCase())) return;
-    setSubjects(s => [...s, { name, targetGrade: 'A' }]);
-    setDraft('');
-  };
+  const input = { fontFamily: font('body', 600, ar), fontSize: TEXT.body, color: C.ink, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, textAlign: ar ? 'right' : 'left' } as const;
+
+  // The date is validated here as well as in the store: a future, real calendar day or nothing is created.
+  const dateOk = isDateKey(date) && daysBetween(today, date) >= 1;
+  const canGo = subject.trim().length > 0 && chapters.length > 0 && dateOk;
+
   const finish = () => {
-    onboard({ profile, subjects, studyTime, exam: examSubject !== null && subjects.length ? { subject: examSubject, inDays, chapters } : undefined });
+    if (!canGo) return;
+    const o: Onboarding = { profile: {}, subjects: [{ name: subject.trim(), targetGrade: 'A' }], exam: { subject: 0, inDays, chapters } };
+    onboard(o);
     router.replace('/');
   };
 
@@ -75,93 +84,53 @@ export default function Welcome() {
 
             {step === 1 && (
               <View style={{ gap: 12 }}>
-                <T f="display" w={700} s="display" ls={ar ? 0 : -0.6}>{L.obAboutT}</T>
-                <T w={500} s="label" c={C.ink2}>{L.obAboutS}</T>
-                {(['name', 'uni', 'major'] as const).map(k => (
-                  <TextInput key={k} value={profile[k]} onChangeText={v => setProfile(p => ({ ...p, [k]: v }))} placeholder={L[{ name: 'fName', uni: 'fUni', major: 'fMajor' }[k] as 'fName']}
-                    placeholderTextColor={C.ink3} autoCapitalize="words" style={input} accessibilityLabel={L[{ name: 'fName', uni: 'fUni', major: 'fMajor' }[k] as 'fName']} />
-                ))}
-                {/* Implementation intention: deciding *when* doubles follow-through */}
-                <T w={700} s="label" c={C.ink2} style={{ marginTop: 8 }}>{L.studyTimeQ}</T>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="radiogroup">
-                  {(['morning', 'afternoon', 'evening', 'night'] as const).map((k, i) => {
-                    const on = studyTime === k;
-                    return (
-                      <Btn key={k} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setStudyTime(k)}
-                        style={{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: 99, borderWidth: 1.5, borderColor: on ? accent.a1 : C.line, backgroundColor: on ? accent.tint : C.card }}>
-                        <T w={700} s="label" c={on ? accent.strong : C.ink2}>{L.studyTimes[i]}</T>
-                      </Btn>
-                    );
-                  })}
-                </View>
-                <T w={500} s="caption" c={C.ink3}>{L.studyTimeSub}</T>
+                <T f="display" w={700} s="display" ls={ar ? 0 : -0.6}>{L.obSubjOne}</T>
+                <T w={500} s="label" lh={1.5} c={C.ink2}>{L.obSubjOneS}</T>
+                <TextInput value={subject} onChangeText={setSubject} placeholder={L.obSubjPh} placeholderTextColor={C.ink3}
+                  autoCapitalize="words" autoFocus returnKeyType="next" style={input} accessibilityLabel={L.obSubjOne} />
               </View>
             )}
 
             {step === 2 && (
-              <View style={{ gap: 12 }}>
-                <T f="display" w={700} s="display" ls={ar ? 0 : -0.6}>{L.obSubjT}</T>
-                <T w={500} s="label" c={C.ink2}>{L.obSubjS}</T>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TextInput value={draft} onChangeText={setDraft} placeholder={L.obSubjPh} placeholderTextColor={C.ink3} autoFocus
-                    onSubmitEditing={addSubject} blurOnSubmit={false} returnKeyType="done" style={[input, { flex: 1 }]} accessibilityLabel={L.subjName} />
-                  <Btn label={L.addSubject} onPress={addSubject} style={{ width: 50, borderRadius: 12, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name="plus" size={18} color={accent.strong} stroke={2.6} />
+              <View style={{ gap: 14 }}>
+                <T f="display" w={700} s="display" ls={ar ? 0 : -0.6}>{L.obDateT}</T>
+                <T w={500} s="label" lh={1.5} c={C.ink2}>{L.obDateS}</T>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <Btn label="−1" onPress={() => setInDays(n => Math.max(1, n - 1))} style={stepper(C.line)}>
+                    <T ltr w={700} s="title" c={C.ink2}>−</T>
+                  </Btn>
+                  <View style={{ flex: 1, alignItems: 'center' }}>
+                    <T f="display" w={700} s="title" ls={ar ? 0 : -0.4}>{fmtDate(date, L)}</T>
+                    <T w={600} s="caption" c={accent.fg} style={{ marginTop: 2 }}>{inDaysLabel(inDays, L, ar)}</T>
+                  </View>
+                  <Btn label="+1" onPress={() => setInDays(n => Math.min(365, n + 1))} style={stepper(C.line)}>
+                    <T ltr w={700} s="title" c={C.ink2}>+</T>
                   </Btn>
                 </View>
-                {subjects.map((s, i) => (
-                  <View key={s.name} style={{ padding: 12, borderRadius: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, gap: 10 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <T w={700} s="label" style={{ flex: 1 }}>{s.name}</T>
-                      <Btn label={L.deleteSubject} onPress={() => setSubjects(x => x.filter((_, j) => j !== i))} style={{ padding: 4 }}>
-                        <Icon name="trash" size={16} color={C.ink3} />
-                      </Btn>
-                    </View>
-                    <Choice options={GRADES.slice(0, 5)} value={s.targetGrade} onChange={g => setSubjects(x => x.map((y, j) => (j === i ? { ...y, targetGrade: g } : y)))} labels={GRADES.slice(0, 5)} ltr />
-                  </View>
-                ))}
+                <Choice options={QUICK_DAYS} value={inDays} onChange={setInDays} labels={QUICK_DAYS.map(n => inDaysLabel(n, L, ar))} />
               </View>
             )}
 
             {step === 3 && (
-              <View style={{ gap: 14 }}>
-                <T f="display" w={700} s="display" ls={ar ? 0 : -0.6}>{L.obExamT}</T>
-                <T w={500} s="label" c={C.ink2}>{L.obExamS}</T>
-                <T w={700} s="caption" c={C.ink3}>{L.obWhich}</T>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }} accessibilityRole="radiogroup">
-                  {[...subjects.map((s, i) => ({ label: s.name, v: i as number | null })), { label: L.obNoExam, v: null }].map(o => {
-                    const on = examSubject === o.v;
-                    return (
-                      <Btn key={String(o.v)} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setExamSubject(o.v)}
-                        style={{ paddingVertical: 9, paddingHorizontal: 14, borderRadius: 99, borderWidth: 1.5, borderColor: on ? accent.a1 : C.line, backgroundColor: on ? accent.tint : C.card }}>
-                        <T w={700} s="label" c={on ? accent.strong : C.ink2}>{o.label}</T>
-                      </Btn>
-                    );
-                  })}
-                </View>
-                {examSubject !== null && (
-                  <>
-                    <T w={700} s="caption" c={C.ink3}>{L.obWhen}</T>
-                    <Choice options={IN_DAYS} value={inDays} onChange={setInDays} labels={IN_DAYS.map(n => L.dIn.replace('{n}', String(n)))} />
-                    <T w={700} s="caption" c={C.ink3}>{L.obChapters}</T>
-                    <Choice options={[2, 3, 4, 5, 6, 8]} value={chapters} onChange={setChapters} labels={['2', '3', '4', '5', '6', '8']} num="data" />
-                  </>
-                )}
+              <View style={{ gap: 12 }}>
+                <T f="display" w={700} s="display" ls={ar ? 0 : -0.6}>{L.obChapT}</T>
+                <T w={500} s="label" lh={1.5} c={C.ink2}>{L.obChapS}</T>
+                <TextInput value={chaptersText} onChangeText={setChaptersText} placeholder={L.obChapPh} placeholderTextColor={C.ink3}
+                  multiline textAlignVertical="top" autoFocus accessibilityLabel={L.obChapT}
+                  style={[input, { minHeight: 150, lineHeight: 24 }]} />
+                <T w={600} s="caption" c={C.ink3}>{L.obLater}</T>
               </View>
             )}
 
             <View style={{ flex: 1 }} />
             {step < 3
-              ? <PrimaryBtn title={L.obNext} onPress={() => { if (step === 2) { const n = subjects.length + (draft.trim() ? 1 : 0); addSubject(); setExamSubject(n ? 0 : null); } setStep(step + 1); }} />
-              : <PrimaryBtn title={L.obBuild} icon="sparkle" onPress={finish} />}
-            {step === 2 && !subjects.length && (
-              <Btn onPress={() => { setExamSubject(null); setStep(3); }} style={{ padding: 10, alignItems: 'center' }}>
-                <T w={700} s="label" c={C.ink3}>{L.obSkip}</T>
-              </Btn>
-            )}
+              ? <PrimaryBtn title={L.obNext} onPress={() => setStep(step + 1)} disabled={step === 1 && !subject.trim()} />
+              : <PrimaryBtn title={L.obGo} icon="sparkle" onPress={finish} disabled={!canGo} />}
           </>
         )}
       </ScrollView>
     </View>
   );
 }
+
+const stepper = (border: string) => ({ width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: border, alignItems: 'center', justifyContent: 'center' }) as const;

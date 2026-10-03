@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 import { ProgressRing, SubjectTile } from '../../components/Academic';
-import { Btn, Icon, T } from '../../components/ui';
+import { Btn, EmptyState, Icon, T } from '../../components/ui';
 import { summarizeSubject } from '../../engine/academic';
 import { useAcademic } from '../../lib/academic';
 import { counted } from '../../lib/copy';
@@ -23,7 +23,7 @@ export default function Subjects() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}>
           <T f="display" w={700} s="display" ls={ar ? 0 : -0.8} style={{ flex: 1 }} accessibilityRole="header">{L.subjects}</T>
           <Btn label={L.addSubject} onPress={() => router.push('/subject/new')} pressScale={0.94}
-            style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
+            style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: accent.tint, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="plus" size={18} color={accent.strong} stroke={2.6} />
           </Btn>
         </View>
@@ -65,11 +65,8 @@ export default function Subjects() {
         })}
 
         {!subjects.length && (
-          <Btn onPress={() => router.push('/subject/new')} style={{ padding: 20, borderRadius: 20, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.line, alignItems: 'center', gap: 8 }}>
-            <Icon name="books" size={24} color={accent.fg} />
-            <T w={600} s="label" c={C.ink2} style={{ textAlign: 'center' }}>{L.noSubjects}</T>
-            <T w={700} s="label" c={accent.fg}>{L.addSubject}</T>
-          </Btn>
+          <EmptyState icon="books" title={L.subjEmptyT} body={`${L.noSubjects} ${L.subjEmptyS}`}
+            action={{ label: L.addSubject, onPress: () => router.push('/subject/new') }} />
         )}
       </ScrollView>
     </View>

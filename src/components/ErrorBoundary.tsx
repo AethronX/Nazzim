@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Appearance, Text, TouchableOpacity, View } from 'react-native';
+import { COPY } from '../lib/copy';
 import { track } from '../services/analytics';
 
 // A render crash used to mean a white screen and a student who uninstalls without telling anyone. Now it
@@ -35,18 +36,24 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.error) return this.props.children;
     if (this.props.fallback) return this.props.fallback(this.retry);
-    // Deliberately dependency-free: the theme provider is one of the things that might have just crashed.
+    // Deliberately provider-free: the theme provider is one of the things that might have just crashed. Without
+    // it we do not know the student's language, so the message is shown in both — Arabic first.
+    const dark = Appearance.getColorScheme() === 'dark';
+    const ink = dark ? '#EFF2F7' : '#121927', ink2 = dark ? '#C7CCD7' : '#4D5667';
     return (
-      <View style={{ flex: 1, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', padding: 28, gap: 14 }}>
-        <Text style={{ fontSize: 19, fontWeight: '700', color: '#0F172A', textAlign: 'center' }}>Something broke on this screen</Text>
-        <Text style={{ fontSize: 14, lineHeight: 21, color: '#475569', textAlign: 'center' }}>
-          Your plan is safe on this device. Try again, and if it keeps happening tell us at support@nazzim.app.
-        </Text>
+      <View style={{ flex: 1, backgroundColor: dark ? '#0C101A' : '#F8FAFD', alignItems: 'center', justifyContent: 'center', padding: 28, gap: 12 }}>
+        {[COPY.ar, COPY.en].map((L, i) => (
+          <View key={i} style={{ gap: 6, alignItems: 'center', maxWidth: 360 }}>
+            <Text style={{ fontSize: 19, fontWeight: '700', color: ink, textAlign: 'center', writingDirection: i ? 'ltr' : 'rtl' }}>{L.errT}</Text>
+            <Text style={{ fontSize: 14, lineHeight: 21, color: ink2, textAlign: 'center', writingDirection: i ? 'ltr' : 'rtl' }}>{L.errS}</Text>
+          </View>
+        ))}
         <TouchableOpacity
           accessibilityRole="button"
+          accessibilityLabel={`${COPY.ar.errRetry} · ${COPY.en.errRetry}`}
           onPress={this.retry}
-          style={{ marginTop: 6, backgroundColor: '#285CE7', paddingVertical: 14, paddingHorizontal: 30, borderRadius: 12 }}>
-          <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 15 }}>Try again</Text>
+          style={{ marginTop: 6, minHeight: 48, justifyContent: 'center', backgroundColor: '#285CE7', paddingHorizontal: 30, borderRadius: 16 }}>
+          <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 16 }}>{`${COPY.ar.errRetry} · ${COPY.en.errRetry}`}</Text>
         </TouchableOpacity>
       </View>
     );

@@ -1,9 +1,9 @@
 import { router } from 'expo-router';
 import { ScrollView, View } from 'react-native';
-import { Timeline } from '../../components/Agenda';
+import { Timeline, WeekLoad } from '../../components/Agenda';
 import { ExamCard } from '../../components/Study';
 import { Btn, Card, Icon, SectionHeader, T } from '../../components/ui';
-import { agendaFor } from '../../engine/academic';
+import { agendaFor, analyzeAcademicLoad } from '../../engine/academic';
 import { useAcademic } from '../../lib/academic';
 import { addDays, fromKey } from '../../lib/exams';
 import { fmtDate } from '../../lib/format';
@@ -21,6 +21,8 @@ export default function Plan() {
   const upcoming = exams.filter(e => e.date > today);
   const agenda = agendaFor(ctx, day, { exam: L.kExam, task: L.kTaskB, kind: k => ({ learn: L.kLearn, review: L.kReview, mock: L.kMock })[k] }, chapterTitle, studyStart);
   const blocks = agenda.filter(a => a.kind !== 'exam');
+  const load = analyzeAcademicLoad(ctx, today, 7);
+  const openTasks = tasks.filter(x => !x.done).length;
 
   return (
     <View style={{ flex: 1, direction: ar ? 'rtl' : 'ltr' }}>
@@ -68,9 +70,23 @@ export default function Plan() {
           </Card>
         )}
 
+        {/* Every task, in the smart order, one tap away from the day it is scheduled on. */}
+        <Btn onPress={() => router.push('/tasks')} pressScale={0.99} accessibilityLabel={L.tkAll}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: C.line, backgroundColor: C.card }}>
+          <Icon name="check" size={18} color={accent.fg} stroke={2.4} />
+          <T w={700} s="label" style={{ flex: 1 }}>{L.tkAll}</T>
+          {openTasks > 0 && <T w={700} s="caption" c={C.ink3}>{L.tkOpenN.replace('{n}', String(openTasks))}</T>}
+          <Icon name="chevron" size={15} color={C.ink3} stroke={2.3} flip={ar} />
+        </Btn>
+
         <SectionHeader title={L.examsL} action={{ label: L.exAdd, onPress: () => router.push('/planner') }} />
         {upcoming.map(e => <ExamCard key={e.id} exam={e} />)}
         {!upcoming.length && <T w={600} s="label" c={C.ink3} style={{ paddingHorizontal: 4 }}>{L.exNone}</T>}
+
+        {/* The week ahead answers the question a single day cannot: where the heavy day is. It also gives the
+            screen something true to say on a light day, instead of ending in empty space. */}
+        <SectionHeader title={L.weekAhead} />
+        <WeekLoad days={load.days} minutes={load.minutesPerDay} selected={day} today={today} onPick={setDay} />
       </ScrollView>
     </View>
   );

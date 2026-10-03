@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { readiness, type Confidence, type ExamItem, type StudySession } from '../lib/exams';
+import { type Confidence, type ExamItem, type StudySession } from '../lib/exams';
 import { counted } from '../lib/copy';
 import { fmtDate, relDay } from '../lib/format';
+import { evidenceScore } from '../lib/readiness';
 import { useNazzim } from '../lib/store';
 import { Btn, Icon, T } from './ui';
 
@@ -67,10 +68,14 @@ export function SessionRow({ s, exam, last, showExam = true }: { s: StudySession
   );
 }
 
-// Exam summary: subject, date, countdown, readiness. The nearest exam uses the midnight hero surface.
+// Exam summary: subject, date, countdown, evidence completeness. The nearest exam uses the hero surface.
+//
+// The number is derived here from the cards rather than trusted from the caller, because callers pass the
+// store's raw `exams`. It used to call `readiness(exam, study)` — no recall evidence and no `today` — so the
+// Plan and More screens showed 32% for the same student Today showed 36% for.
 export function ExamCard({ exam, hero }: { exam: ExamItem; hero?: boolean }) {
-  const { C, L, ar, accent, study, today } = useNazzim();
-  const ready = readiness(exam, study);
+  const { C, L, ar, accent, study, cards, today } = useNazzim();
+  const ready = evidenceScore(exam, study, cards, today);
   const left = study.filter(s => s.examId === exam.id && !s.done).length;
   const ink = hero ? C.onHero : C.ink, ink2 = hero ? C.onHero2 : C.ink3;
   return (

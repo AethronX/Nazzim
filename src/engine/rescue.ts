@@ -25,21 +25,179 @@ export type RescuePlan = {
   status: 'onTrack' | 'recoverable' | 'tight';
 };
 
-export type BehindStatus = { behind: boolean; overdue: number; todayMin: number; overloadedDays: number };
+export type BehindStatus = {
+  behind: boolean;
+  overdue: number; // count of overdue tasks (display)
+  overdueMin: number; // accumulated overdue minutes — what the trigger actually weighs
+  todayMin: number;
+  overloadedDays: number;
+  deficitRatio: number; // work needed before the nearest exam ÷ capacity available before it
+  nearestExamDays: number | null;
+  evidenceGap: number; // 1 − evidence completeness of the nearest exam, 0..1
+  reason: 'overdue' | 'load' | 'deficit' | 'exam' | null;
+};
 
 export const DEFAULT_DAILY_MIN = 120;
 
-// Is the student behind? Overdue tasks, or today/upcoming days well over their usual capacity.
-export function assessBehind(ctx: AcademicContext, horizon = 7): BehindStatus {
+// Trigger thresholds. Named, exported and tested so they can be calibrated against real `rescue_opened`
+// data later instead of being argued about. The old trigger was `overdueTasks > 0`, which meant one
+// forgotten ten-minute task put the student into an emergency screen — the fastest way to teach someone
+// to ignore a warning.
+export const RESCUE_OVERDUE_MIN = 60; // an hour of work actually left behind, not a count of rows
+export const RESCUE_LOAD_RATIO = 1.5; // today is scheduled at more than 1.5× a normal day
+export const RESCUE_DEFICIT_RATIO = 1.25; // more work before the nearest exam than hours to do it in
+export const RESCUE_EXAM_DAYS = 3; // and, close to an exam…
+export const RESCUE_GAP = 0.4; // …evidence this incomplete
+
+/**
+ * Is today worth triaging? `evidence` is evidence completeness (0–100) for the nearest exam, passed in so
+ * this engine stays pure and so the trigger reads the same number the student sees.
+ */
+export function assessBehind(ctx: AcademicContext, horizon = 7, evidence?: number): BehindStatus {
   const cap = ctx.dailyMinutes ?? DEFAULT_DAILY_MIN;
-  const overdue = ctx.tasks.filter(t => !t.done && workDay(t) < ctx.today).length;
+  const late = ctx.tasks.filter(t => !t.done && workDay(t) < ctx.today);
+  const overdueMin = late.reduce((a, t) => a + t.estimateMin, 0);
   const perDay = (d: DateKey) =>
     ctx.sessions.filter(s => !s.done && s.date === d).reduce((a, s) => a + s.minutes, 0) +
     ctx.tasks.filter(t => !t.done && workDay(t) === d).reduce((a, t) => a + t.estimateMin, 0);
   const days = Array.from({ length: horizon }, (_, i) => addDays(ctx.today, i));
-  const todayMin = perDay(ctx.today) + ctx.tasks.filter(t => !t.done && workDay(t) < ctx.today).reduce((a, t) => a + t.estimateMin, 0);
+  const todayMin = perDay(ctx.today) + overdueMin;
   const overloadedDays = days.filter(d => perDay(d) > cap * 1.25).length;
-  return { behind: overdue > 0 || todayMin > cap * 1.5 || overloadedDays >= 2, overdue, todayMin, overloadedDays };
+
+  const nextExam = ctx.exams.filter(e => e.date >= ctx.today).sort((a, b) => a.date.localeCompare(b.date))[0];
+  const nearestExamDays = nextExam ? daysBetween(ctx.today, nextExam.date) : null;
+  // Can the remaining work for that exam fit in the days left at a normal pace?
+  let deficitRatio = 0;
+  if (nextExam && nearestExamDays !== null && Number.isFinite(nearestExamDays) && nearestExamDays > 0) {
+    const need = ctx.sessions.filter(s => !s.done && s.examId === nextExam.id && s.date <= nextExam.date).reduce((a, s) => a + s.minutes, 0);
+    deficitRatio = need / Math.max(1, cap * nearestExamDays);
+  }
+  const evidenceGap = evidence === undefined ? 0 : Math.max(0, Math.min(1, 1 - evidence / 100));
+
+  const reason: BehindStatus['reason'] =
+    overdueMin >= RESCUE_OVERDUE_MIN ? 'overdue'
+    : todayMin > cap * RESCUE_LOAD_RATIO ? 'load'
+    : deficitRatio >= RESCUE_DEFICIT_RATIO ? 'deficit'
+    : nearestExamDays !== null && nearestExamDays <= RESCUE_EXAM_DAYS && evidenceGap >= RESCUE_GAP ? 'exam'
+    : null;
+
+  return { behind: reason !== null, overdue: late.length, overdueMin, todayMin, overloadedDays, deficitRatio, nearestExamDays, evidenceGap, reason };
+}
+
+// ── Today triage ────────────────────────────────────────────────────────────────────────────────
+//
+// The old Rescue was a re-dating pass: it moved every open item inside a seven-day window until each day fit
+// under the cap, and reported the moves. That answers "how do I fit everything in", which is not the
+// question a student has at 9pm with four days to an exam. This answers theirs: of everything competing for
+// tonight, which three are worth the time?
+//
+// It is a shortlist, not a schedule. The seven-day rebuild still exists below and still runs — it just sits
+// underneath the shortlist instead of in front of it.
+
+export type ReasonCode = 'examSoon' | 'evidenceGap' | 'overdue' | 'dueToday';
+export type TriageItem = {
+  kind: 'session' | 'task' | 'recall';
+  id: string;
+  examId?: string;
+  chapter?: number;
+  minutes: number;
+  why: ReasonCode;
+  value: number; // evidence-equivalent gain per minute; higher first
+};
+export type RescueTriage = {
+  capacityMin: number; // what a normal day holds for this student
+  committedMin: number; // what is actually asked of today, overdue included
+  deficitMin: number; // the overspill
+  now: TriageItem[]; // at most three, and they fit
+  later: TriageItem[];
+  dropped: string[];
+};
+
+/** Minutes assumed for a self-test sitting. Short on purpose: the point is that it is cheap. */
+export const RECALL_MIN = 10;
+/**
+ * What a task with a deadline is worth in the same currency as an evidence gain. A judgement constant, not a
+ * derived one: a submitted assignment matters without moving any exam's evidence. Exported so it can be
+ * calibrated rather than buried.
+ */
+export const TASK_VALUE = 0.35;
+
+/** 0 far from a date, 1 on it. */
+const urgency = (days: number) => (Number.isFinite(days) ? Math.max(0, Math.min(1, (14 - days) / 14)) : 0);
+
+/**
+ * `targets` are the ranked evidence gaps from src/lib/readiness.ts — passed in so this engine stays pure and
+ * so triage and Today agree about what is missing.
+ */
+export function triageToday(
+  ctx: AcademicContext,
+  targets: { kind: string; examId: string; chapter: number; gain: number; need: number; daysLeft: number }[],
+  horizon = 7,
+): RescueTriage {
+  const cap = ctx.dailyMinutes ?? DEFAULT_DAILY_MIN;
+  const { today } = ctx;
+  const last = addDays(today, horizon - 1);
+  const examById = new Map(ctx.exams.map(e => [e.id, e]));
+  const items: TriageItem[] = [];
+
+  // Study blocks: valued by what the evidence model says the matching chapter would gain.
+  for (const s of ctx.sessions) {
+    if (s.done || s.orphan || s.date > last) continue;
+    const exam = examById.get(s.examId);
+    if (!exam) continue;
+    const days = daysBetween(today, exam.date);
+    if (!Number.isFinite(days) || days < 0) continue;
+    const target = targets.find(t => t.examId === s.examId && t.chapter === s.chapter && t.kind !== 'recall');
+    const gain = target?.gain ?? 0.05;
+    const minutes = Math.max(1, s.minutes);
+    items.push({
+      kind: 'session', id: s.id, examId: s.examId, chapter: s.chapter, minutes,
+      why: days <= RESCUE_EXAM_DAYS ? 'examSoon' : 'evidenceGap',
+      value: (gain * (0.5 + 0.5 * urgency(days))) / minutes,
+    });
+  }
+
+  // Self-tests: no scheduled block exists for them, so they come from the evidence ranking directly.
+  for (const t of targets) {
+    if (t.kind !== 'recall') continue;
+    items.push({
+      kind: 'recall', id: `${t.examId}:${t.chapter}`, examId: t.examId, chapter: t.chapter, minutes: RECALL_MIN,
+      why: t.daysLeft <= RESCUE_EXAM_DAYS ? 'examSoon' : 'evidenceGap',
+      value: (t.gain * (0.5 + 0.5 * urgency(t.daysLeft))) / RECALL_MIN,
+    });
+  }
+
+  // Tasks: deadlines, not evidence.
+  for (const t of ctx.tasks) {
+    if (t.done) continue;
+    const day = workDay(t);
+    if (day > last) continue;
+    const dueIn = daysBetween(today, t.due);
+    if (!Number.isFinite(dueIn)) continue;
+    const overdueBoost = dueIn < 0 ? 1 + Math.min(-dueIn, 7) / 7 : 1;
+    const minutes = Math.max(1, t.estimateMin);
+    items.push({
+      kind: 'task', id: t.id, minutes,
+      why: dueIn < 0 ? 'overdue' : dueIn === 0 ? 'dueToday' : 'evidenceGap',
+      value: (TASK_VALUE * (0.5 + 0.5 * urgency(dueIn)) * overdueBoost) / minutes,
+    });
+  }
+
+  items.sort((a, b) => b.value - a.value || a.minutes - b.minutes);
+
+  // Greedy fill of one normal day, three items at most. Three because the point is a decision, not a list.
+  const now: TriageItem[] = [];
+  const later: TriageItem[] = [];
+  let used = 0;
+  for (const it of items) {
+    if (now.length < 3 && used + it.minutes <= cap) { now.push(it); used += it.minutes; }
+    else later.push(it);
+  }
+
+  const todayLoad = ctx.sessions.filter(s => !s.done && !s.orphan && s.date === today).reduce((a, s) => a + s.minutes, 0)
+    + ctx.tasks.filter(t => !t.done && workDay(t) <= today).reduce((a, t) => a + t.estimateMin, 0);
+
+  return { capacityMin: cap, committedMin: todayLoad, deficitMin: Math.max(0, todayLoad - cap), now, later, dropped: [] };
 }
 
 const RANK = { overdue: 0, mock: 1, learn: 2, task: 3, review: 4 } as const;

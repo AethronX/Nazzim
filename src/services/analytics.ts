@@ -17,7 +17,9 @@ export type AnalyticsEvent =
   | { name: 'card_added' }
   | { name: 'card_graded'; props: { grade: number } }
   | { name: 'recall_session_completed'; props: { cards: number; correct: number } }
-  | { name: 'readiness_explained' }
+  // Fires when the explainer screen is opened, which is what the name says. It used to fire on the recall
+  // button inside that screen, so it measured intent to self-test and was named after reading an explanation.
+  | { name: 'evidence_explainer_opened' }
   // Monetisation funnel (so the paywall can be measured rather than guessed at)
   | { name: 'paywall_viewed'; props: { trigger: string } }
   | { name: 'paywall_dismissed'; props: { trigger: string } }
