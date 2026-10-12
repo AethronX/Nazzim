@@ -13,12 +13,13 @@ import { useNazzim } from '../lib/store';
 // explains its place, so the order can be checked rather than taken on trust. Tapping a row opens it for
 // editing; the circle ticks it off.
 export default function Tasks() {
-  const { C, L, ar, accent, today, tasks, exams, toggleTask } = useNazzim();
+  const { C, L, ar, accent, today, tasks, exams, toggleTask, signals, priorityWeights } = useNazzim();
   const { subjectById } = useAcademic();
   const [sort, setSort] = useState<TaskSort>('smart');
   const [showDone, setShowDone] = useState(false);
 
-  const ranked = useMemo(() => rankTasks(tasks, exams, today, sort), [tasks, exams, today, sort]);
+  const ranked = useMemo(() => rankTasks(tasks, exams, today, sort, { signals, weights: priorityWeights }),
+    [tasks, exams, today, sort, signals, priorityWeights]);
   const open = ranked.filter(r => r.group !== 'done').length;
   const groups = GROUP_ORDER
     .filter(g => g !== 'done' || showDone)

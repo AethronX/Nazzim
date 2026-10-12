@@ -8,7 +8,7 @@
 //
 //  · rankTasks: the smart order. Every position is explainable in one phrase, and that phrase is returned
 //    with the task so the screen can say *why* a task sits where it does instead of asking to be trusted.
-import { workDay, type DateKey, type Exam, type Subject, type Task, type TaskPriority } from '../domain/types';
+import { workDay, type DateKey, type Exam, type Subject, type SubjectSignal, type Task, type TaskPriority } from '../domain/types';
 import { addDays, daysBetween, fromKey } from '../lib/exams';
 
 // ── Reading a quick task ────────────────────────────────────────────────────────────────────────
@@ -156,7 +156,26 @@ export function parseQuickTask(text: string, today: DateKey, subjects: Pick<Subj
 
 export type TaskGroup = 'overdue' | 'today' | 'soon' | 'later' | 'done';
 export type TaskReason =
-  | 'overdue' | 'dueToday' | 'plannedToday' | 'examSoon' | 'highPriority' | 'dueTomorrow' | 'quickWin' | 'dueLater' | 'done';
+  | 'overdue' | 'dueToday' | 'plannedToday' | 'examSoon' | 'highStakes' | 'weakTopic' | 'reviewBacklog'
+  | 'highPriority' | 'dueTomorrow' | 'quickWin' | 'dueLater' | 'done';
+
+/**
+ * What else the app knows about a subject, beyond the calendar. All normalised 0–1 so the weights below are
+ * comparable, and all optional: with no signals the order is exactly the deadline-and-exam order, which is
+ * what a brand-new student with no recorded evidence should get.
+ */
+export type { SubjectSignal } from '../domain/types';
+
+/** Tunable from Settings: how loud each factor is. Students weigh these differently and should be able to say so. */
+export type PriorityWeights = {
+  urgency: number; exam: number; stakes: number; weakness: number; backlog: number; quickWin: number;
+};
+export const DEFAULT_PRIORITY_WEIGHTS: PriorityWeights = {
+  urgency: 1, exam: 0.5, stakes: 0.5, weakness: 0.4, backlog: 0.25, quickWin: 0.1,
+};
+/** The three settings presets, so the UI never asks a student to type a coefficient. */
+export const WEIGHT_LEVELS = { off: 0, normal: 1, high: 1.8 } as const;
+export type WeightLevel = keyof typeof WEIGHT_LEVELS;
 
 export type RankedTask = {
   task: Task;
@@ -196,7 +215,15 @@ export type TaskSort = 'smart' | 'due';
  * Ties break toward the earlier deadline, then the shorter task, then the title, so the order is fully
  * determined and the same list never reshuffles between renders.
  */
-export function rankTasks(tasks: Task[], exams: Pick<Exam, 'subjectId' | 'date'>[], today: DateKey, sort: TaskSort = 'smart'): RankedTask[] {
+export function rankTasks(
+  tasks: Task[],
+  exams: Pick<Exam, 'subjectId' | 'date'>[],
+  today: DateKey,
+  sort: TaskSort = 'smart',
+  ctx: { signals?: Record<string, SubjectSignal>; weights?: Partial<PriorityWeights> } = {},
+): RankedTask[] {
+  const W: PriorityWeights = { ...DEFAULT_PRIORITY_WEIGHTS, ...ctx.weights };
+  const signalOf = (id?: string): SubjectSignal => (id && ctx.signals?.[id]) || {};
   const nearestExam = new Map<string, number>();
   for (const e of exams) {
     if (!e.subjectId) continue;
@@ -220,15 +247,36 @@ export function rankTasks(tasks: Task[], exams: Pick<Exam, 'subjectId' | 'date'>
     const examIn = task.subjectId !== undefined ? nearestExam.get(task.subjectId) : undefined;
     const pull = examIn !== undefined && examIn <= EXAM_WINDOW ? 0.5 * (1 - examIn / (EXAM_WINDOW + 1)) : 0;
     const weight = PRIORITY_WEIGHT[task.priority ?? 'normal'];
-    const quick = task.estimateMin <= QUICK_MIN ? 0.1 : 0;
-    const score = weight * (urgency + pull) + quick;
+    const quick = task.estimateMin <= QUICK_MIN ? 1 : 0;
+
+    // Signals the app has actually measured for this subject. Absent signals contribute exactly zero, so a
+    // student with no recorded evidence sees the plain deadline order rather than a guess dressed as data.
+    const sig = signalOf(task.subjectId);
+    const stakes = clamp01(sig.stakes ?? 0);
+    const weakness = clamp01(sig.weakness ?? 0);
+    const backlog = clamp01(sig.backlog ?? 0);
+
+    const cUrgency = W.urgency * urgency;
+    const cExam = W.exam * pull;
+    const cStakes = W.stakes * stakes;
+    const cWeak = W.weakness * weakness;
+    const cBacklog = W.backlog * backlog;
+    const score = weight * (cUrgency + cExam + cStakes + cWeak + cBacklog) + W.quickWin * quick;
 
     // The one phrase that explains the position, most decisive factor first.
+    // The one phrase that explains the position. Calendar facts win first because they are not debatable;
+    // after that, whichever measured signal contributes most is named, so the order can be audited.
+    const best = [
+      { r: 'highStakes' as const, v: cStakes },
+      { r: 'weakTopic' as const, v: cWeak },
+      { r: 'reviewBacklog' as const, v: cBacklog },
+    ].sort((a, b) => b.v - a.v)[0];
     const reason: TaskReason =
       due < 0 ? 'overdue'
       : due === 0 ? 'dueToday'
       : effIn <= 0 ? 'plannedToday'
-      : pull > 0 ? 'examSoon'
+      : pull > 0 && cExam >= best.v ? 'examSoon'
+      : best.v > 0.05 ? best.r
       : task.priority === 'high' ? 'highPriority'
       : due === 1 ? 'dueTomorrow'
       : quick ? 'quickWin'
@@ -267,3 +315,5 @@ export const moveToTomorrow = (task: Task, today: DateKey) => moveTo(task, addDa
 
 /** The working day a task is scheduled on — re-exported so screens need one import. */
 export { workDay };
+
+function clamp01(n: number): number { return Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0)); }

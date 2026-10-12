@@ -92,6 +92,16 @@ export const workDay = (t: Task): DateKey => t.plannedFor ?? t.due;
 export type Exam = ExamItem & { subjectId?: string };
 export type Session = StudySession;
 
+/**
+ * What the app has measured about a subject, normalised 0–1. Lives in the domain so both the ordering engine
+ * and the academic context can name it without importing each other.
+ */
+export type SubjectSignal = {
+  stakes?: number;   // marks still undecided (remaining assessment weight / 100)
+  weakness?: number; // 1 − proved mastery across its topics
+  backlog?: number;  // overdue reviews and repeated mistakes piling up
+};
+
 export type AcademicContext = {
   today: DateKey;
   subjects: Subject[];
@@ -99,4 +109,5 @@ export type AcademicContext = {
   exams: Exam[];
   sessions: Session[];
   dailyMinutes?: number; // how much the student can study on a normal day (default 120)
+  signals?: Record<string, SubjectSignal>; // measured evidence that tunes the task order
 };

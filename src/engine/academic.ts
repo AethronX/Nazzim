@@ -82,7 +82,7 @@ export function agendaFor(ctx: AcademicContext, day: DateKey, label: { exam: str
     blocks.push({ key: 's' + s.id, kind: 'session', refId: s.id, subjectId: exam?.subjectId, title: chapterTitle(s, exam), detail: `${exam?.subject ?? ''} · ${label.kind(s.kind)}`, minutes: s.minutes, done: s.done });
   }
   // Tasks on the day follow the same smart order as the task list, so the two never disagree.
-  for (const t of rankTasks(ctx.tasks.filter(x => workDay(x) === day), ctx.exams, ctx.today).map(r => r.task)) {
+  for (const t of rankTasks(ctx.tasks.filter(x => workDay(x) === day), ctx.exams, ctx.today, 'smart', { signals: ctx.signals }).map(r => r.task)) {
     blocks.push({ key: 't' + t.id, kind: 'task', refId: t.id, subjectId: t.subjectId, title: t.title, detail: label.task, minutes: t.estimateMin, done: t.done });
   }
   let cursor = startMin;

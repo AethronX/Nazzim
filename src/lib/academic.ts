@@ -10,11 +10,11 @@ import { withEvidence } from './readiness';
 import { useNazzim } from './store';
 
 export function useAcademic() {
-  const { today, subjects, tasks, exams, study, cards, dailyMinutes, studyTime, L } = useNazzim();
+  const { today, subjects, tasks, exams, study, cards, dailyMinutes, studyTime, signals, L } = useNazzim();
   // Recall evidence is derived from the cards by `withEvidence` in src/lib/readiness.ts — the one place it
   // happens — so a graded card changes every surface in the same render and no screen can disagree.
   const withRecall = useMemo(() => withEvidence(exams, cards), [exams, cards]);
-  const ctx: AcademicContext = useMemo(() => ({ today, subjects, tasks, exams: withRecall, sessions: study, dailyMinutes }), [today, subjects, tasks, withRecall, study, dailyMinutes]);
+  const ctx: AcademicContext = useMemo(() => ({ today, subjects, tasks, exams: withRecall, sessions: study, dailyMinutes, signals }), [today, subjects, tasks, withRecall, study, dailyMinutes, signals]);
   const chapterTitle = useMemo(() => (s: StudySession, e?: ExamItem) => (s.chapter < 0 ? L.exAll : e?.chapters[s.chapter] ?? ''), [L]);
   const subjectById = useMemo(() => new Map(subjects.map(s => [s.id, s])), [subjects]);
   // The day's blocks start at the student's chosen study time (implementation intention).

@@ -5,6 +5,7 @@ import { Btn, T, Toggle } from '../components/ui';
 import { hhmm } from '../components/Habits';
 import { reminderTime } from '../engine/habits';
 import { remindersSupported } from '../lib/reminders';
+import { DEFAULT_PRIORITY_WEIGHTS, type PriorityWeights, type WeightLevel } from '../engine/tasks';
 import { useNazzim, type Appearance } from '../lib/store';
 import { ACCENT_KEYS, ACCENTS } from '../lib/theme';
 
@@ -23,6 +24,7 @@ const FOCUS_LENGTHS = [25, 50, 90];
 export default function Settings() {
   const {
     C, L, ar, set, appearance, accentKey, reminders, setReminders, remDenied, preset, setPreset, haptics, rewards, aiTips, setDel, studyTime,
+    priorityWeights, setPriorityWeight,
   } = useNazzim();
 
   return (
@@ -67,6 +69,19 @@ export default function Settings() {
               right={<Toggle on={reminders.focus} onPress={() => setReminders({ focus: !reminders.focus })} label={L.remFocus} />} />
           </>
         )}
+      </Section>
+
+      {/* Ordering factors: three plain levels, never a raw coefficient. */}
+      <Section label={L.pw.title}>
+        {(Object.keys(DEFAULT_PRIORITY_WEIGHTS) as (keyof PriorityWeights)[]).map((f, i, all) => {
+          const current = priorityWeights[f] ?? DEFAULT_PRIORITY_WEIGHTS[f];
+          const level: WeightLevel = current === 0 ? 'off' : current > DEFAULT_PRIORITY_WEIGHTS[f] ? 'high' : 'normal';
+          return (
+            <Row key={f} title={L.pw.factors[f]} last={i === all.length - 1} style={{ paddingStart: 16 }}
+              right={<Choice options={['off', 'normal', 'high'] as const} value={level}
+                onChange={v => setPriorityWeight(f, v)} labels={L.pw.levels} />} />
+          );
+        })}
       </Section>
 
       <Section label={L.sControls}>

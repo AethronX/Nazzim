@@ -153,3 +153,44 @@ const ids = (r) => r.map(x => x.task.id);
 }
 
 console.log('all task checks passed');
+
+// ── Priority signals: stakes, weakness and review backlog (added with the A-level OS) ─────────────
+{
+  const base = [task('stat', { due: E.addDays(today, 5), subjectId: 'stat' }), task('other', { due: E.addDays(today, 5), subjectId: 'calc' })];
+
+  // No signals at all → identical to the plain deadline order, and no invented reasons.
+  const plain = T.rankTasks(base, [], today);
+  assert.ok(['dueLater', 'quickWin', 'highPriority'].includes(plain[0].reason), 'no signals means no measured reason');
+
+  // Heavy marks still undecided in a subject pulls its task up, and says so.
+  const stakes = T.rankTasks(base, [], today, 'smart', { signals: { stat: { stakes: 0.9 } } });
+  assert.equal(stakes[0].task.id, 'stat', 'the subject with marks at stake comes first');
+  assert.equal(stakes[0].reason, 'highStakes');
+
+  // Proved weakness outranks a subject the student has mastered.
+  const weak = T.rankTasks(base, [], today, 'smart', { signals: { calc: { weakness: 0.9 } } });
+  assert.equal(weak[0].task.id, 'other');
+  assert.equal(weak[0].reason, 'weakTopic');
+
+  // A review/mistake backlog counts too.
+  const back = T.rankTasks(base, [], today, 'smart', { signals: { stat: { backlog: 1 } } });
+  assert.equal(back[0].task.id, 'stat');
+  assert.equal(back[0].reason, 'reviewBacklog');
+
+  // Weights are tunable: switching a factor off removes its effect entirely.
+  const off = T.rankTasks(base, [], today, 'smart', { signals: { stat: { stakes: 0.9 } }, weights: { stakes: 0 } });
+  assert.notEqual(off[0].reason, 'highStakes', 'a zeroed weight stops contributing');
+
+  // Signals can never cross a group boundary: an overdue task still outranks a high-stakes future one.
+  const groups = T.rankTasks(
+    [task('late', { due: E.addDays(today, -1), subjectId: 'calc' }), task('rich', { due: E.addDays(today, 6), subjectId: 'stat' })],
+    [], today, 'smart', { signals: { stat: { stakes: 1, weakness: 1, backlog: 1 } } },
+  );
+  assert.deepEqual(groups.map(r => r.task.id), ['late', 'rich'], 'groups still cannot be crossed');
+
+  // Out-of-range or non-finite signals are clamped, never trusted blindly.
+  const wild = T.rankTasks(base, [], today, 'smart', { signals: { stat: { stakes: 99, weakness: NaN } } });
+  assert.ok(Number.isFinite(wild[0].score), 'score stays finite with bad input');
+}
+
+console.log('all priority-signal checks passed');
