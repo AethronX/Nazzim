@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, useColorScheme } from 'react-native';
-import type { Assessment, Exam, Subject, Task } from '../domain/types';
+import type { Assessment, Exam, Subject, Task, Topic } from '../domain/types';
 import { workDay } from '../domain/types';
 import type { PlanProposal } from '../ai/planner';
 import { canAddExam } from '../config/plans';
@@ -17,6 +17,7 @@ import { track } from '../services/analytics';
 import { entitlementFromServer, purchase, purchasesAvailable, restore, type Period } from '../services/billing';
 import * as Sync from '../services/sync';
 import { COPY, counted, type Copy, type Lang } from './copy';
+import { newTopic, review as reviewTopicEngine } from '../engine/topics';
 import { addDays, daysBetween, newId, planExam, pruneOrphans, rate, rollForward, todayKey, type Confidence, type StudySession } from './exams';
 import { evidenceScore, withEvidence } from './readiness';
 import { askForReview, REVIEW_AFTER_SESSIONS, sessionDone, setHaptics, tapDone } from './feedback';
@@ -40,6 +41,7 @@ type Persisted = {
   subjects: Subject[]; tasks: Task[]; exams: Exam[]; study: StudySession[]; examsSeeded: boolean;
   cards: Card[]; // retrieval-practice cards the student wrote; the evidence behind the recall part of readiness
   assessments: Assessment[]; // graded course components (quizzes, midterms, finals) — the grade engine reads these
+  topics: Topic[]; // units of content tracked for mastery and spaced review, separate from task completion
   gradeTargets: Record<string, number>; // subjectId → the A threshold in points (university's real cutoff), default 90
   coursesSeeded: boolean; // whether the student's own four courses were loaded
   dailyMinutes: number; // usual study capacity per day; Rescue Mode plans within it
@@ -70,7 +72,7 @@ const deviceLang = (): Lang => {
 
 const INITIAL: Persisted = { schema: SCHEMA, lang: deviceLang(), ticks: {}, xp: 0, preset: 25, plan: 'year', sessions: 0, reviewAsked: false, appearance: 'system', reminders: DEFAULT_REMINDERS,
   profile: { name: '', uni: '', major: '', year: '' }, tier: 'free', haptics: true, rewards: true, aiTips: true, accentKey: 'indigo',
-  subjects: [], tasks: [], exams: [], study: [], cards: [], examsSeeded: false, assessments: [], gradeTargets: {}, coursesSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false, studyTime: 'afternoon', recapSeen: null, checklistHidden: false };
+  subjects: [], tasks: [], exams: [], study: [], cards: [], examsSeeded: false, assessments: [], topics: [], gradeTargets: {}, coursesSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false, studyTime: 'afternoon', recapSeen: null, checklistHidden: false };
 
 export const DEFAULT_A = 90; // most Gulf universities put A at 90; the student can change it per subject.
 
@@ -121,6 +123,8 @@ type Store = Persisted & {
   addSubject: (s: Omit<Subject, 'id'>) => string; updateSubject: (id: string, patch: Partial<Subject>) => void; deleteSubject: (id: string) => void;
   addAssessment: (a: Omit<Assessment, 'id'>) => string; updateAssessment: (id: string, patch: Partial<Omit<Assessment, 'id'>>) => void; deleteAssessment: (id: string) => void;
   setGradeTarget: (subjectId: string, target: number) => void;
+  addTopic: (subjectId: string, name: string) => string; updateTopic: (id: string, patch: Partial<Omit<Topic, 'id'>>) => void; deleteTopic: (id: string) => void;
+  reviewTopic: (id: string, grade: 0 | 1 | 2) => void; // records one retrieval attempt and reschedules
   seedMyCourses: () => void; // loads the student's own four courses with only the confirmed weights
   addTask: (t: Omit<Task, 'id' | 'done'>) => string; toggleTask: (id: string) => void; deleteTask: (id: string) => void;
   updateTask: (id: string, patch: Partial<Omit<Task, 'id'>>) => boolean; // validated; false = refused, nothing changed
@@ -171,7 +175,7 @@ function migrate(p: Persisted): Persisted {
   return { ...p, schema: SCHEMA, subjects, exams, tasks: p.tasks ?? [], cards, accentKey: normalizeAccent(p.accentKey),
     // Merge reminder defaults so a new toggle (e.g. task reminders) is present on upgrades, not undefined.
     reminders: { ...DEFAULT_REMINDERS, ...(p.reminders ?? {}) },
-    assessments: p.assessments ?? [], gradeTargets: p.gradeTargets ?? {}, coursesSeeded: p.coursesSeeded ?? false };
+    assessments: p.assessments ?? [], topics: p.topics ?? [], gradeTargets: p.gradeTargets ?? {}, coursesSeeded: p.coursesSeeded ?? false };
 }
 
 // "Explore with a sample semester" on the welcome screen: three subjects, one exam with its plan, three tasks.
@@ -239,11 +243,22 @@ function seedCourses(p: Persisted): Persisted {
     a(ecce.id, { name: 'Final Exam', weight: 0, status: 'upcoming', source: 'unconfirmed', note: 'Add the exam date and the official weights.' }),
   ];
 
+  // Topic content maps, taken verbatim from what the student supplied. Geology's seven topics come from the
+  // course outline; Statistics starts with the one topic they said they are on now. Nothing is invented, and
+  // the two courses with no content map stay empty for the student to fill in.
+  const topics: Topic[] = [
+    ...['Geology & Earth Origin', 'Continental Drift & Plate Tectonics', 'Rock Cycle & Earth Interior',
+      'Geological Structure', 'Earthquakes', 'Minerals', 'Igneous Rocks']
+      .map(n => newTopic(ersc.id, n, newId('tp'))),
+    newTopic(stat.id, 'Descriptive statistics', newId('tp')),
+  ];
+
   const subjects = [stat, ersc, socy, ecce];
   return {
     ...p, coursesSeeded: true,
     subjects: [...p.subjects, ...subjects],
     assessments: [...p.assessments, ...assessments],
+    topics: [...p.topics, ...topics],
     gradeTargets: { ...p.gradeTargets, [stat.id]: DEFAULT_A, [ersc.id]: DEFAULT_A, [socy.id]: DEFAULT_A, [ecce.id]: DEFAULT_A },
   };
 }
@@ -574,6 +589,7 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
       tasks: s.tasks.map(t => (t.subjectId === id ? { ...t, subjectId: undefined } : t)),
       exams: s.exams.map(e => (e.subjectId === id ? { ...e, subjectId: undefined } : e)),
       assessments: s.assessments.filter(a => a.subjectId !== id),
+      topics: s.topics.filter(t => t.subjectId !== id),
     })),
 
     // ── Grades ──────────────────────────────────────────────────────────────────────────────
@@ -594,6 +610,25 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
     deleteAssessment: id => setP(s => ({ ...s, assessments: s.assessments.filter(a => a.id !== id) })),
     setGradeTarget: (subjectId, target) => setP(s => ({ ...s, gradeTargets: { ...s.gradeTargets, [subjectId]: Math.max(0, Math.min(100, target)) } })),
     seedMyCourses: () => setP(s => (s.coursesSeeded ? s : seedCourses(s))),
+
+    // ── Topics and spaced review ────────────────────────────────────────────────────────────
+    addTopic: (subjectId, name) => {
+      const id = newId('tp');
+      if (!name.trim()) return '';
+      setP(s => ({ ...s, topics: [...s.topics, newTopic(subjectId, name, id)] }));
+      return id;
+    },
+    updateTopic: (id, patch) => setP(s => ({ ...s, topics: s.topics.map(t => (t.id === id ? { ...t, ...patch } : t)) })),
+    deleteTopic: id => setP(s => ({ ...s, topics: s.topics.filter(t => t.id !== id) })),
+    // Only a recorded attempt moves a topic. The nearest exam for that subject compresses the next gap.
+    reviewTopic: (id, grade) => setP(s => {
+      const t = s.topics.find(x => x.id === id);
+      if (!t) return s;
+      const nextExam = s.exams
+        .filter(e => e.subjectId === t.subjectId && e.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date))[0];
+      return { ...s, topics: s.topics.map(x => (x.id === id ? reviewTopicEngine(x, grade, today, nextExam?.date) : x)) };
+    }),
     // Every task that enters the store passes the same validation a synced row does, so a form can never
     // write a task the sync layer would later have to quarantine.
     addTask: t => {

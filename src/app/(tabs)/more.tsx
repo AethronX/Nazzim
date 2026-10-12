@@ -45,6 +45,7 @@ export default function More() {
         </Section>
         <Section label={L.secStudy}>
           <Row icon="chart" title={L.gr.title} sub={L.gr.sub} onPress={() => router.push('/grades')} />
+          <Row icon="target" title={L.tp.title} sub={L.tp.sub} onPress={() => router.push('/topics')} />
           <Row icon="check" title={L.tasksTitle} sub={openTasks ? L.tkOpenN.replace('{n}', String(openTasks)) : undefined} onPress={() => router.push('/tasks')} />
           <Row icon="chart" title={L.progressMenu} onPress={() => router.push('/progress')} />
           <Row icon="reset" title={L.rescueMenu} onPress={() => router.push('/rescue')} last />
