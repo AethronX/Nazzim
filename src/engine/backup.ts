@@ -5,7 +5,7 @@ export const BACKUP_VERSION = 1;
 export const BACKUP_TAG = 'nazzim-backup';
 
 /** Only the student's own records travel. Settings, language and UI state stay with the device. */
-export const BACKUP_KEYS = ['subjects', 'tasks', 'exams', 'study', 'cards', 'assessments', 'topics', 'errors', 'gradeTargets', 'dayLogs', 'focusLog'] as const;
+export const BACKUP_KEYS = ['subjects', 'tasks', 'exams', 'study', 'cards', 'assessments', 'topics', 'errors', 'classes', 'gradeTargets', 'playbooks', 'dayLogs', 'focusLog'] as const;
 export type BackupKey = (typeof BACKUP_KEYS)[number];
 
 export type Backup = { tag: string; version: number; exportedAt: string; data: Record<string, unknown> };
@@ -32,7 +32,7 @@ export function parseBackup(text: string): ParseResult {
   for (const k of BACKUP_KEYS) {
     const v = (b.data as Record<string, unknown>)[k];
     if (v === undefined) continue;
-    const wantsObject = k === 'gradeTargets' || k === 'dayLogs' || k === 'focusLog';
+    const wantsObject = k === 'gradeTargets' || k === 'playbooks' || k === 'dayLogs' || k === 'focusLog';
     const isObject = typeof v === 'object' && v !== null && !Array.isArray(v);
     if (wantsObject ? !isObject : !Array.isArray(v)) return { ok: false, reason: 'shape' };
   }

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, useColorScheme } from 'react-native';
-import type { Assessment, DayLog, ErrorKind, Exam, StudyError, Subject, Task, Topic } from '../domain/types';
+import type { Assessment, ClassSlot, DayLog, ErrorKind, Exam, Playbook, StudyError, Subject, Task, Topic } from '../domain/types';
 import { workDay } from '../domain/types';
 import type { PlanProposal } from '../ai/planner';
 import { canAddExam } from '../config/plans';
@@ -50,6 +50,8 @@ type Persisted = {
   errors: StudyError[]; // the mistake log: what went wrong, why, and when to re-test it
   priorityWeights: Partial<PriorityWeights>; // how loud each ordering factor is; tuned from Settings
   dayLogs: Record<string, DayLog>; // sleep, training, water and energy by day — counted, never graded
+  classes: ClassSlot[]; // the weekly timetable: lectures, labs, tutorials
+  playbooks: Record<string, Playbook>; // per subject: how to study it, and what its exam asks for
   gradeTargets: Record<string, number>; // subjectId → the A threshold in points (university's real cutoff), default 90
   coursesSeeded: boolean; // whether the student's own four courses were loaded
   dailyMinutes: number; // usual study capacity per day; Rescue Mode plans within it
@@ -80,7 +82,7 @@ const deviceLang = (): Lang => {
 
 const INITIAL: Persisted = { schema: SCHEMA, lang: deviceLang(), ticks: {}, xp: 0, preset: 25, plan: 'year', sessions: 0, reviewAsked: false, appearance: 'system', reminders: DEFAULT_REMINDERS,
   profile: { name: '', uni: '', major: '', year: '' }, tier: 'free', haptics: true, rewards: true, aiTips: true, accentKey: 'indigo',
-  subjects: [], tasks: [], exams: [], study: [], cards: [], examsSeeded: false, assessments: [], topics: [], errors: [], priorityWeights: {}, dayLogs: {}, gradeTargets: {}, coursesSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false, studyTime: 'afternoon', recapSeen: null, checklistHidden: false };
+  subjects: [], tasks: [], exams: [], study: [], cards: [], examsSeeded: false, assessments: [], topics: [], errors: [], priorityWeights: {}, dayLogs: {}, classes: [], playbooks: {}, gradeTargets: {}, coursesSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false, studyTime: 'afternoon', recapSeen: null, checklistHidden: false };
 
 export const DEFAULT_A = 90; // most Gulf universities put A at 90; the student can change it per subject.
 
@@ -139,6 +141,8 @@ type Store = Persisted & {
   setPriorityWeight: (factor: keyof PriorityWeights, level: WeightLevel) => void;
   logDay: (date: string, patch: Partial<DayLog>) => void;
   exportData: () => string; importData: (text: string) => { ok: boolean; records?: number };
+  addClass: (c: Omit<ClassSlot, 'id'>) => string; deleteClass: (id: string) => void;
+  setPlaybook: (subjectId: string, patch: Partial<Playbook>) => void;
   signals: Record<string, SubjectSignal>; // measured per-subject signals the ordering reads
   seedMyCourses: () => void; // loads the student's own four courses with only the confirmed weights
   addTask: (t: Omit<Task, 'id' | 'done'>) => string; toggleTask: (id: string) => void; deleteTask: (id: string) => void;
@@ -190,7 +194,7 @@ function migrate(p: Persisted): Persisted {
   return { ...p, schema: SCHEMA, subjects, exams, tasks: p.tasks ?? [], cards, accentKey: normalizeAccent(p.accentKey),
     // Merge reminder defaults so a new toggle (e.g. task reminders) is present on upgrades, not undefined.
     reminders: { ...DEFAULT_REMINDERS, ...(p.reminders ?? {}) },
-    assessments: p.assessments ?? [], topics: p.topics ?? [], errors: p.errors ?? [], priorityWeights: p.priorityWeights ?? {}, dayLogs: p.dayLogs ?? {}, gradeTargets: p.gradeTargets ?? {}, coursesSeeded: p.coursesSeeded ?? false };
+    assessments: p.assessments ?? [], topics: p.topics ?? [], errors: p.errors ?? [], priorityWeights: p.priorityWeights ?? {}, dayLogs: p.dayLogs ?? {}, classes: p.classes ?? [], playbooks: p.playbooks ?? {}, gradeTargets: p.gradeTargets ?? {}, coursesSeeded: p.coursesSeeded ?? false };
 }
 
 // "Explore with a sample semester" on the welcome screen: three subjects, one exam with its plan, three tasks.
@@ -268,9 +272,97 @@ function seedCourses(p: Persisted): Persisted {
     newTopic(stat.id, 'Descriptive statistics', newId('tp')),
   ];
 
+  // The weekly timetable, as given. 0 = Sunday … 6 = Saturday; times are minutes from midnight.
+  const hm = (h: number, m: number) => h * 60 + m;
+  const cls = (subjectId: string, weekday: number, from: [number, number], to: [number, number], kind: ClassSlot['kind']): ClassSlot =>
+    ({ id: newId('cl'), subjectId, weekday, startMin: hm(...from), endMin: hm(...to), kind });
+  const classes: ClassSlot[] = [
+    cls(ersc.id, 0, [14, 15], [16, 5], 'lab'),       // Sunday
+    cls(stat.id, 1, [10, 0], [11, 20], 'lecture'),   // Monday
+    cls(ersc.id, 1, [14, 15], [15, 35], 'lecture'),
+    cls(ecce.id, 2, [10, 0], [11, 50], 'lecture'),   // Tuesday
+    cls(socy.id, 2, [12, 0], [13, 50], 'lecture'),
+    cls(stat.id, 2, [14, 15], [16, 5], 'lab'),
+    cls(stat.id, 3, [10, 0], [11, 20], 'lecture'),   // Wednesday
+    cls(ersc.id, 3, [14, 15], [15, 35], 'lecture'),
+  ];
+
+  // How to study each course, written from the student's own notes on what each subject demands.
+  const playbooks: Record<string, Playbook> = {
+    [stat.id]: {
+      methods: [
+        'تدرّب على المسائل بدل قراءة الحلول',
+        'افهم متى وكيف يُستخدم كل قانون',
+        'اكتب خطوات الحل والتفسير',
+        'سجّل كل خطأ وصنّفه: مفهوم، قانون، حساب، تفسير، استعجال',
+        'ابدأ بمسائل الإحصاء الوصفي — هو موضوعك الحالي',
+        'اختبارات تدريبية محدّدة بالوقت',
+        'مراجعة تراكمية قبل النهائي مع تتبع الدقة والسرعة',
+      ],
+    },
+    [ersc.id]: {
+      methods: [
+        'بطاقات للمصطلحات والتعريفات',
+        'تعرّف على صور العينات والمعادن والصخور',
+        'ارسم المخططات من الذاكرة',
+        'تدرّب على تسمية الأجزاء',
+        'قارن بين المفاهيم والأنواع المتشابهة',
+        'حل أسئلة قصيرة وأسئلة اختيار من متعدد',
+        'افصل جلسات النظري عن جلسات المختبر',
+        'اختبار تجريبي يحاكي تنوّع أشكال أسئلة النهائي',
+      ],
+      formats: ['اختيار من متعدد', 'املأ الفراغ', 'التسمية (Labelling)', 'صح/خطأ', 'المطابقة', 'الرسم', 'إجابات قصيرة'],
+    },
+    [socy.id]: {
+      methods: [
+        'ملخص مستقل لكل محاضرة',
+        'حوّل المفاهيم إلى أسئلة وأجوبة',
+        'اربط الأفكار بالأمثلة الواردة في المقرر',
+        'بطاقات للمصطلحات والأسماء والتواريخ المهمة',
+        'اختبارات استرجاع مغلقة الكتاب',
+        'مراجعة تراكمية للمحاضرات',
+        'اصنع قائمة بالموضوعات التي تنسى تفاصيلها',
+      ],
+    },
+    [ecce.id]: {
+      methods: [
+        'سجل للمفاهيم والمصطلحات',
+        'اشرح كل مفهوم بأسلوب مبسّط',
+        'أمثلة وتطبيقات مرتبطة بالمحاضرات',
+        'أسئلة استرجاع وفهم',
+        'راجع الواجبات والمشاريع ومواعيد تسليمها',
+        'تتبّع مستوى الإتقان لكل موضوع',
+        'احتفظ بالأسئلة التي تحتاج طرحها على المدرّس',
+      ],
+    },
+  };
+
+  // Exams the revision planner can actually schedule around. Chapters come only from the coverage the
+  // student stated (Geology's midterm covers topics 1–5, its final covers all seven); courses whose syllabus
+  // gave no content map get no invented chapters — their dates still show in Grades and the Calendar.
+  const today = todayKey();
+  const erscNames = topics.filter(t => t.subjectId === ersc.id).map(t => t.name);
+  const statNames = topics.filter(t => t.subjectId === stat.id).map(t => t.name);
+  const exam = (subjectId: string, name: string, date: string, chapters: string[]): Exam =>
+    ({ id: newId('e'), subjectId, subject: name, date, chapters });
+  const exams: Exam[] = [];
+  if (statNames.length) {
+    exams.push(exam(stat.id, stat.name, '2026-11-03', statNames));
+    exams.push(exam(stat.id, stat.name, '2026-12-29', statNames));
+  }
+  if (erscNames.length) {
+    exams.push(exam(ersc.id, ersc.name, '2026-10-26', erscNames.slice(0, 5)));
+    exams.push(exam(ersc.id, ersc.name, '2027-01-02', erscNames));
+  }
+  const study: StudySession[] = exams.flatMap(e => planExam(e, today));
+
   const subjects = [stat, ersc, socy, ecce];
   return {
     ...p, coursesSeeded: true,
+    exams: [...p.exams, ...exams].sort((a, b) => a.date.localeCompare(b.date)),
+    study: [...p.study, ...study],
+    classes: [...p.classes, ...classes],
+    playbooks: { ...p.playbooks, ...playbooks },
     subjects: [...p.subjects, ...subjects],
     assessments: [...p.assessments, ...assessments],
     topics: [...p.topics, ...topics],
@@ -310,6 +402,11 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
           // device, can leave blocks pointing at chapters that no longer exist.
           setP({ ...next, study: pruneOrphans(rollForward(next.study, next.exams, todayKey()), next.exams) });
           setTimer(t => ({ ...t, secs: next.preset * 60, total: next.preset * 60 }));
+        } else {
+          // First launch: this build is configured for one student's semester, so the courses, timetable,
+          // topic maps, assessment weights, study playbooks and the A target are already in place. There is
+          // nothing to set up — only to follow. Anything the syllabus left unconfirmed stays editable.
+          setP(s => ({ ...seedCourses(s), onboarded: true }));
         }
         track({ name: 'app_opened' });
       })
@@ -612,6 +709,7 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
       assessments: s.assessments.filter(a => a.subjectId !== id),
       topics: s.topics.filter(t => t.subjectId !== id),
       errors: s.errors.filter(e => e.subjectId !== id),
+      classes: s.classes.filter(c => c.subjectId !== id),
     })),
 
     // ── Grades ──────────────────────────────────────────────────────────────────────────────
@@ -665,6 +763,12 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
     markErrorRepeated: id => setP(s => ({ ...s, errors: s.errors.map(e => (e.id === id ? repeatError(e, today) : e)) })),
     resolveErrorItem: id => setP(s => ({ ...s, errors: s.errors.map(e => (e.id === id ? resolveError(e) : e)) })),
     logDay: (date, patch) => setP(s => ({ ...s, dayLogs: { ...s.dayLogs, [date]: patchDay(s.dayLogs[date], date, patch) } })),
+    addClass: c => { const id = newId('cl'); setP(s => ({ ...s, classes: [...s.classes, { ...c, id }] })); return id; },
+    deleteClass: id => setP(s => ({ ...s, classes: s.classes.filter(c => c.id !== id) })),
+    setPlaybook: (subjectId, patch) => setP(s => {
+      const current: Playbook = s.playbooks[subjectId] ?? { methods: [] };
+      return { ...s, playbooks: { ...s.playbooks, [subjectId]: { ...current, ...patch } } };
+    }),
     exportData: () => JSON.stringify(exportBackup(p as unknown as Record<string, unknown>, new Date().toISOString()), null, 2),
     // Restore replaces the academic records only, and refuses anything it cannot fully validate.
     importData: text => {

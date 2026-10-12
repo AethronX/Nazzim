@@ -69,6 +69,26 @@ export type StudyError = {
   createdAt: DateKey;
 };
 
+// A recurring class on the weekly timetable. `weekday` is 0 = Sunday … 6 = Saturday, matching Date.getDay(),
+// and times are minutes from midnight so comparing and sorting needs no parsing.
+export type ClassKind = 'lecture' | 'lab' | 'tutorial';
+export type ClassSlot = {
+  id: string;
+  subjectId: string;
+  weekday: number;
+  startMin: number;
+  endMin: number;
+  kind: ClassKind;
+  room?: string;
+};
+
+// How to study THIS course, and what its exam actually asks for. Written by the student (or carried over
+// from the course outline) — never generated, because a method invented by software is just noise.
+export type Playbook = {
+  methods: string[];   // the practices that work for this subject
+  formats?: string[];  // question types the final is known to use
+};
+
 // One day of self-care, logged in seconds. Every field is optional on purpose: a day with only sleep logged
 // is still a logged day. These are the student's own numbers, not medical targets, and nothing here is
 // diagnosed, scored or judged — the weekly summary only places them beside focus and completion.

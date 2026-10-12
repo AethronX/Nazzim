@@ -50,7 +50,7 @@ export default function Dashboard() {
       : null;
     return (
       <View key={c.subject.id} style={{ borderBottomWidth: last ? 0 : 1, borderBottomColor: C.line2, padding: 14, gap: 12 }}>
-        <Btn pressScale={0.99} onPress={() => router.push(`/grades/${c.subject.id}`)} accessibilityLabel={c.subject.name}
+        <Btn pressScale={0.99} onPress={() => router.push(`/course/${c.subject.id}`)} accessibilityLabel={c.subject.name}
           style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <SubjectTile subject={c.subject} size={38} />
           <View style={{ flex: 1, minWidth: 0, gap: 3 }}>

@@ -35,7 +35,7 @@ export default function Subjects() {
           const fact = sum.nextExam ? L.subjExam.replace('{d}', relDay(sum.nextExam.date, today, L, ar))
             : sum.pendingTasks ? L.subjTasks.replace('{c}', counted(sum.pendingTasks, 'task', L, ar)) : L.subjClear;
           return (
-            <Btn key={s.id} pressScale={0.99} onPress={() => router.push(`/subject/${s.id}`)}
+            <Btn key={s.id} pressScale={0.99} onPress={() => router.push(`/course/${s.id}`)}
               accessibilityLabel={`${s.name}, ${L.target.replace('{g}', s.targetGrade)}, ${sum.readiness === undefined ? L.sbDone : L.sbReady} ${sum.readiness ?? sum.progress}%`}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, boxShadow: C.shadowSoft }}>
               <SubjectTile subject={s} size={48} />

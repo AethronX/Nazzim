@@ -105,6 +105,14 @@ const en = {
     apply: 'Use this split', applied: 'Saved as your weekly target', note: 'Nothing changes until you accept it.',
     emptyT: 'Not enough yet', emptyS: 'Finish a few tasks and log a day or two, and your review appears here.',
   },
+  co: {
+    title: 'Course', schedule: 'Weekly classes', methodsT: 'How to study this', formats: 'The final asks for',
+    nextUp: 'Next assessment', gradeNow: 'Earned', needsFor: 'Needs for A', noClasses: 'No classes added',
+    kinds: { lecture: 'Lecture', lab: 'Lab', tutorial: 'Tutorial' },
+    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    openGrades: 'Grades', openTopics: 'Topics & review', openErrors: 'Mistakes',
+    todayClass: 'Today', methodsNote: 'These came from your own course notes — edit them whenever your method changes.',
+  },
   ex: {
     title: 'Backup', sub: 'Your data, in a file you keep.',
     export: 'Export my data', copy: 'Copy to clipboard', copied: 'Copied',
@@ -473,6 +481,14 @@ const ar: Copy = {
     },
     apply: 'اعتمد هذا التوزيع', applied: 'حُفظ كهدفك الأسبوعي', note: 'لا شيء يتغيّر حتى توافق.',
     emptyT: 'البيانات قليلة بعد', emptyS: 'أنجز بعض المهام وسجّل يوماً أو يومين، وتظهر مراجعتك هنا.',
+  },
+  co: {
+    title: 'المادة', schedule: 'محاضرات الأسبوع', methodsT: 'كيف تذاكرها', formats: 'النهائي يسأل بـ',
+    nextUp: 'التقييم القادم', gradeNow: 'المكتسب', needsFor: 'المطلوب لـ A', noClasses: 'لا محاضرات مضافة',
+    kinds: { lecture: 'محاضرة', lab: 'مختبر', tutorial: 'تمارين' },
+    days: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+    openGrades: 'الدرجات', openTopics: 'الموضوعات والمراجعة', openErrors: 'الأخطاء',
+    todayClass: 'اليوم', methodsNote: 'هذه من ملاحظاتك على المقرر — عدّلها متى تغيّرت طريقتك.',
   },
   ex: {
     title: 'النسخ الاحتياطي', sub: 'بياناتك، في ملف تحتفظ به.',
