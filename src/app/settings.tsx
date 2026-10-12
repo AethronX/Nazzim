@@ -61,6 +61,8 @@ export default function Settings() {
               right={<Toggle on={reminders.habits} onPress={() => setReminders({ habits: !reminders.habits })} label={L.remHabits} />} />
             <Row title={L.remExams} sub={L.remExamsSub} style={{ paddingStart: 46 }}
               right={<Toggle on={reminders.exams} onPress={() => setReminders({ exams: !reminders.exams })} label={L.remExams} />} />
+            <Row title={L.remTasks} sub={L.remTasksSub} style={{ paddingStart: 46 }}
+              right={<Toggle on={reminders.tasks} onPress={() => setReminders({ tasks: !reminders.tasks })} label={L.remTasks} />} />
             <Row title={L.remFocus} sub={L.remFocusSub} style={{ paddingStart: 46 }} last
               right={<Toggle on={reminders.focus} onPress={() => setReminders({ focus: !reminders.focus })} label={L.remFocus} />} />
           </>

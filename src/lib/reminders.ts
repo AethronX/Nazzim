@@ -5,8 +5,8 @@ import type { Copy } from './copy';
 // Local notifications only (no server): daily habit check-in, exam eve, and focus-session end.
 export const remindersSupported = Platform.OS !== 'web';
 
-export type ReminderSettings = { on: boolean; habits: boolean; habitHour: number; exams: boolean; focus: boolean };
-export const DEFAULT_REMINDERS: ReminderSettings = { on: false, habits: true, habitHour: 16, exams: true, focus: true };
+export type ReminderSettings = { on: boolean; habits: boolean; habitHour: number; exams: boolean; focus: boolean; tasks: boolean };
+export const DEFAULT_REMINDERS: ReminderSettings = { on: false, habits: true, habitHour: 16, exams: true, focus: true, tasks: true };
 export const HABIT_HOURS = [8, 20, 22];
 const EXAM_EVE_HOUR = 19;
 
@@ -14,6 +14,8 @@ const HABITS_ID = 'nz-habits';
 const STREAK_ID = 'nz-streak';
 const STREAK_HOUR = 20;
 const EXAM_PREFIX = 'nz-exam-';
+const TASK_ID = 'nz-tasks';
+const TASK_HOUR = 18; // evening nudge for tasks due today that are still open
 const FOCUS_ID = 'nz-focus';
 const CHANNEL = 'reminders';
 
@@ -60,10 +62,23 @@ export type DailyContext = { hour: number; minute: number; next: string | null; 
 
 // Rebuild the reminders from the current settings, language and plan. At most two a day (the plan reminder and,
 // only when a streak is alive and nothing is done yet, one evening nudge), never in quiet hours.
-export async function syncReminders(s: ReminderSettings, L: Copy, exams: Exam[], daily?: DailyContext) {
+export async function syncReminders(s: ReminderSettings, L: Copy, exams: Exam[], daily?: DailyContext, tasksCtx?: { label: string; top: string }) {
   if (!remindersSupported) return;
-  await cancelMatching(id => id === HABITS_ID || id === STREAK_ID || id.startsWith(EXAM_PREFIX));
+  await cancelMatching(id => id === HABITS_ID || id === STREAK_ID || id === TASK_ID || id.startsWith(EXAM_PREFIX));
   if (!s.on || (await getPermission()) !== 'granted') return;
+
+  // Forgotten-task nudge: one evening reminder (18:00) when something due today is still open. Motivating, not
+  // nagging — it names the count and the one task to start with, and only fires if that hour is still ahead.
+  if (s.tasks && tasksCtx && tasksCtx.top) {
+    const at = new Date(); at.setHours(TASK_HOUR, 0, 0, 0);
+    if (at.getTime() > Date.now()) {
+      await Notifications.scheduleNotificationAsync({
+        identifier: TASK_ID,
+        content: { title: L.nTaskTitle, body: L.nTaskBody.replace('{n}', tasksCtx.label).replace('{task}', tasksCtx.top), data: { url: '/' } },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId: CHANNEL },
+      });
+    }
+  }
 
   if (s.habits) {
     await Notifications.scheduleNotificationAsync({

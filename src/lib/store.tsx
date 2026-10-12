@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, useColorScheme } from 'react-native';
 import type { Assessment, Exam, Subject, Task } from '../domain/types';
+import { workDay } from '../domain/types';
 import type { PlanProposal } from '../ai/planner';
 import { canAddExam } from '../config/plans';
 import { recommendNextAction } from '../engine/academic';
@@ -15,7 +16,7 @@ import { DEFAULT_DAILY_MIN, type RescuePlan } from '../engine/rescue';
 import { track } from '../services/analytics';
 import { entitlementFromServer, purchase, purchasesAvailable, restore, type Period } from '../services/billing';
 import * as Sync from '../services/sync';
-import { COPY, type Copy, type Lang } from './copy';
+import { COPY, counted, type Copy, type Lang } from './copy';
 import { addDays, daysBetween, newId, planExam, pruneOrphans, rate, rollForward, todayKey, type Confidence, type StudySession } from './exams';
 import { evidenceScore, withEvidence } from './readiness';
 import { askForReview, REVIEW_AFTER_SESSIONS, sessionDone, setHaptics, tapDone } from './feedback';
@@ -168,6 +169,8 @@ function migrate(p: Persisted): Persisted {
   // New in the A-level OS: graded assessments and per-subject grade targets. Non-destructive — absent on older
   // installs, so default to empty and the student's existing subjects/exams/tasks are untouched.
   return { ...p, schema: SCHEMA, subjects, exams, tasks: p.tasks ?? [], cards, accentKey: normalizeAccent(p.accentKey),
+    // Merge reminder defaults so a new toggle (e.g. task reminders) is present on upgrades, not undefined.
+    reminders: { ...DEFAULT_REMINDERS, ...(p.reminders ?? {}) },
     assessments: p.assessments ?? [], gradeTargets: p.gradeTargets ?? {}, coursesSeeded: p.coursesSeeded ?? false };
 }
 
@@ -460,11 +463,15 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
       const next = recommendNextAction(ctx, (s, e) => (s.chapter < 0 ? Lx.exAll : e?.chapters[s.chapter] ?? ''));
       const streak = studyStreak(ctx, p.focusLog);
       const list = p.exams.map(e => ({ id: e.id, name: e.subject, days: daysBetween(today, e.date) })).filter(e => e.days > 0);
+      // Forgotten-task nudge context: tasks whose working day is today or earlier and still open. Start with
+      // the one that is due soonest, so the nudge points at the most urgent thing, not a random task.
+      const open = p.tasks.filter(t => !t.done && workDay(t) <= today).sort((a, b) => a.due.localeCompare(b.due));
+      const tasksCtx = open.length ? { label: counted(open.length, 'task', Lx, p.lang === 'ar'), top: open[0].title } : undefined;
       syncReminders(p.reminders, Lx, list, {
         ...reminderTime(p.studyTime),
         next: next.kind === 'session' || next.kind === 'task' ? `${next.title} · ${next.minutes} ${Lx.min}` : null,
         streakDays: streak.days, studiedToday: streak.studiedToday,
-      }).catch(() => {});
+      }, tasksCtx).catch(() => {});
     }, 2000);
     return () => clearTimeout(t);
   }, [ready, p.reminders, p.lang, p.exams, p.study, p.tasks, p.subjects, p.cards, p.focusLog, p.studyTime, today]);
