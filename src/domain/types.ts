@@ -69,6 +69,24 @@ export type StudyError = {
   createdAt: DateKey;
 };
 
+// One day of self-care, logged in seconds. Every field is optional on purpose: a day with only sleep logged
+// is still a logged day. These are the student's own numbers, not medical targets, and nothing here is
+// diagnosed, scored or judged — the weekly summary only places them beside focus and completion.
+export type DayLog = {
+  date: DateKey;
+  sleepHours?: number;
+  sleepQuality?: 1 | 2 | 3;
+  water?: number;        // litres
+  runMinutes?: number;
+  liftMinutes?: number;
+  restDay?: boolean;     // a deliberate rest day is a success, not a gap
+  energy?: 1 | 2 | 3;    // how the student felt
+  focusFelt?: 1 | 2 | 3;
+  chessMinutes?: number;
+  podcastMinutes?: number;
+  note?: string;
+};
+
 // A unit of content inside a course, tracked for mastery and spaced review — separate from task completion.
 export type TopicStatus = 'new' | 'learning' | 'reviewed' | 'mastered';
 export type Topic = {
