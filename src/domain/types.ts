@@ -31,6 +31,41 @@ export type Task = {
 
 export type TaskPriority = 'high' | 'normal' | 'low';
 
+// A graded component of a course: a quiz, midterm, lab, assignment, final. The grade engine reads these.
+// `weight` is a PERCENT of the final course grade (25 means 25%), never a fraction — one convention everywhere.
+// `source` keeps honest provenance: data the student confirmed from the official syllabus vs. entered vs. unconfirmed.
+export type AssessmentStatus = 'upcoming' | 'inProgress' | 'submitted' | 'graded' | 'deferred';
+export type AssessmentSource = 'official' | 'student' | 'unconfirmed';
+export type Assessment = {
+  id: string;
+  subjectId: string;
+  name: string;
+  weight: number;        // percent of the final course grade, 0–100
+  maxScore?: number;     // raw maximum of this assessment (e.g. 15)
+  score?: number;        // raw achieved (e.g. 8); present only once graded
+  due?: DateKey;
+  status: AssessmentStatus;
+  source: AssessmentSource;
+  topicIds?: string[];   // topics this assessment covers, if known
+  note?: string;
+};
+
+// A unit of content inside a course, tracked for mastery and spaced review — separate from task completion.
+export type TopicStatus = 'new' | 'learning' | 'reviewed' | 'mastered';
+export type Topic = {
+  id: string;
+  subjectId: string;
+  name: string;
+  status: TopicStatus;
+  lastStudied?: DateKey;
+  nextReview?: DateKey;
+  reps: number;          // successful recalls in a row
+  correct: number;       // lifetime correct answers
+  wrong: number;         // lifetime wrong answers
+  confidence?: 1 | 2 | 3;
+  lastScore?: number;    // 0–1 on the last self-test
+};
+
 // The day a task sits on the schedule: where it was planned, else its due date.
 export const workDay = (t: Task): DateKey => t.plannedFor ?? t.due;
 

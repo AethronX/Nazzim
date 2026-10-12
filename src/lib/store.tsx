@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, useColorScheme } from 'react-native';
-import type { Exam, Subject, Task } from '../domain/types';
+import type { Assessment, Exam, Subject, Task } from '../domain/types';
 import type { PlanProposal } from '../ai/planner';
 import { canAddExam } from '../config/plans';
 import { recommendNextAction } from '../engine/academic';
@@ -38,6 +38,9 @@ type Persisted = {
   // Academic context. `study` is the revision plan; `sessions` above counts finished focus sessions.
   subjects: Subject[]; tasks: Task[]; exams: Exam[]; study: StudySession[]; examsSeeded: boolean;
   cards: Card[]; // retrieval-practice cards the student wrote; the evidence behind the recall part of readiness
+  assessments: Assessment[]; // graded course components (quizzes, midterms, finals) — the grade engine reads these
+  gradeTargets: Record<string, number>; // subjectId → the A threshold in points (university's real cutoff), default 90
+  coursesSeeded: boolean; // whether the student's own four courses were loaded
   dailyMinutes: number; // usual study capacity per day; Rescue Mode plans within it
   focusLog: Record<string, number>; // focused minutes per day, for consistency and weekly study time
   onboarded: boolean;
@@ -66,7 +69,9 @@ const deviceLang = (): Lang => {
 
 const INITIAL: Persisted = { schema: SCHEMA, lang: deviceLang(), ticks: {}, xp: 0, preset: 25, plan: 'year', sessions: 0, reviewAsked: false, appearance: 'system', reminders: DEFAULT_REMINDERS,
   profile: { name: '', uni: '', major: '', year: '' }, tier: 'free', haptics: true, rewards: true, aiTips: true, accentKey: 'indigo',
-  subjects: [], tasks: [], exams: [], study: [], cards: [], examsSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false, studyTime: 'afternoon', recapSeen: null, checklistHidden: false };
+  subjects: [], tasks: [], exams: [], study: [], cards: [], examsSeeded: false, assessments: [], gradeTargets: {}, coursesSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false, studyTime: 'afternoon', recapSeen: null, checklistHidden: false };
+
+export const DEFAULT_A = 90; // most Gulf universities put A at 90; the student can change it per subject.
 
 // What the focus timer is working on, so a finished session can update that item's progress.
 export type FocusTarget = { kind: 'session' | 'task'; id: string } | null;
@@ -113,6 +118,9 @@ type Store = Persisted & {
   addCard: (examId: string, chapter: number, q: string, a: string) => string; deleteCard: (id: string) => void;
   gradeCard: (id: string, g: Grade, typed?: string) => void;
   addSubject: (s: Omit<Subject, 'id'>) => string; updateSubject: (id: string, patch: Partial<Subject>) => void; deleteSubject: (id: string) => void;
+  addAssessment: (a: Omit<Assessment, 'id'>) => string; updateAssessment: (id: string, patch: Partial<Omit<Assessment, 'id'>>) => void; deleteAssessment: (id: string) => void;
+  setGradeTarget: (subjectId: string, target: number) => void;
+  seedMyCourses: () => void; // loads the student's own four courses with only the confirmed weights
   addTask: (t: Omit<Task, 'id' | 'done'>) => string; toggleTask: (id: string) => void; deleteTask: (id: string) => void;
   updateTask: (id: string, patch: Partial<Omit<Task, 'id'>>) => boolean; // validated; false = refused, nothing changed
   moveTaskTomorrow: (id: string) => void; // the working day moves, the deadline stays
@@ -157,7 +165,10 @@ function migrate(p: Persisted): Persisted {
     return { ...e, subjectId: subj.id };
   });
   const cards = (p.cards ?? []).map(c => (c.lastGrade !== undefined && c.evidence === undefined ? { ...c, evidence: 'self' as const } : c));
-  return { ...p, schema: SCHEMA, subjects, exams, tasks: p.tasks ?? [], cards, accentKey: normalizeAccent(p.accentKey) };
+  // New in the A-level OS: graded assessments and per-subject grade targets. Non-destructive — absent on older
+  // installs, so default to empty and the student's existing subjects/exams/tasks are untouched.
+  return { ...p, schema: SCHEMA, subjects, exams, tasks: p.tasks ?? [], cards, accentKey: normalizeAccent(p.accentKey),
+    assessments: p.assessments ?? [], gradeTargets: p.gradeTargets ?? {}, coursesSeeded: p.coursesSeeded ?? false };
 }
 
 // "Explore with a sample semester" on the welcome screen: three subjects, one exam with its plan, three tasks.
@@ -177,6 +188,61 @@ function seed(p: Persisted): Persisted {
     { id: newId('t'), subjectId: subjects[1].id, title: S.tasks[2], due: addDays(today, 3), estimateMin: 50, done: false },
   ];
   return { ...p, examsSeeded: true, subjects: [...p.subjects, ...subjects], exams: [...p.exams, exam], study: [...p.study, ...study], tasks: [...p.tasks, ...tasks] };
+}
+
+// The student's own four courses, seeded with ONLY the weights confirmed from each syllabus. Anything the
+// syllabus did not state is either left out (to be added in-app) or marked source:'unconfirmed' with weight 0,
+// so the grade engine refuses a misleading forecast until the student enters the official numbers. Nothing
+// here is invented — no fake grades, no guessed weights, no spread of the unknown 10% in Geology.
+function seedCourses(p: Persisted): Persisted {
+  const mk = (name: string, color: Subject['color'], icon: Subject['icon']): Subject => ({ id: newId('sub'), name, color, icon, targetGrade: 'A' });
+  const stat = mk('STAT2101 — Introduction to Statistics', 'indigo', 'chart');
+  const ersc = mk('ERSC2101 — Introduction to Geology', 'amber', 'globe');
+  const socy = mk('SOCY1005 — عُمان الدولة والإنسان', 'rose', 'book');
+  const ecce = mk('ECCE2000 — Introduction to AI', 'violet', 'atom');
+
+  type A = Omit<Assessment, 'id'>;
+  const a = (subjectId: string, o: Omit<A, 'subjectId'>): Assessment => ({ id: newId('as'), subjectId, ...o });
+
+  const assessments: Assessment[] = [
+    // STAT2101 — the full distribution is known and sums to 100%. The in-class quiz block (15%) is three
+    // quizzes (weeks 4,6,11), so each is 5%; quiz 1 is the one recorded result: 8/15.
+    a(stat.id, { name: 'In-class Quiz 1 (wk4)', weight: 5, maxScore: 15, score: 8, status: 'graded', source: 'official' }),
+    a(stat.id, { name: 'In-class Quiz 2 (wk6)', weight: 5, status: 'upcoming', source: 'official' }),
+    a(stat.id, { name: 'In-class Quiz 3 (wk11)', weight: 5, status: 'upcoming', source: 'official' }),
+    a(stat.id, { name: 'Lab Quiz 1 (wk5)', weight: 2.5, status: 'upcoming', source: 'official' }),
+    a(stat.id, { name: 'Lab Quiz 2 (wk7)', weight: 2.5, status: 'upcoming', source: 'official' }),
+    a(stat.id, { name: 'Lab Quiz 3 (wk12)', weight: 2.5, status: 'upcoming', source: 'official' }),
+    a(stat.id, { name: 'Lab Quiz 4 (wk14)', weight: 2.5, status: 'upcoming', source: 'official' }),
+    a(stat.id, { name: 'Midterm', weight: 25, due: '2026-11-03', status: 'upcoming', source: 'official' }),
+    a(stat.id, { name: 'Active Learning 1 (wk7)', weight: 2.5, status: 'upcoming', source: 'official' }),
+    a(stat.id, { name: 'Active Learning 2 (wk12)', weight: 2.5, status: 'upcoming', source: 'official' }),
+    a(stat.id, { name: 'Final Exam', weight: 45, due: '2026-12-29', status: 'upcoming', source: 'official' }),
+
+    // ERSC2101 — syllabus states 90% only. The remaining 10% is a real but unconfirmed component; keep it as
+    // its own unconfirmed line so the engine treats the subject as incomplete instead of forecasting on 90%.
+    a(ersc.id, { name: 'First Quiz (topics 1–2)', weight: 2.5, due: '2026-10-06', status: 'upcoming', source: 'official' }),
+    a(ersc.id, { name: 'Midterm (topics 1–5)', weight: 20, due: '2026-10-26', status: 'upcoming', source: 'official' }),
+    a(ersc.id, { name: 'Second Quiz (topics 6–7)', weight: 2.5, due: '2026-11-24', status: 'upcoming', source: 'official' }),
+    a(ersc.id, { name: 'Lab Exam', weight: 20, due: '2026-12-22', status: 'upcoming', source: 'official' }),
+    a(ersc.id, { name: 'Final Exam', weight: 45, due: '2027-01-02', status: 'upcoming', source: 'official' }),
+    a(ersc.id, { name: 'Unconfirmed component (10%)', weight: 10, status: 'upcoming', source: 'unconfirmed', note: 'Confirm the official breakdown of this 10% from the syllabus.' }),
+
+    // SOCY1005 — only the final's date is known; no weights given. One unconfirmed, weight-0 line so the
+    // subject reads "distribution incomplete" and the student fills the real weights in-app.
+    a(socy.id, { name: 'Final Exam', weight: 0, due: '2026-12-24', status: 'upcoming', source: 'unconfirmed', note: 'Add the official grade distribution from the course outline.' }),
+
+    // ECCE2000 — final date, weights and assignments not provided. Placeholder to be completed in-app.
+    a(ecce.id, { name: 'Final Exam', weight: 0, status: 'upcoming', source: 'unconfirmed', note: 'Add the exam date and the official weights.' }),
+  ];
+
+  const subjects = [stat, ersc, socy, ecce];
+  return {
+    ...p, coursesSeeded: true,
+    subjects: [...p.subjects, ...subjects],
+    assessments: [...p.assessments, ...assessments],
+    gradeTargets: { ...p.gradeTargets, [stat.id]: DEFAULT_A, [ersc.id]: DEFAULT_A, [socy.id]: DEFAULT_A, [ecce.id]: DEFAULT_A },
+  };
 }
 
 export function NazzimProvider({ children }: { children: ReactNode }) {
@@ -494,13 +560,33 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
       // Exams carry the subject name for display; keep it in step.
       exams: patch.name ? s.exams.map(e => (e.subjectId === id ? { ...e, subject: patch.name! } : e)) : s.exams,
     })),
-    // Deleting a subject keeps its tasks and exams, unlinked.
+    // Deleting a subject keeps its tasks and exams, unlinked, and removes its assessments.
     deleteSubject: id => setP(s => ({
       ...s,
       subjects: s.subjects.filter(x => x.id !== id),
       tasks: s.tasks.map(t => (t.subjectId === id ? { ...t, subjectId: undefined } : t)),
       exams: s.exams.map(e => (e.subjectId === id ? { ...e, subjectId: undefined } : e)),
+      assessments: s.assessments.filter(a => a.subjectId !== id),
     })),
+
+    // ── Grades ──────────────────────────────────────────────────────────────────────────────
+    addAssessment: a => {
+      const id = newId('as');
+      setP(s => ({ ...s, assessments: [...s.assessments, { ...a, id }] }));
+      return id;
+    },
+    updateAssessment: (id, patch) => setP(s => ({
+      ...s,
+      assessments: s.assessments.map(a => {
+        if (a.id !== id) return a;
+        const next: Record<string, unknown> = { ...a, ...patch };
+        for (const k of Object.keys(patch)) if ((patch as Record<string, unknown>)[k] === undefined) delete next[k];
+        return next as Assessment;
+      }),
+    })),
+    deleteAssessment: id => setP(s => ({ ...s, assessments: s.assessments.filter(a => a.id !== id) })),
+    setGradeTarget: (subjectId, target) => setP(s => ({ ...s, gradeTargets: { ...s.gradeTargets, [subjectId]: Math.max(0, Math.min(100, target)) } })),
+    seedMyCourses: () => setP(s => (s.coursesSeeded ? s : seedCourses(s))),
     // Every task that enters the store passes the same validation a synced row does, so a form can never
     // write a task the sync layer would later have to quarantine.
     addTask: t => {

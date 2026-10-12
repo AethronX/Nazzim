@@ -252,6 +252,37 @@ const en = {
   subjEmptyT: 'Start with one subject', subjEmptyS: 'One subject and its next exam is enough for Nazzim to plan your days.',
   offT: 'You’re offline', offS: 'Everything you do is saved on this device.',
   errT: 'This screen hit a problem', errS: 'Your plan is safe on this device. Try again — if it keeps happening, tell us at support@nazzim.app.', errRetry: 'Try again',
+  // Grades — the A-level engine surfaced in the UI.
+  gr: {
+    title: 'Grades', sub: 'What you’ve earned — and exactly what you need for your target.',
+    seed: 'Load my four courses', hubEmptyT: 'Track your real grade', hubEmptyS: 'Add a course and its assessments to see what you’ve earned and what each A still needs.',
+    add: 'Add assessment', edit: 'Edit assessment', newA: 'New assessment',
+    name: 'Name', weight: 'Weight', maxScore: 'Out of', score: 'Your score', due: 'Date', optional: 'optional',
+    target: 'A target', earned: 'Earned so far', avg: 'Average graded', need: 'Needed on remaining', max: 'Best possible', remaining: 'Remaining',
+    statusLabel: 'Status', sourceLabel: 'Source', pts: 'pts',
+    status: { upcoming: 'Upcoming', inProgress: 'In progress', submitted: 'Submitted', graded: 'Graded', deferred: 'Deferred' },
+    source: { official: 'Official', student: 'Entered', unconfirmed: 'Unconfirmed' },
+    verdict: {
+      secured: 'Target reached mathematically — keep going to lock it in.',
+      onTrack: 'On track — your current form is enough.',
+      needsPush: 'Reachable, but it needs a push above your current average.',
+      impossible: 'Not reachable from the current data — adjust the target or raise earlier results.',
+      done: 'All assessments are graded — this is your final grade.',
+      needData: 'Enter the official weights to get a reliable requirement.',
+    },
+    reason: {
+      missingWeight: 'Weights don’t add up to 100% yet.',
+      unconfirmedWeight: 'An unconfirmed component still has no official weight.',
+      weightsOver100: 'Weights add up to more than 100% — check them.',
+    },
+    need1: 'You need an average of {n}% on the remaining {w}% of the course.',
+    securedLine: 'Even zero on the rest keeps you at or above A.',
+    doneLine: 'Your final grade is {n}%.',
+    whatIf: 'What do I need on…', whatIfPick: 'Pick an upcoming assessment', whatIfNeed: 'You’d need {n}%.', whatIfImpossible: 'Not reachable on this one alone.',
+    confirm: 'Confirm weight', unconfirmedTag: 'Unconfirmed', needsConfirm: 'Needs confirmation',
+    save: 'Save', remove: 'Delete assessment', removeConfirm: 'Tap again to delete', invalidWeight: 'Weight must be 0–100.',
+    weightSet: '{n}% of 100 set', gradedN: '{n} graded', notGraded: 'Not graded yet', aAt: 'A at {n}%',
+  },
 };
 
 export type Copy = typeof en;
@@ -502,6 +533,36 @@ const ar: Copy = {
   subjEmptyT: 'ابدأ بمادة واحدة', subjEmptyS: 'مادة واحدة وامتحانها القادم يكفيان ليخطط نظّم أيامك.',
   offT: 'أنت غير متصل', offS: 'كل ما تفعله محفوظ على جهازك.',
   errT: 'واجهت هذه الشاشة مشكلة', errS: 'خطتك محفوظة على جهازك. حاول مرة أخرى — وإن تكرر ذلك راسلنا على support@nazzim.app.', errRetry: 'حاول مرة أخرى',
+  gr: {
+    title: 'الدرجات', sub: 'ما حقّقته — وما تحتاجه بالضبط للوصول إلى هدفك.',
+    seed: 'حمّل موادي الأربع', hubEmptyT: 'تابع درجتك الحقيقية', hubEmptyS: 'أضف مادة وتقييماتها لترى ما حقّقته وما يحتاجه كل A.',
+    add: 'أضف تقييماً', edit: 'تعديل التقييم', newA: 'تقييم جديد',
+    name: 'الاسم', weight: 'الوزن', maxScore: 'من', score: 'درجتك', due: 'التاريخ', optional: 'اختياري',
+    target: 'هدف A', earned: 'المكتسب حتى الآن', avg: 'متوسط المصحَّح', need: 'المطلوب في المتبقي', max: 'أقصى ممكن', remaining: 'المتبقي',
+    statusLabel: 'الحالة', sourceLabel: 'المصدر', pts: 'نقطة',
+    status: { upcoming: 'لم يبدأ', inProgress: 'جارٍ', submitted: 'سُلّم', graded: 'صُحّح', deferred: 'مؤجل' },
+    source: { official: 'رسمي', student: 'مُدخَل', unconfirmed: 'غير مؤكد' },
+    verdict: {
+      secured: 'تحقق الهدف حسابياً — واصل لتثبيته.',
+      onTrack: 'على المسار — مستواك الحالي يكفي.',
+      needsPush: 'قابل للتحقيق، لكنه يحتاج دفعة فوق متوسطك الحالي.',
+      impossible: 'غير قابل للتحقيق بالبيانات الحالية — عدّل الهدف أو ارفع النتائج السابقة.',
+      done: 'كل التقييمات صُحّحت — هذه درجتك النهائية.',
+      needData: 'أدخل الأوزان الرسمية للحصول على مطلب موثوق.',
+    },
+    reason: {
+      missingWeight: 'مجموع الأوزان لم يبلغ 100% بعد.',
+      unconfirmedWeight: 'يوجد تقييم غير مؤكد بلا وزن رسمي.',
+      weightsOver100: 'مجموع الأوزان أكثر من 100% — راجعها.',
+    },
+    need1: 'تحتاج متوسط {n}% في الـ{w}% المتبقية من المادة.',
+    securedLine: 'حتى الصفر في الباقي يبقيك عند A أو فوقها.',
+    doneLine: 'درجتك النهائية {n}%.',
+    whatIf: 'ماذا أحتاج في…', whatIfPick: 'اختر تقييماً قادماً', whatIfNeed: 'تحتاج {n}%.', whatIfImpossible: 'غير قابل للتحقيق في هذا وحده.',
+    confirm: 'أكّد الوزن', unconfirmedTag: 'غير مؤكد', needsConfirm: 'يحتاج تأكيداً',
+    save: 'احفظ', remove: 'حذف التقييم', removeConfirm: 'اضغط مرة أخرى للحذف', invalidWeight: 'الوزن بين 0 و100.',
+    weightSet: 'ضُبط {n}% من 100', gradedN: 'صُحّح {n}', notGraded: 'لم يُصحّح بعد', aAt: 'A عند {n}%',
+  },
 };
 
 export const COPY: Record<Lang, Copy> = { en, ar };
