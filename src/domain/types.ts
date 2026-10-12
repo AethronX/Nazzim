@@ -50,6 +50,25 @@ export type Assessment = {
   note?: string;
 };
 
+// One recorded mistake. The point is not to collect errors but to classify them: the same wrong answer for a
+// different reason needs a different fix. `kind` is the spec's taxonomy; `retryOn` schedules the re-test.
+export type ErrorKind = 'concept' | 'formula' | 'calculation' | 'interpretation' | 'rushing';
+export type StudyError = {
+  id: string;
+  subjectId: string;
+  topicId?: string;
+  question: string;      // the question, or a description of the problem
+  myAnswer?: string;
+  correctAnswer?: string;
+  kind: ErrorKind;
+  cause?: string;        // why it happened, in the student's words
+  fix?: string;          // the corrective action they chose
+  retryOn?: DateKey;     // when to re-test it
+  repeats: number;       // how many times this same mistake has come back
+  resolved: boolean;
+  createdAt: DateKey;
+};
+
 // A unit of content inside a course, tracked for mastery and spaced review — separate from task completion.
 export type TopicStatus = 'new' | 'learning' | 'reviewed' | 'mastered';
 export type Topic = {

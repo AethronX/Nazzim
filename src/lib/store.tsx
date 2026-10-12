@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, useColorScheme } from 'react-native';
-import type { Assessment, Exam, Subject, Task, Topic } from '../domain/types';
+import type { Assessment, ErrorKind, Exam, StudyError, Subject, Task, Topic } from '../domain/types';
 import { workDay } from '../domain/types';
 import type { PlanProposal } from '../ai/planner';
 import { canAddExam } from '../config/plans';
@@ -18,6 +18,7 @@ import { entitlementFromServer, purchase, purchasesAvailable, restore, type Peri
 import * as Sync from '../services/sync';
 import { COPY, counted, type Copy, type Lang } from './copy';
 import { newTopic, review as reviewTopicEngine } from '../engine/topics';
+import { newError, repeated as repeatError, resolve as resolveError } from '../engine/errors';
 import { addDays, daysBetween, newId, planExam, pruneOrphans, rate, rollForward, todayKey, type Confidence, type StudySession } from './exams';
 import { evidenceScore, withEvidence } from './readiness';
 import { askForReview, REVIEW_AFTER_SESSIONS, sessionDone, setHaptics, tapDone } from './feedback';
@@ -42,6 +43,7 @@ type Persisted = {
   cards: Card[]; // retrieval-practice cards the student wrote; the evidence behind the recall part of readiness
   assessments: Assessment[]; // graded course components (quizzes, midterms, finals) — the grade engine reads these
   topics: Topic[]; // units of content tracked for mastery and spaced review, separate from task completion
+  errors: StudyError[]; // the mistake log: what went wrong, why, and when to re-test it
   gradeTargets: Record<string, number>; // subjectId → the A threshold in points (university's real cutoff), default 90
   coursesSeeded: boolean; // whether the student's own four courses were loaded
   dailyMinutes: number; // usual study capacity per day; Rescue Mode plans within it
@@ -72,7 +74,7 @@ const deviceLang = (): Lang => {
 
 const INITIAL: Persisted = { schema: SCHEMA, lang: deviceLang(), ticks: {}, xp: 0, preset: 25, plan: 'year', sessions: 0, reviewAsked: false, appearance: 'system', reminders: DEFAULT_REMINDERS,
   profile: { name: '', uni: '', major: '', year: '' }, tier: 'free', haptics: true, rewards: true, aiTips: true, accentKey: 'indigo',
-  subjects: [], tasks: [], exams: [], study: [], cards: [], examsSeeded: false, assessments: [], topics: [], gradeTargets: {}, coursesSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false, studyTime: 'afternoon', recapSeen: null, checklistHidden: false };
+  subjects: [], tasks: [], exams: [], study: [], cards: [], examsSeeded: false, assessments: [], topics: [], errors: [], gradeTargets: {}, coursesSeeded: false, dailyMinutes: DEFAULT_DAILY_MIN, focusLog: {}, onboarded: false, studyTime: 'afternoon', recapSeen: null, checklistHidden: false };
 
 export const DEFAULT_A = 90; // most Gulf universities put A at 90; the student can change it per subject.
 
@@ -125,6 +127,9 @@ type Store = Persisted & {
   setGradeTarget: (subjectId: string, target: number) => void;
   addTopic: (subjectId: string, name: string) => string; updateTopic: (id: string, patch: Partial<Omit<Topic, 'id'>>) => void; deleteTopic: (id: string) => void;
   reviewTopic: (id: string, grade: 0 | 1 | 2) => void; // records one retrieval attempt and reschedules
+  addError: (e: { subjectId: string; topicId?: string; question: string; kind: ErrorKind; myAnswer?: string; correctAnswer?: string; cause?: string; fix?: string }) => string;
+  updateError: (id: string, patch: Partial<Omit<StudyError, 'id'>>) => void; deleteError: (id: string) => void;
+  markErrorRepeated: (id: string) => void; resolveErrorItem: (id: string) => void;
   seedMyCourses: () => void; // loads the student's own four courses with only the confirmed weights
   addTask: (t: Omit<Task, 'id' | 'done'>) => string; toggleTask: (id: string) => void; deleteTask: (id: string) => void;
   updateTask: (id: string, patch: Partial<Omit<Task, 'id'>>) => boolean; // validated; false = refused, nothing changed
@@ -175,7 +180,7 @@ function migrate(p: Persisted): Persisted {
   return { ...p, schema: SCHEMA, subjects, exams, tasks: p.tasks ?? [], cards, accentKey: normalizeAccent(p.accentKey),
     // Merge reminder defaults so a new toggle (e.g. task reminders) is present on upgrades, not undefined.
     reminders: { ...DEFAULT_REMINDERS, ...(p.reminders ?? {}) },
-    assessments: p.assessments ?? [], topics: p.topics ?? [], gradeTargets: p.gradeTargets ?? {}, coursesSeeded: p.coursesSeeded ?? false };
+    assessments: p.assessments ?? [], topics: p.topics ?? [], errors: p.errors ?? [], gradeTargets: p.gradeTargets ?? {}, coursesSeeded: p.coursesSeeded ?? false };
 }
 
 // "Explore with a sample semester" on the welcome screen: three subjects, one exam with its plan, three tasks.
@@ -590,6 +595,7 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
       exams: s.exams.map(e => (e.subjectId === id ? { ...e, subjectId: undefined } : e)),
       assessments: s.assessments.filter(a => a.subjectId !== id),
       topics: s.topics.filter(t => t.subjectId !== id),
+      errors: s.errors.filter(e => e.subjectId !== id),
     })),
 
     // ── Grades ──────────────────────────────────────────────────────────────────────────────
@@ -629,6 +635,19 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
         .sort((a, b) => a.date.localeCompare(b.date))[0];
       return { ...s, topics: s.topics.map(x => (x.id === id ? reviewTopicEngine(x, grade, today, nextExam?.date) : x)) };
     }),
+
+    // ── Error log ───────────────────────────────────────────────────────────────────────────
+    addError: e => {
+      const id = newId('er');
+      if (!e.question.trim()) return '';
+      const { subjectId, question, kind, ...rest } = e;
+      setP(s => ({ ...s, errors: [...s.errors, newError(subjectId, question, kind, today, id, rest)] }));
+      return id;
+    },
+    updateError: (id, patch) => setP(s => ({ ...s, errors: s.errors.map(e => (e.id === id ? { ...e, ...patch } : e)) })),
+    deleteError: id => setP(s => ({ ...s, errors: s.errors.filter(e => e.id !== id) })),
+    markErrorRepeated: id => setP(s => ({ ...s, errors: s.errors.map(e => (e.id === id ? repeatError(e, today) : e)) })),
+    resolveErrorItem: id => setP(s => ({ ...s, errors: s.errors.map(e => (e.id === id ? resolveError(e) : e)) })),
     // Every task that enters the store passes the same validation a synced row does, so a form can never
     // write a task the sync layer would later have to quarantine.
     addTask: t => {
