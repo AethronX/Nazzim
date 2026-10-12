@@ -44,6 +44,7 @@ export default function More() {
           <Row icon="user" title={L.acTitle} sub={account ? (syncState === 'error' ? L.acSyncError : account.email) : L.acSub} onPress={() => router.push('/account')} last />
         </Section>
         <Section label={L.secStudy}>
+          <Row icon="bars" title={L.db.title} sub={L.db.sub} onPress={() => router.push('/dashboard')} />
           <Row icon="chart" title={L.gr.title} sub={L.gr.sub} onPress={() => router.push('/grades')} />
           <Row icon="target" title={L.tp.title} sub={L.tp.sub} onPress={() => router.push('/topics')} />
           <Row icon="alert" title={L.er.title} sub={L.er.sub} onPress={() => router.push('/errors')} />
