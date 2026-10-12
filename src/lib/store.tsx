@@ -22,6 +22,7 @@ import { newError, repeated as repeatError, resolve as resolveError } from '../e
 import { DEFAULT_PRIORITY_WEIGHTS, WEIGHT_LEVELS, type PriorityWeights, type SubjectSignal, type WeightLevel } from '../engine/tasks';
 import { subjectSignals } from './signals';
 import { patchDay } from '../engine/wellbeing';
+import { exportBackup, parseBackup } from '../engine/backup';
 import { addDays, daysBetween, newId, planExam, pruneOrphans, rate, rollForward, todayKey, type Confidence, type StudySession } from './exams';
 import { evidenceScore, withEvidence } from './readiness';
 import { askForReview, REVIEW_AFTER_SESSIONS, sessionDone, setHaptics, tapDone } from './feedback';
@@ -137,6 +138,7 @@ type Store = Persisted & {
   markErrorRepeated: (id: string) => void; resolveErrorItem: (id: string) => void;
   setPriorityWeight: (factor: keyof PriorityWeights, level: WeightLevel) => void;
   logDay: (date: string, patch: Partial<DayLog>) => void;
+  exportData: () => string; importData: (text: string) => { ok: boolean; records?: number };
   signals: Record<string, SubjectSignal>; // measured per-subject signals the ordering reads
   seedMyCourses: () => void; // loads the student's own four courses with only the confirmed weights
   addTask: (t: Omit<Task, 'id' | 'done'>) => string; toggleTask: (id: string) => void; deleteTask: (id: string) => void;
@@ -663,6 +665,14 @@ export function NazzimProvider({ children }: { children: ReactNode }) {
     markErrorRepeated: id => setP(s => ({ ...s, errors: s.errors.map(e => (e.id === id ? repeatError(e, today) : e)) })),
     resolveErrorItem: id => setP(s => ({ ...s, errors: s.errors.map(e => (e.id === id ? resolveError(e) : e)) })),
     logDay: (date, patch) => setP(s => ({ ...s, dayLogs: { ...s.dayLogs, [date]: patchDay(s.dayLogs[date], date, patch) } })),
+    exportData: () => JSON.stringify(exportBackup(p as unknown as Record<string, unknown>, new Date().toISOString()), null, 2),
+    // Restore replaces the academic records only, and refuses anything it cannot fully validate.
+    importData: text => {
+      const parsed = parseBackup(text);
+      if (!parsed.ok) return { ok: false };
+      setP(s => ({ ...s, ...(parsed.backup.data as Partial<Persisted>) }));
+      return { ok: true, records: parsed.records };
+    },
     setPriorityWeight: (factor, level) => setP(s => ({
       ...s, priorityWeights: { ...s.priorityWeights, [factor]: DEFAULT_PRIORITY_WEIGHTS[factor] * WEIGHT_LEVELS[level] },
     })),

@@ -48,6 +48,8 @@ export default function More() {
           <Row icon="chart" title={L.gr.title} sub={L.gr.sub} onPress={() => router.push('/grades')} />
           <Row icon="target" title={L.tp.title} sub={L.tp.sub} onPress={() => router.push('/topics')} />
           <Row icon="alert" title={L.er.title} sub={L.er.sub} onPress={() => router.push('/errors')} />
+          <Row icon="calendar" title={L.cal.title} sub={L.cal.sub} onPress={() => router.push('/calendar')} />
+          <Row icon="doc" title={L.wr.title} sub={L.wr.sub} onPress={() => router.push('/weekreview')} />
           <Row icon="flame" title={L.wb.title} sub={L.wb.sub} onPress={() => router.push('/wellbeing')} />
           <Row icon="check" title={L.tasksTitle} sub={openTasks ? L.tkOpenN.replace('{n}', String(openTasks)) : undefined} onPress={() => router.push('/tasks')} />
           <Row icon="chart" title={L.progressMenu} onPress={() => router.push('/progress')} />
@@ -55,6 +57,7 @@ export default function More() {
         </Section>
         <Section label={L.secApp}>
           <Row icon="gear" title={L.settings} onPress={() => router.push('/settings')} />
+          <Row icon="shield" title={L.ex.title} sub={L.ex.sub} onPress={() => router.push('/backup')} />
           <Row icon="help" title={L.support} onPress={() => Linking.openURL(URLS.support).catch(() => {})} last />
         </Section>
       </ScrollView>
